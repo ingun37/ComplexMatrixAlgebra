@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "NumberKit",
+        "repositoryURL": "https://github.com/objecthub/swift-numberkit",
+        "state": {
+          "branch": null,
+          "revision": "a29903f82329df499e0a422f7c4824f9093e5df8",
+          "version": "2.3.7"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
