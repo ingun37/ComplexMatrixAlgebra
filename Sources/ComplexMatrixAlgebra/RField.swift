@@ -56,7 +56,7 @@ struct RAdd:RBinary {
                 }
             }
         }
-        return l
+        return RAdd(l: l, r: r)
     }
     
     let l: RField
@@ -91,7 +91,7 @@ struct RMul:RBinary {
                 }
             }
         }
-        return l
+        return RMul(l: l, r: r)
     }
     
     let l: RField
