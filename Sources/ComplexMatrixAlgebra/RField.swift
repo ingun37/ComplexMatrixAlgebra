@@ -7,15 +7,32 @@
 
 import Foundation
 import NumberKit
-
+struct REq: Equatable {
+    static func == (lhs: REq, rhs: REq) -> Bool {
+        return lhs.r.eq(rhs.r)
+    }
+    
+    let r:RField
+}
 protocol RField {
     func eval() -> RField
+    func eq(_ to:RField) -> Bool
+}
+extension RField {
+    var equatable: REq {
+        return REq(r: self)
+    }
 }
 protocol RBinary: RField {
     var l:RField {get}
     var r:RField {get}
 }
 struct RAdd:RBinary {
+    func eq(_ to: RField) -> Bool {
+        guard let to = to as? RAdd else { return false }
+        return l.eq(to.l) && r.eq(to.r)
+    }
+    
     func eval() -> RField {
         let l = self.l.eval()
         let r = self.r.eval()
@@ -46,6 +63,11 @@ struct RAdd:RBinary {
     let r: RField
 }
 struct RMul:RBinary {
+    func eq(_ to: RField) -> Bool {
+        guard let to = to as? RMul else { return false }
+        return l.eq(to.l) && r.eq(to.r)
+    }
+    
     func eval() -> RField {
         let l = self.l.eval()
         let r = self.r.eval()
@@ -76,10 +98,29 @@ struct RMul:RBinary {
     let r: RField
 }
 
-enum Real: RField {
+enum Real: RField, Equatable {
+    func eq(_ to: RField) -> Bool {
+        guard let to = to as? Real else { return false }
+        return self == to
+    }
+    
     func eval() -> RField {
-        //TODO: R to Q, Q to N if possible
-        return self
+        switch self {
+        case .N(_):
+            return self
+        case let .Q(q):
+            if let n = q.intValue {
+                return Real.N(n)
+            } else {
+                return self
+            }
+        case let .R(r):
+            if abs(r - r.rounded()) < 0.00001 {
+                return Real.N(Int(r.rounded()))
+            } else {
+                return self
+            }
+        }
     }
     
     case N(Int)
