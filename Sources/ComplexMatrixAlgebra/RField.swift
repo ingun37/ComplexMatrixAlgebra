@@ -22,6 +22,9 @@ extension RField {
     var equatable: REq {
         return REq(r: self)
     }
+    static var zero:RField {
+        return Real.N(0)
+    }
 }
 protocol RBinary: RField {
     var l:RField {get}
@@ -126,5 +129,22 @@ enum Real: RField, Equatable {
     case N(Int)
     case Q(Rational<Int>)
     case R(Double)
+    
+}
+
+struct RSubtract: RBinary {
+    let l: RField
+    
+    let r: RField
+    
+    func eval() -> RField {
+        return RAdd(l: l, r: RMul(l: Real.N(-1), r: r)).eval()
+    }
+    
+    func eq(_ to: RField) -> Bool {
+        guard let to = to as? RSubtract else { return false }
+        return l.eq(to.l) && r.eq(to.r)
+    }
+    
     
 }
