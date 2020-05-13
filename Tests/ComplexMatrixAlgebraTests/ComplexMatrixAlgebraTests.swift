@@ -5,6 +5,9 @@ import struct NumberKit.Rational
 @testable import ComplexMatrixAlgebra
 
 final class ComplexMatrixAlgebraTests: XCTestCase {
+    func testOutput() {
+        print([1,2,3,4].comb2())
+    }
     func testExample() {
         let r1 = Real.N(1)
         let r0 = Real.N(0)
@@ -35,12 +38,14 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
                   [(1,1),(4,-1)]].matrix
         let m2 = [[(0,1),(1,-1)],
                   [(2,-3),(4,0)]].matrix
-        let m3 = [[(-3,-1),(1,-5)],
-                  [(4,-13),(18,-4)]].matrix
-        expect(MMul(l: m1, r: m2).eval().equatable).to(equal(m3.equatable))
+        let expectedMul = [[(-3,-1),(1,-5)],
+                           [(4,-13),(18,-4)]].matrix
+        let expectedAdd = [[(1,1),(1,-2)],
+                           [(3,-2),(8,-1)]].matrix
+        expect(MMul(l: m1, r: m2).eval().equatable).to(equal(expectedMul.equatable))
+        expect(MAdd(l: m1, r: m2).eval().equatable).to(equal(expectedAdd.equatable))
         
     }
-
     static var allTests = [
         ("testExample", testExample),
     ]

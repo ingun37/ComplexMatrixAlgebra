@@ -69,23 +69,38 @@ protocol MBinary:MAlg {
     var l:MAlg { get }
     var r:MAlg { get }
 }
-struct MAdd:MBinary {
-    func eval() -> MAlg {
-        let l = self.l.eval()
-        let r = self.r.eval()
-        if let l = l as? Matrix {
-            if let r = r as? Matrix {
-                if l.dim == r.dim {
-                    let newElems = zip(l.elems, r.elems).map { (rowL, rowR) in
-                        zip(rowL, rowR).map { (x,y) in
-                            CAdd(l: x, r: y).eval()
+
+struct MAdd:MBinary, GroupBinary {
+    static func evalTerms<T:Collection>(head:MAlg, tail:T) -> MAlg where T.Element == MAlg{
+        let terms = [head] + tail
+        for i in 0..<terms.count {
+            for j in (0..<terms.count).without(i) {
+                let l = terms[i]
+                let r = terms[j]
+                if let l = l as? Matrix, let r = r as? Matrix {
+                    if l.dim == r.dim {
+                        let newElems = zip(l.elems, r.elems).map { (rowL, rowR) in
+                            zip(rowL, rowR).map { (x,y) in
+                                CAdd(l: x, r: y).eval()
+                            }
                         }
+                        let resultMat = Matrix(elems: newElems)
+                        let newTerms = (0..<terms.count).without(i, j).map({terms[$0]})
+                        return evalTerms(head: resultMat, tail: newTerms)
                     }
-                    return Matrix(elems: newElems)
                 }
             }
         }
-        return MAdd(l: l, r: r)
+        return tail.reduce(head) { (x, fx) in
+            MAdd(l: x, r: fx)
+        }
+    }
+    func eval() -> MAlg {
+        let l = self.l.eval()
+        let r = self.r.eval()
+        let terms = MAdd.flatTerms(m: l) + MAdd.flatTerms(m: r)
+        
+        return MAdd.evalTerms(head: terms.first!, tail: terms.dropFirst())
     }
     
     func eq(_ to: MAlg) -> Bool {
@@ -124,26 +139,30 @@ struct MMul:MBinary {
     let r: MAlg
 }
 
-extension Matrix {
-    var rowLen:Int {
-        return elems.count
+
+struct Var:CField, RField, MAlg {
+    func eval() -> MAlg { return self }
+    
+    func eq(_ to: MAlg) -> Bool {
+        guard let to = to as? Var else { return false }
+        return to.name == name
     }
-    var colLen:Int {
-        return elems.reduce(0) { (x, fx) in x < fx.count ? fx.count : x }
+    
+    func eval() -> CField { return self }
+    
+    func eq(_ to: CField) -> Bool {
+        guard let to = to as? Var else { return false }
+        return to.name == name
     }
-    var dim:(Int, Int) {
-        return (rowLen, colLen)
+    
+    func eval() -> RField { return self }
+    
+    func eq(_ to: RField) -> Bool {
+        guard let to = to as? Var else { return false }
+        return to.name == name
     }
-    func row(_ i:Int) -> [CField] {
-        return elems[i]
-    }
-    func col(_ i:Int) -> [CField] {
-        return elems.map { (row) in row[i] }
-    }
-    var rows:[[CField]] {
-        return elems
-    }
-    var cols:[[CField]] {
-        return (0..<colLen).map { (coli) in col(coli) }
-    }
+    let name:String
+    
+    
 }
+
