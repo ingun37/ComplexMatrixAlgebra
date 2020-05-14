@@ -12,27 +12,30 @@ protocol Algebra: Equatable {
     func iso(_ to:Self) -> Bool
 }
 
+/**
+ 
+ */
 protocol AlgebraBinaryOperator {
     associatedtype Alg where Alg:Algebra
     var l: Alg { get }
     var r: Alg { get }
 }
 extension AlgebraBinaryOperator {//associativity flat
-    static func flatTerms(m:Alg) -> [Alg] {
+    static func associativeFlat(m:Alg) -> [Alg] {
         if let m = m as? Self {
-            return flatTerms(m: m.l) + flatTerms(m: m.r)
+            return associativeFlat(m: m.l) + associativeFlat(m: m.r)
         } else {
             return [m]
         }
     }
     
-    func flatTermsLR() -> [Alg] {
-        return Self.flatTerms(m: l) + Self.flatTerms(m: r)
+    func associativeFlat() -> [Alg] {
+        return Self.associativeFlat(m: l) + Self.associativeFlat(m: r)
     }
     
-    func iso(_ to: Self) -> Bool {
-        let xs = flatTermsLR()
-        let ys = to.flatTermsLR()
+    func commutativeIso(_ to: Self) -> Bool {
+        let xs = associativeFlat()
+        let ys = to.associativeFlat()
         guard xs.count == ys.count else { return false }
         let match = xs.permutations().first { (xs_) -> Bool in
             zip(xs_, ys).allSatisfy { (x,y) -> Bool in

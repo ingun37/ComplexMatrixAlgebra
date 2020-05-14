@@ -68,8 +68,8 @@ extension Int {
     var real: Real {
         return Real.Number(RealNumber.N(self))
     }
-    func complex(i:Int) -> ComplexField {
-        return ComplexField.Number(ComplexNumber(i: i.real, real: real))
+    func complex(i:Int) -> Complex {
+        return Complex.Number(ComplexNumber(i: i.real, real: real))
     }
 }
 extension Double {

@@ -112,13 +112,13 @@ indirect enum Real:Algebra {
             return me == to
         case let .Add(me):
             guard case let .Add(to) = to else { return false }
-            return me.iso(to)
+            return me.commutativeIso(to)
         case let .Mul(me):
             guard case let .Mul(to) = to else { return false }
-            return me.iso(to)
+            return me.commutativeIso(to)
         case let .Subtract(x):
             guard case let .Mul(y) = to else { return false }
-            return x.iso(y)
+            return x.commutativeIso(y)
         }
     }
     

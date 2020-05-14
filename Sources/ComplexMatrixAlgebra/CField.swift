@@ -13,12 +13,16 @@ struct ComplexNumber: Equatable {
     let real: Real
 }
 struct ComplexBinary: AlgebraBinaryOperator {
-    let l: ComplexField
-    let r: ComplexField
+    let l: Complex
+    let r: Complex
 }
 
-indirect enum ComplexField: Algebra {
-    static func == (lhs: ComplexField, rhs: ComplexField) -> Bool {
+indirect enum Complex: Algebra {
+    case Number(ComplexNumber)
+    case Add(ComplexBinary)
+    case Mul(ComplexBinary)
+    
+    static func == (lhs: Complex, rhs: Complex) -> Bool {
         switch lhs {
         case let .Number(l):
             guard case let .Number(r) = rhs else { return false }
@@ -32,11 +36,7 @@ indirect enum ComplexField: Algebra {
         }
     }
     
-    case Number(ComplexNumber)
-    case Add(ComplexBinary)
-    case Mul(ComplexBinary)
-    
-    func eval() -> ComplexField {
+    func eval() -> Complex {
         switch self {
         case let .Number(x):
             let i = x.i.eval()
@@ -49,7 +49,7 @@ indirect enum ComplexField: Algebra {
             if case let .Number(l) = l, case let .Number(r) = r{
                 let img = Real.Add(RealBinary(l: l.i, r: r.i))
                 let real = Real.Add(RealBinary(l: l.real, r: r.real))
-                return ComplexField.Number(ComplexNumber(i: img, real: real))
+                return Complex.Number(ComplexNumber(i: img, real: real))
             }
             
             return .Add(ComplexBinary(l: l, r: r))
@@ -64,24 +64,24 @@ indirect enum ComplexField: Algebra {
                 let real = Real.Subtract(RealBinary(
                     l: .Mul(RealBinary(l: l.real, r: r.real)),
                     r: .Mul(RealBinary(l: l.i, r: r.i))))
-                return ComplexField.Number(ComplexNumber(i: img, real: real)).eval()
+                return Complex.Number(ComplexNumber(i: img, real: real)).eval()
             }
             
             return .Mul(ComplexBinary(l: l, r: r))
         }
     }
     
-    func iso(_ to: ComplexField) -> Bool {
+    func iso(_ to: Complex) -> Bool {
         switch self {
         case let .Number(l):
             guard case let .Number(r) = to else { return false }
             return l == r
         case let .Add(l):
             guard case let .Add(r) = to else { return false }
-            return l.iso(r)
+            return l.commutativeIso(r)
         case let .Mul(l):
             guard case let .Mul(r) = to else { return false }
-            return l.iso(r)
+            return l.commutativeIso(r)
         }
     }
     
