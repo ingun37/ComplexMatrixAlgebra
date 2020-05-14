@@ -49,7 +49,7 @@ indirect enum Complex: Algebra {
             if case let .Number(l) = l, case let .Number(r) = r{
                 let img = Real.Add(RealBinary(l: l.i, r: r.i))
                 let real = Real.Add(RealBinary(l: l.real, r: r.real))
-                return Complex.Number(ComplexNumber(i: img, real: real))
+                return Complex.Number(ComplexNumber(i: img, real: real)).eval()
             }
             
             return .Add(ComplexBinary(l: l, r: r))

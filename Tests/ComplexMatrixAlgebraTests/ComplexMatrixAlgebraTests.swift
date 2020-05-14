@@ -28,11 +28,15 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         expect(Real.Add(RealBinary(l: 3.real, r: (-3).real)).eval()).to(equal(0.real))
         expect(Real.Mul(RealBinary(l: 2.real, r: 4.real)).eval()).to(equal(8.real))
         expect(Real.Mul(RealBinary(l: 2.real, r: 0.5.real)).eval()).to(equal(1.real))
-//        expect(RMul(l: Real.R(2), r: Real.R(0.5)).eval().equatable).to(equal(Real.N(1).equatable))
-//        expect(RMul(l: Real.Q(Rational(1, 2)), r: r2).eval().equatable).to(equal(r1.equatable))
-//        expect(RSubtract(l: r1, r: r2).eval().equatable).to(equal(r_1.equatable))
-//        expect(CAdd(l: Complex(i: r1, real: r2), r: Complex(i: r1, real: r_1)).eval().equatable).to(equal(Complex(i: r2, real: r1).equatable))
-//        expect(CMul(l: Complex(i: r1, real: r2), r: Complex(i: r1, real: r_1)).eval().equatable).to(equal(Complex(i: r1, real: Real.N(-3)).equatable))
+        // 1/2 * 2 = 1
+        expect(Real.Mul(RealBinary(l: Rational(1, 2).real, r: 2.real)).eval()).to(equal(1.real))
+        // 1 - 2 = -1
+        expect(Real.Subtract(RealBinary(l: 1.real, r: 2.real)).eval()).to(equal((-1).real))
+        // 2+1i + -1+1i = 1+2i
+        expect(Complex.Add(ComplexBinary(l: 2.complex(i: 1), r: (-1).complex(i: 1))).eval()).to(equal(1.complex(i: 2)))
+        //2+i * -1+i = -3+i
+        expect(Complex.Mul(ComplexBinary(l: 2.complex(i: 1), r: (-1).complex(i: 1))).eval()).to(equal((-3).complex(i: 1)))
+
 //
 //        expect(MScale(k: c2, m: m22_1).eval().equatable).to(equal(Matrix(elems: [[c2, c0],[c0, c2]]).eval().equatable))
 //        expect(MAdd(l: m22_1, r: m22_1).eval().equatable).to(equal(m22_2.equatable))
@@ -75,5 +79,10 @@ extension Int {
 extension Double {
     var real: Real {
         return Real.Number(RealNumber.R(self))
+    }
+}
+extension Rational where T == Int {
+    var real: Real {
+        return Real.Number(.Q(self))
     }
 }
