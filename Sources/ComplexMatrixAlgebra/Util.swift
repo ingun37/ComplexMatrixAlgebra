@@ -18,6 +18,23 @@ extension Collection {
         let f = filter { !($0 is T) }
         return (t,f)
     }
+    
+}
+
+extension Collection where Index == Int {
+    func decompose() -> (Element, [Element])? {
+        guard let x = first else { return nil }
+        return (x, Array(dropFirst()))
+    }
+    func permutations() -> [[Element]] {
+        guard let (head, tail) = decompose() else { return [[]] }
+        return tail.permutations().flatMap { between(x: head, $0) }
+    }
+}
+
+func between<T>(x: T, _ ys: [T]) -> [[T]] {
+    guard let (head, tail) = ys.decompose() else { return [[x]] }
+    return [[x] + ys] + between(x:x, tail).map { [head] + $0 }
 }
 
 extension Collection where Element:Equatable {
@@ -40,29 +57,29 @@ struct Dimension:Hashable {
     }
 }
 
-extension Matrix {
-    var rowLen:Int {
-        return elems.count
-    }
-    var colLen:Int {
-        return elems.reduce(0) { (x, fx) in x < fx.count ? fx.count : x }
-    }
-    var dim:(Int, Int) {
-        return (rowLen, colLen)
-    }
-    var dimen:Dimension {
-        return Dimension(rowLen, colLen)
-    }
-    func row(_ i:Int) -> [CField] {
-        return elems[i]
-    }
-    func col(_ i:Int) -> [CField] {
-        return elems.map { (row) in row[i] }
-    }
-    var rows:[[CField]] {
-        return elems
-    }
-    var cols:[[CField]] {
-        return (0..<colLen).map { (coli) in col(coli) }
-    }
-}
+//extension Matrix {
+//    var rowLen:Int {
+//        return elems.count
+//    }
+//    var colLen:Int {
+//        return elems.reduce(0) { (x, fx) in x < fx.count ? fx.count : x }
+//    }
+//    var dim:(Int, Int) {
+//        return (rowLen, colLen)
+//    }
+//    var dimen:Dimension {
+//        return Dimension(rowLen, colLen)
+//    }
+//    func row(_ i:Int) -> [CField] {
+//        return elems[i]
+//    }
+//    func col(_ i:Int) -> [CField] {
+//        return elems.map { (row) in row[i] }
+//    }
+//    var rows:[[CField]] {
+//        return elems
+//    }
+//    var cols:[[CField]] {
+//        return (0..<colLen).map { (coli) in col(coli) }
+//    }
+//}

@@ -7,144 +7,119 @@
 
 import Foundation
 import NumberKit
-struct REq: Equatable {
-    static func == (lhs: REq, rhs: REq) -> Bool {
-        return lhs.r.eq(rhs.r)
-    }
-    
-    let r:RField
-}
-protocol RField {
-    func eval() -> RField
-    func eq(_ to:RField) -> Bool
-}
-extension RField {
-    var equatable: REq {
-        return REq(r: self)
-    }
-    static var zero:RField {
-        return Real.N(0)
-    }
-}
-protocol RBinary: RField {
-    var l:RField {get}
-    var r:RField {get}
-}
-struct RAdd:RBinary {
-    func eq(_ to: RField) -> Bool {
-        guard let to = to as? RAdd else { return false }
-        return l.eq(to.l) && r.eq(to.r)
-    }
-    
-    func eval() -> RField {
-        let l = self.l.eval()
-        let r = self.r.eval()
-        if let l = l as? Real {
-            if let r = r as? Real {
-                switch (l,r) {
-                case let (.N(x), .N(y)): return Real.N(x+y)
-                    
-                case let (.N(x), .Q(y)): return Real.Q(y + Rational<Int>(x)).eval()
-                case let (.Q(y), .N(x)): return Real.Q(y + Rational<Int>(x)).eval()
-                    
-                case let (.N(x), .R(y)): return Real.R(y + Double(x)).eval()
-                case let (.R(y), .N(x)): return Real.R(y + Double(x)).eval()
-                    
-                case let (.Q(x), .Q(y)): return Real.Q(y + x).eval()
-                    
-                case let (.Q(x), .R(y)): return Real.R(x.doubleValue + y).eval()
-                case let (.R(y), .Q(x)): return Real.R(x.doubleValue + y).eval()
-                    
-                case let (.R(x), .R(y)): return Real.R(y + x).eval()
-                }
-            }
-        }
-        return RAdd(l: l, r: r)
-    }
-    
-    let l: RField
-    let r: RField
-}
-struct RMul:RBinary {
-    func eq(_ to: RField) -> Bool {
-        guard let to = to as? RMul else { return false }
-        return l.eq(to.l) && r.eq(to.r)
-    }
-    
-    func eval() -> RField {
-        let l = self.l.eval()
-        let r = self.r.eval()
-        if let l = l as? Real {
-            if let r = r as? Real {
-                switch (l,r) {
-                case let (.N(x), .N(y)): return Real.N(x*y)
-                    
-                case let (.N(x), .Q(y)): return Real.Q(y * Rational<Int>(x)).eval()
-                case let (.Q(y), .N(x)): return Real.Q(y * Rational<Int>(x)).eval()
-                    
-                case let (.N(x), .R(y)): return Real.R(y * Double(x)).eval()
-                case let (.R(y), .N(x)): return Real.R(y * Double(x)).eval()
-                    
-                case let (.Q(x), .Q(y)): return Real.Q(y * x).eval()
-                    
-                case let (.Q(x), .R(y)): return Real.R(x.doubleValue * y).eval()
-                case let (.R(y), .Q(x)): return Real.R(x.doubleValue * y).eval()
-                    
-                case let (.R(x), .R(y)): return Real.R(y * x).eval()
-                }
-            }
-        }
-        return RMul(l: l, r: r)
-    }
-    
-    let l: RField
-    let r: RField
-}
 
-enum Real: RField, Equatable {
-    func eq(_ to: RField) -> Bool {
-        guard let to = to as? Real else { return false }
-        return self == to
-    }
-    
-    func eval() -> RField {
-        switch self {
-        case .N(_):
-            return self
-        case let .Q(q):
-            if let n = q.intValue {
-                return Real.N(n)
-            } else {
-                return self
-            }
-        case let .R(r):
-            if abs(r - r.rounded()) < 0.00001 {
-                return Real.N(Int(r.rounded()))
-            } else {
-                return self
-            }
-        }
-    }
-    
+enum RealNumber: Equatable {
     case N(Int)
     case Q(Rational<Int>)
     case R(Double)
-    
 }
+struct RealBinary: AlgebraBinaryOperator {
+    let l: Real
+    let r: Real
+}
+indirect enum Real:Algebra {
+    static func == (lhs: Real, rhs: Real) -> Bool {
+        switch lhs {
+        case let .Number(l):
+            guard case let .Number(r) = rhs else { return false }
+            return l == r
+        case let .Add(l):
+            guard case let .Add(r) = rhs else { return false }
+            return l.eq(r)
+        case let .Mul(l):
+            guard case let .Mul(r) = rhs else { return false }
+            return l.eq(r)
+        case let .Subtract(l):
+            guard case let .Mul(r) = rhs else { return false }
+            return l.eq(r)
+        }
+    }
+    
+    case Number(RealNumber)
+    case Add(RealBinary)
+    case Mul(RealBinary)
+    case Subtract(RealBinary)
+    
+    func eval() -> Real {
+        switch self {
+        case let .Number(number):
+            switch number {
+            case .N(_): return self
+            case let .Q(q):
+                if let n = q.intValue { return .Number(.N(n)) }
+                else                  { return self }
+            case let .R(r):
+                if abs(r - r.rounded()) < 0.00001 { return .Number(.N(Int(r.rounded())))}
+                else                              { return self }
+            }
+        case let .Add(lr):
+            let l = lr.l.eval()
+            let r = lr.r.eval()
+            if case let .Number(l) = l {
+                if case let .Number(r) = r {
+                    switch (l,r) {
+                    case let (.N(x), .N(y)): return Real.Number(.N(x+y))
+                        
+                    case let (.N(x), .Q(y)): return Real.Number(.Q(y + Rational<Int>(x))).eval()
+                    case let (.Q(y), .N(x)): return Real.Number(.Q(y + Rational<Int>(x))).eval()
 
-struct RSubtract: RBinary {
-    let l: RField
-    
-    let r: RField
-    
-    func eval() -> RField {
-        return RAdd(l: l, r: RMul(l: Real.N(-1), r: r)).eval()
+                    case let (.N(x), .R(y)): return Real.Number(.R(y + Double(x))).eval()
+                    case let (.R(y), .N(x)): return Real.Number(.R(y + Double(x))).eval()
+
+                    case let (.Q(x), .Q(y)): return Real.Number(.Q(y + x)).eval()
+
+                    case let (.Q(x), .R(y)): return Real.Number(.R(x.doubleValue + y)).eval()
+                    case let (.R(y), .Q(x)): return Real.Number(.R(x.doubleValue + y)).eval()
+
+                    case let (.R(x), .R(y)): return Real.Number(.R(y + x)).eval()
+                    }
+                }
+            }
+            return .Add(RealBinary(l: l, r: r))
+        case let .Mul(lr):
+            let l = lr.l.eval()
+            let r = lr.r.eval()
+            if case let .Number(l) = l {
+                if case let .Number(r) = r {
+                    switch (l,r) {
+                    case let (.N(x), .N(y)): return Real.Number(.N(x*y))
+                        
+                    case let (.N(x), .Q(y)): return Real.Number(.Q(y * Rational<Int>(x))).eval()
+                    case let (.Q(y), .N(x)): return Real.Number(.Q(y * Rational<Int>(x))).eval()
+                        
+                    case let (.N(x), .R(y)): return Real.Number(.R(y * Double(x))).eval()
+                    case let (.R(y), .N(x)): return Real.Number(.R(y * Double(x))).eval()
+                        
+                    case let (.Q(x), .Q(y)): return Real.Number(.Q(y * x)).eval()
+                        
+                    case let (.Q(x), .R(y)): return Real.Number(.R(x.doubleValue * y)).eval()
+                    case let (.R(y), .Q(x)): return Real.Number(.R(x.doubleValue * y)).eval()
+                        
+                    case let (.R(x), .R(y)): return Real.Number(.R(y * x)).eval()
+                    }
+                }
+            }
+            return .Mul(RealBinary(l: l, r: r))
+        case let .Subtract(b):
+            return Real.Add(RealBinary(l: b.l, r: .Mul(RealBinary(l: .Number(.N(-1)), r: b.r)))).eval()
+        }
     }
     
-    func eq(_ to: RField) -> Bool {
-        guard let to = to as? RSubtract else { return false }
-        return l.eq(to.l) && r.eq(to.r)
+    func iso(_ to: Real) -> Bool {
+        switch self {
+        case let .Number(me):
+            guard case let .Number(to) = to else { return false }
+            return me == to
+        case let .Add(me):
+            guard case let .Add(to) = to else { return false }
+            return me.iso(to)
+        case let .Mul(me):
+            guard case let .Mul(to) = to else { return false }
+            return me.iso(to)
+        case let .Subtract(x):
+            guard case let .Mul(y) = to else { return false }
+            return x.iso(y)
+        }
     }
-    
     
 }

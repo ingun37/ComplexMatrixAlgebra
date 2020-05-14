@@ -7,86 +7,82 @@
 
 import Foundation
 
-struct CEq: Equatable {
-    static func == (lhs: CEq, rhs: CEq) -> Bool {
-        return lhs.c.eq(rhs.c)
-    }
-    
-    let c: CField
+
+struct ComplexNumber: Equatable {
+    let i: Real
+    let real: Real
+}
+struct ComplexBinary: AlgebraBinaryOperator {
+    let l: ComplexField
+    let r: ComplexField
 }
 
-protocol CField {
-    func eval() -> CField
-    func eq(_ to:CField) -> Bool
-}
-extension CField {
-    var equatable:CEq {
-        return CEq(c: self)
-    }
-    static var zero:CField {
-        return Complex(i: Real.zero, real: Real.zero)
-    }
-}
-struct Complex:CField {
-    func eval() -> CField {
-        let i = self.i.eval()
-        let r = self.real.eval()
-        return Complex(i: i, real: r)
-    }
-    
-    func eq(_ to: CField) -> Bool {
-        guard let to = to as? Complex else { return false }
-        return i.eq(to.i) && real.eq(to.real)
-    }
-    
-    let i: RField
-    let real: RField
-}
-protocol CBinary:CField {
-    var l:CField { get }
-    var r:CField { get }
-}
-struct CAdd: CBinary {
-    func eval() -> CField {
-        let l = self.l.eval()
-        let r = self.r.eval()
-        
-        if let l = l as? Complex, let r = r as? Complex {
-            let img = RAdd(l: l.i, r: r.i)
-            let real = RAdd(l: l.real, r: r.real)
-            return Complex(i: img, real: real).eval()
+indirect enum ComplexField: Algebra {
+    static func == (lhs: ComplexField, rhs: ComplexField) -> Bool {
+        switch lhs {
+        case let .Number(l):
+            guard case let .Number(r) = rhs else { return false }
+            return l == r
+        case let .Add(l):
+            guard case let .Add(r) = rhs else { return false }
+            return l.eq(r)
+        case let .Mul(l):
+            guard case let .Mul(r) = rhs else { return false }
+            return l.eq(r)
         }
-        
-        return CAdd(l: l, r: r)
     }
     
-    func eq(_ to: CField) -> Bool {
-        guard let to = to as? CAdd else { return false }
-        return l.eq(to.l) && r.eq(to.r)
-    }
+    case Number(ComplexNumber)
+    case Add(ComplexBinary)
+    case Mul(ComplexBinary)
     
-    let l: CField
-    let r: CField
-}
-struct CMul: CBinary {
-    func eval() -> CField {
-        let l = self.l.eval()
-        let r = self.r.eval()
-        
-        if let l = l as? Complex, let r = r as? Complex {
-            let img = RAdd(l: RMul(l: l.i, r: r.real), r: RMul(l: l.real, r: r.i))
-            let real = RSubtract(l: RMul(l: l.real, r: r.real), r: RMul(l: l.i, r: r.i))
-            return Complex(i: img, real: real).eval()
+    func eval() -> ComplexField {
+        switch self {
+        case let .Number(x):
+            let i = x.i.eval()
+            let r = x.real.eval()
+            return .Number(ComplexNumber(i: i, real: r))
+        case let .Add(x):
+            let l = x.l.eval()
+            let r = x.r.eval()
+            
+            if case let .Number(l) = l, case let .Number(r) = r{
+                let img = Real.Add(RealBinary(l: l.i, r: r.i))
+                let real = Real.Add(RealBinary(l: l.real, r: r.real))
+                return ComplexField.Number(ComplexNumber(i: img, real: real))
+            }
+            
+            return .Add(ComplexBinary(l: l, r: r))
+        case let .Mul(x):
+            let l = x.l.eval()
+            let r = x.r.eval()
+            
+            if case let .Number(l) = l, case let .Number(r) = r {
+                let img = Real.Add(RealBinary(
+                    l: .Mul(RealBinary(l: l.i, r: r.real)),
+                    r: .Mul(RealBinary(l: l.real, r: r.i))))
+                let real = Real.Subtract(RealBinary(
+                    l: .Mul(RealBinary(l: l.real, r: r.real)),
+                    r: .Mul(RealBinary(l: l.i, r: r.i))))
+                return ComplexField.Number(ComplexNumber(i: img, real: real)).eval()
+            }
+            
+            return .Mul(ComplexBinary(l: l, r: r))
         }
-        
-        return CMul(l: l, r: r)
     }
     
-    func eq(_ to: CField) -> Bool {
-        guard let to = to as? CMul else { return false }
-        return l.eq(to.l) && r.eq(to.r)
+    func iso(_ to: ComplexField) -> Bool {
+        switch self {
+        case let .Number(l):
+            guard case let .Number(r) = to else { return false }
+            return l == r
+        case let .Add(l):
+            guard case let .Add(r) = to else { return false }
+            return l.iso(r)
+        case let .Mul(l):
+            guard case let .Mul(r) = to else { return false }
+            return l.iso(r)
+        }
     }
     
-    let l: CField
-    let r: CField
 }
