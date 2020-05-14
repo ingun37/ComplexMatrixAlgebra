@@ -57,29 +57,39 @@ struct Dimension:Hashable {
     }
 }
 
-//extension Matrix {
-//    var rowLen:Int {
-//        return elems.count
-//    }
-//    var colLen:Int {
-//        return elems.reduce(0) { (x, fx) in x < fx.count ? fx.count : x }
-//    }
-//    var dim:(Int, Int) {
-//        return (rowLen, colLen)
-//    }
-//    var dimen:Dimension {
-//        return Dimension(rowLen, colLen)
-//    }
-//    func row(_ i:Int) -> [CField] {
-//        return elems[i]
-//    }
-//    func col(_ i:Int) -> [CField] {
-//        return elems.map { (row) in row[i] }
-//    }
-//    var rows:[[CField]] {
-//        return elems
-//    }
-//    var cols:[[CField]] {
-//        return (0..<colLen).map { (coli) in col(coli) }
-//    }
-//}
+extension Elements {
+    var rowLen:Int {
+        return e.count
+    }
+    var colLen:Int {
+        return e.reduce(0) { (x, fx) in x < fx.count ? fx.count : x }
+    }
+    var dim:(Int, Int) {
+        return (rowLen, colLen)
+    }
+    var dimen:Dimension {
+        return Dimension(rowLen, colLen)
+    }
+    func row(_ i:Int) -> [Complex] {
+        return e[i]
+    }
+    func col(_ i:Int) -> [Complex] {
+        return e.map { (row) in row[i] }
+    }
+    var rows:[[Complex]] {
+        return e
+    }
+    var cols:[[Complex]] {
+        return (0..<colLen).map { (coli) in col(coli) }
+    }
+}
+extension Real {
+    static var zero:Real {
+        return .Number(.N(0))
+    }
+}
+extension Complex {
+    static var zero:Complex {
+        return .Number(ComplexNumber(i: Real.zero, real: Real.zero))
+    }
+}

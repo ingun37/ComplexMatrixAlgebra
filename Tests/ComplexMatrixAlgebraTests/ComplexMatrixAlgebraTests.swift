@@ -17,8 +17,6 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let c0 = 0.complex(i: 0)
         let c2 = 2.complex(i: 0)
         let r_1 = (-1).real
-//        let m22_1 = Matrix(elems: [[c1, c0],[c0, c1]])
-//        let m22_2 = Matrix(elems: [[c2, c0],[c0, c2]])
         
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct
@@ -37,20 +35,24 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         //2+i * -1+i = -3+i
         expect(Complex.Mul(ComplexBinary(l: 2.complex(i: 1), r: (-1).complex(i: 1))).eval()).to(equal((-3).complex(i: 1)))
 
-//
-//        expect(MScale(k: c2, m: m22_1).eval().equatable).to(equal(Matrix(elems: [[c2, c0],[c0, c2]]).eval().equatable))
-//        expect(MAdd(l: m22_1, r: m22_1).eval().equatable).to(equal(m22_2.equatable))
-//
-//        let m1 = [[(1,0),(0,-1)],
-//                  [(1,1),(4,-1)]].matrix
-//        let m2 = [[(0,1),(1,-1)],
-//                  [(2,-3),(4,0)]].matrix
-//        let expectedMul = [[(-3,-1),(1,-5)],
-//                           [(4,-13),(18,-4)]].matrix
-//        let expectedAdd = [[(1,1),(1,-2)],
-//                           [(3,-2),(8,-1)]].matrix
-//        expect(MMul(l: m1, r: m2).eval().equatable).to(equal(expectedMul.equatable))
-//        expect(MAdd(l: m1, r: m2).eval().equatable).to(equal(expectedAdd.equatable))
+
+        let m22_1 = Matrix.a(Elements(e: [[c1, c0],[c0, c1]]))
+        let m22_2 = Matrix.a(Elements(e: [[c2, c0],[c0, c2]]))
+        expect(Matrix.Scale(c2, m22_1).eval()).to(equal(m22_2))
+        expect(Matrix.Add(MatrixBinary(l: m22_1, r: m22_1)).eval()).to(equal(m22_2))
+
+        let m1 = [[(1,0),(0,-1)],
+                  [(1,1),(4,-1)]].matrix
+        let m2 = [[(0,1),(1,-1)],
+                  [(2,-3),(4,0)]].matrix
+        
+        let expectedMul = [[(-3,-1),(1,-5)],
+                           [(4,-13),(18,-4)]].matrix
+        let expectedAdd = [[(1,1),(1,-2)],
+                           [(3,-2),(8,-1)]].matrix
+        
+        expect(Matrix.Mul(MatrixBinary(l: m1, r: m2)).eval()).to(equal(expectedMul))
+        expect(Matrix.Add(MatrixBinary(l: m1, r: m2)).eval()).to(equal(expectedAdd))
         
     }
     static var allTests = [
@@ -58,16 +60,16 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
     ]
 }
 
-//extension Collection where Element == (Int, Int){
-//    var complexes: [Complex] {
-//        return map { (x,y) in Complex(i: Real.N(y), real: Real.N(x)) }
-//    }
-//}
-//extension Collection where Element:Collection, Element.Element == (Int, Int){
-//    var matrix:Matrix {
-//        return Matrix(elems: map({$0.complexes}))
-//    }
-//}
+extension Collection where Element == (Int, Int){
+    var complexes: [Complex] {
+        return map { (x,y) in x.complex(i: y) }
+    }
+}
+extension Collection where Element:Collection, Element.Element == (Int, Int){
+    var matrix:Matrix {
+        return Matrix.a(Elements(e: map({$0.complexes})))
+    }
+}
 extension Int {
     var real: Real {
         return Real.Number(RealNumber.N(self))
