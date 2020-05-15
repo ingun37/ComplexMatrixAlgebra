@@ -18,7 +18,11 @@ extension Collection {
         let f = filter { !($0 is T) }
         return (t,f)
     }
-    
+    func seperate(_ criteria:(Element)->Bool) -> ([Element],[Element]) {
+        let t = filter(criteria)
+        let f = filter { !criteria($0) }
+        return (t,f)
+    }
 }
 
 extension Collection where Index == Int {
@@ -57,39 +61,39 @@ struct Dimension:Hashable {
     }
 }
 
-extension Elements {
-    var rowLen:Int {
-        return e.count
-    }
-    var colLen:Int {
-        return e.reduce(0) { (x, fx) in x < fx.count ? fx.count : x }
-    }
-    var dim:(Int, Int) {
-        return (rowLen, colLen)
-    }
-    var dimen:Dimension {
-        return Dimension(rowLen, colLen)
-    }
-    func row(_ i:Int) -> [Complex] {
-        return e[i]
-    }
-    func col(_ i:Int) -> [Complex] {
-        return e.map { (row) in row[i] }
-    }
-    var rows:[[Complex]] {
-        return e
-    }
-    var cols:[[Complex]] {
-        return (0..<colLen).map { (coli) in col(coli) }
-    }
-}
-extension Real {
-    static var zero:Real {
-        return .Number(.N(0))
-    }
-}
-extension Complex {
-    static var zero:Complex {
-        return .Number(ComplexNumber(i: Real.zero, real: Real.zero))
-    }
-}
+//extension Elements {
+//    var rowLen:Int {
+//        return e.count
+//    }
+//    var colLen:Int {
+//        return e.reduce(0) { (x, fx) in x < fx.count ? fx.count : x }
+//    }
+//    var dim:(Int, Int) {
+//        return (rowLen, colLen)
+//    }
+//    var dimen:Dimension {
+//        return Dimension(rowLen, colLen)
+//    }
+//    func row(_ i:Int) -> [Complex] {
+//        return e[i]
+//    }
+//    func col(_ i:Int) -> [Complex] {
+//        return e.map { (row) in row[i] }
+//    }
+//    var rows:[[Complex]] {
+//        return e
+//    }
+//    var cols:[[Complex]] {
+//        return (0..<colLen).map { (coli) in col(coli) }
+//    }
+//}
+//extension Real {
+//    static var zero:Real {
+//        return .Number(.N(0))
+//    }
+//}
+//extension Complex {
+//    static var zero:Complex {
+//        return .Number(ComplexNumber(i: Real.zero, real: Real.zero))
+//    }
+//}
