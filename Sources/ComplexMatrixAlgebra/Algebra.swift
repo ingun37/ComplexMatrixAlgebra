@@ -38,6 +38,7 @@ protocol FieldSet: Equatable {
     static func + (lhs: Self, rhs: Self) -> Self
     static func - (lhs: Self, rhs: Self) -> Self
     static func * (lhs: Self, rhs: Self) -> Self
+    static func / (lhs: Self, rhs: Self) -> Self
     static prefix func - (lhs: Self) -> Self
     static prefix func ~ (lhs: Self) -> Self
 }

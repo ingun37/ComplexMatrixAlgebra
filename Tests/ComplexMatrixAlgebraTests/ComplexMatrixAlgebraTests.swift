@@ -46,6 +46,9 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
             let z = (12.real * "x".rvar)
             expect((y * "y".rvar).eval()).to(equal(z * "y".rvar))
         }
+        
+        expect(ComplexNumber(r: 4.real, i: 3.real) / ComplexNumber(r: 3.real, i: 4.real).eval())
+            .to(equal(ComplexNumber(r: 24.on(25).real, i: -7.on(25).real).eval()))
 //
         
 //        let c1 = 1.complex(i: 0)
@@ -95,6 +98,9 @@ extension Collection where Element:Collection, Element.Element == (Int, Int){
 extension Int {
     var real: Real {
         return Real.Number(RealNumber.N(self))
+    }
+    func on(_ deno:Int)-> Rational<Int> {
+        return Rational(self, deno)
     }
 //    func complex(i:Int) -> Complex {
 //        return Complex.Number(ComplexNumber(i: i.real, real: real))
