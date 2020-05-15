@@ -82,10 +82,18 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
         case let .Mul(l, r):
             let l = l.eval()
             let r = r.eval()
-            if case let (.Number(l), .Number(r)) = (l,r) {
+            if l == Self.id {
+                return r
+            } else if r == Self.id {
+                return l
+            } else if case let (.Number(l), .Number(r)) = (l,r) {
                 return .Number(l * r)
+            } else {
+                let flatten = l.flatMul() + r.flatMul()
+                let (numbers, nonNumbers) = flatten.seperate({if case .Number(_) = $0 {return true} else {return false}})
+                let multipliedNumbers = numbers.reduce(Self.id, *).eval()
+                return nonNumbers.reduce(multipliedNumbers, *)
             }
-            return .Mul(l, r)
         case let .Div(l, r):
             return (l * ~r).eval()
         case let .Subtract(l, r):

@@ -21,7 +21,6 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         // results.
         XCTAssertEqual(ComplexMatrixAlgebra().text, "Hello, World!")
         
-        expect((3.real + (-3).real).eval()).to(equal(0.real))
         expect((3.real + -3.real).eval()).to(equal(0.real))
         expect((2.real * 4.real).eval()).to(equal(8.real))
         expect((2.real * 0.5.real).eval()).to(equal(1.real))
@@ -30,12 +29,25 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         // 1 - 2 = -1
         expect((1.real - 2.real).eval()).to(equal((-1).real))
         expect(("x".rvar + 0.real).eval()).to(equal("x".rvar))
-        expect((1.real + .Var("x") + 1.real).eval()).to(equal(2.real + .Var("x")))
+            
+        /**
+         Terms are distributed otherwise compiling won't end.
+         */
+        do {
+            let x = 1.real + "x".rvar
+            expect((x + 1.real).eval()).to(equal(2.real + "x".rvar))
+        }
+        
         expect((4.real / (-2).real).eval()).to(equal((-2).real))
-//        expect((1.real + .Var("x") + 1.real).eval()).to(equal(2.real + .Var("x")))
-//        expect(Real.Subtract(RealBinary(l: 1.real, r: 2.real)).eval()).to(equal((-1).real))
-//        expect(Real.Add(RealBinary(l: Real.Add(RealBinary(l: 1.real, r: .Var("x"))), r: 1.real)).eval()).to(equal(Real.Add(RealBinary(l: .Var("x"), r: 2.real))))
+            
+        do {
+            let x = (-3.real * "x".rvar)
+            let y = (x * (-4).real)
+            let z = (12.real * "x".rvar)
+            expect((y * "y".rvar).eval()).to(equal(z * "y".rvar))
+        }
 //
+        
 //        let c1 = 1.complex(i: 0)
 //        let c0 = 0.complex(i: 0)
 //        let c2 = 2.complex(i: 0)
@@ -103,3 +115,4 @@ extension String {
         return .Var(self)
     }
 }
+
