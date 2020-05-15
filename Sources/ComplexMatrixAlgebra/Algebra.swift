@@ -41,6 +41,7 @@ protocol FieldSet: Equatable {
     static func / (lhs: Self, rhs: Self) -> Self
     static prefix func - (lhs: Self) -> Self
     static prefix func ~ (lhs: Self) -> Self
+    static func ^ (lhs: Self, rhs: Self) -> Self?
 }
 extension FieldSet {
     static func ^ (lhs: Self, rhs: Int) -> Self {
@@ -72,7 +73,7 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
     case Negate(FieldImp)
     case Var(String)
     case Inverse(FieldImp)
-    
+    case Power(base:FieldImp, exponent:FieldImp)
     static prefix func ~ (lhs: FieldImp<Num>) -> FieldImp<Num> { return .Inverse(lhs) }
     static prefix func - (lhs: FieldImp<Num>) -> FieldImp<Num> { return .Negate(lhs) }
     static func - (lhs: FieldImp<Num>, rhs: FieldImp<Num>) -> FieldImp<Num> { return .Subtract(lhs, rhs) }
@@ -81,6 +82,7 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
     static var id: FieldImp<Num>{ return .Number(Num.id)}
     static func / (lhs: FieldImp<Num>, rhs: FieldImp<Num>) -> FieldImp<Num> { return .Quotient(lhs, rhs) }
     static func * (lhs: FieldImp<Num>, rhs: FieldImp<Num>) -> FieldImp<Num> { return .Mul(lhs, rhs) }
+    static func ^ (lhs: FieldImp<Num>, rhs: FieldImp<Num>) -> FieldImp<Num> { return .Power(base: lhs, exponent: rhs) }
 
     func eval() -> FieldImp<Num> {
         switch self {
@@ -110,7 +112,6 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
         case let .Mul(_l, _r):
             let l = _l.eval()
             let r = _r.eval()
-            
             
             if case let .Add(x,y) = l {
                 let xr = x * r
@@ -146,7 +147,6 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
                     fatalError()
                 }
             }
-            return l * r
         case let .Quotient(l, r):
             return (l * ~r).eval()
         case let .Subtract(l, r):
@@ -167,6 +167,25 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
             default:
                 return .Inverse(x)
             }
+        case .Power(base: let _base, exponent: let _exponent):
+            let base = _base.eval()
+            let exponent = _exponent.eval()
+            if case let .Number(numExp) = exponent {
+                if numExp == .zero {
+                    return .Number(.id)
+                } else if numExp == .id {
+                    return base
+                } else if numExp == -.id {
+                    return ~base
+                }
+                
+                if case let .Number(numBase) = base {
+                    if let evaled = numBase^numExp {
+                        return .Number(evaled)
+                    }
+                }
+            }
+            return .Power(base: base, exponent: exponent)
         }
     }
     

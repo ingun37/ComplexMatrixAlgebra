@@ -10,21 +10,34 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         print([1,2,3,4].comb2())
         print(Array((-3)..<0))
     }
+    enum Sum {
+        case C(Complex)
+        case R(Real)
+    }
+    func genLine<T>(_ x:FieldImp<T>)-> String {
+        return "$$\n" + genLaTex(x) + "=" + genLaTex(x.eval()) + "\n$$"
+    }
     func testOutput() {
         let xy = "x".rvar - "y".rvar
         let xyxy = xy * xy
-        
-        let samples = [xyxy]
+        let i1 = 2.real + "x".rvar
+        let bbb = 2.real + 1.real
+        let hhh = Complex.Number(ComplexNumber(r: 4.real, i: "x".rvar))
+        let samples:[Sum] = [.R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4))]
         
         let tex = samples.map { (expression) in
-            return genLaTex(real: expression) + "=" + genLaTex(real: expression.eval()) + "\\\\"
-        }.joined(separator: "\n")
+            switch expression {
+            case let .C(expression): return genLine(expression)
+            case let .R(expression): return genLine(expression)
+            }
+            
+        }.joined(separator: "\n\n")
         let template = """
             <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
             <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-            $$
+            
             aoeuaoeu
-            $$
+            
         """
         try? template.replacingOccurrences(of: "aoeuaoeu", with: tex).write(toFile: "preview.html", atomically: true, encoding: String.Encoding.utf8)
         NSWorkspace.shared.open(URL(fileURLWithPath: "preview.html"))

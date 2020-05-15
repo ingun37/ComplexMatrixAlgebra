@@ -8,6 +8,15 @@
 import Foundation
 
 struct ComplexNumber: FieldSet {
+    static func ^ (lhs: ComplexNumber, rhs: ComplexNumber) -> ComplexNumber? {
+        if rhs.i == .zero {
+            if case let .Number(.N(intExp)) = rhs.r {
+                return lhs^intExp
+            }
+        }
+        return nil
+    }
+    
     
     static func / (lhs: ComplexNumber, rhs: ComplexNumber) -> ComplexNumber {
         //compiling never ends
