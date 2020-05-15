@@ -47,19 +47,14 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
             expect((y * "y".rvar).eval()).to(equal(z * "y".rvar))
         }
         
-        expect(ComplexNumber(r: 4.real, i: 3.real) / ComplexNumber(r: 3.real, i: 4.real).eval())
-            .to(equal(ComplexNumber(r: 24.on(25).real, i: -7.on(25).real).eval()))
-//
+        expect((4.complex(i: 3)/3.complex(i: 4)).eval()).to(equal(24.on(25).complex(i: (-7).on(25))))
+        expect(
+            (~(3.complex(i: 4))).eval()
+        ).to(equal(
+            3.on(25).complex(i: -4.on(25)).eval()
+        ))
         
-//        let c1 = 1.complex(i: 0)
-//        let c0 = 0.complex(i: 0)
-//        let c2 = 2.complex(i: 0)
-//        // 2+1i + -1+1i = 1+2i
-//        expect(Complex.Add(ComplexBinary(l: 2.complex(i: 1), r: (-1).complex(i: 1))).eval()).to(equal(1.complex(i: 2)))
-//        //2+i * -1+i = -3+i
-//        expect(Complex.Mul(ComplexBinary(l: 2.complex(i: 1), r: (-1).complex(i: 1))).eval()).to(equal((-3).complex(i: 1)))
-//        // 1 + x + 1 = 2 + x
-//
+        expect((2.complex(i: 3) * 3.complex(i: 4)).eval()).to(equal((-6).complex(i: 17)))
 //
 //        let m22_1 = Matrix.a(Elements(e: [[c1, c0],[c0, c1]]))
 //        let m22_2 = Matrix.a(Elements(e: [[c2, c0],[c0, c2]]))
@@ -102,9 +97,9 @@ extension Int {
     func on(_ deno:Int)-> Rational<Int> {
         return Rational(self, deno)
     }
-//    func complex(i:Int) -> Complex {
-//        return Complex.Number(ComplexNumber(i: i.real, real: real))
-//    }
+    func complex(i:Int) -> Complex {
+        return Complex.Number(ComplexNumber(r: real, i: i.real))
+    }
 }
 extension Double {
     var real: Real {
@@ -114,6 +109,9 @@ extension Double {
 extension Rational where T == Int {
     var real: Real {
         return Real.Number(.Q(self))
+    }
+    func complex(i:Rational) -> Complex {
+        return .Number(ComplexNumber(r: real, i: i.real))
     }
 }
 extension String {
