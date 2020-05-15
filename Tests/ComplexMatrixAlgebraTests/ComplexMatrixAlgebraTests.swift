@@ -6,7 +6,18 @@ import struct NumberKit.Rational
 @testable import ComplexMatrixAlgebra
 
 final class ComplexMatrixAlgebraTests: XCTestCase {
+    func testUtil() {
+        print([1,2,3,4].comb2())
+    }
     func testOutput() {
+        let xy = "x".rvar - "y".rvar
+        let xyxy = xy * xy
+        
+        let samples = [xyxy]
+        
+        let tex = samples.map { (expression) in
+            return genLaTex(real: expression) + "=" + genLaTex(real: expression.eval()) + "\\\\"
+        }.joined(separator: "\n")
         let template = """
             <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
             <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -14,7 +25,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
             aoeuaoeu
             $$
         """
-        try? template.replacingOccurrences(of: "aoeuaoeu", with: genLaTex(real: "x".rvar + "y".rvar)).write(toFile: "preview.html", atomically: true, encoding: String.Encoding.utf8)
+        try? template.replacingOccurrences(of: "aoeuaoeu", with: tex).write(toFile: "preview.html", atomically: true, encoding: String.Encoding.utf8)
         NSWorkspace.shared.open(URL(fileURLWithPath: "preview.html"))
     }
     func testExample() {
@@ -43,7 +54,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
          */
         do {
             let x = 1.real + "x".rvar
-            expect((x + 1.real).eval()).to(equal(2.real + "x".rvar))
+            expect((x + 1.real).eval()).to(equal("x".rvar + 2.real))
         }
         
         expect((4.real / (-2).real).eval()).to(equal((-2).real))
@@ -51,8 +62,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         do {
             let x = (-3.real * "x".rvar)
             let y = (x * (-4).real)
-            let z = (12.real * "x".rvar)
-            expect((y * "y".rvar).eval()).to(equal(z * "y".rvar))
+            expect((y * "y".rvar).eval()).to(equal("x".rvar * 12.real * "y".rvar))
         }
         
         expect((4.complex(i: 3)/3.complex(i: 4)).eval()).to(equal(24.on(25).complex(i: (-7).on(25))))

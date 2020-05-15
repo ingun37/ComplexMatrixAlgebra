@@ -44,6 +44,15 @@ protocol FieldSet: Equatable {
 }
 
 indirect enum FieldImp<Num>: Field where Num:FieldSet{
+    struct Cod:Codable&Equatable {
+        func encode(to encoder: Encoder) throws { }
+        init(from decoder: Decoder) throws { self.x = .Number(.id) }
+        init(_ x:FieldImp<Num>) {
+            self.x = x
+        }
+        let x:FieldImp<Num>
+        
+    }
     case Number(Num)
     case Add(FieldImp, FieldImp)
     case Mul(FieldImp, FieldImp)
@@ -65,36 +74,68 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
     func eval() -> FieldImp<Num> {
         switch self {
         case let .Number(number): return .Number(number.eval())
-        case let .Add(l, r):
-            let l = l.eval()
-            let r = r.eval()
-            if l == Self.zero {
-                return r
-            } else if r == Self.zero {
-                return l
-            } else if case let (.Number(l), .Number(r)) = (l,r) {
-                return .Number(l + r)
+        case let .Add(_l, _r):
+            let l = _l.eval()
+            let r = _r.eval()
+            let flatten = l.flatAdd() + r.flatAdd()
+            let flatCodables = flatten.map({Cod($0)})
+            let addedBestEffort = edgeMerge(objs: flatCodables) { (_l, _r) -> Cod? in
+                let l = _l.x
+                let r = _r.x
+                if l == Self.zero {
+                    return Cod(r)
+                } else if r == Self.zero {
+                    return Cod(l)
+                } else if case let (.Number(l), .Number(r)) = (l,r) {
+                    return Cod(.Number(l + r))
+                }
+                return nil
+            }.map({$0.x})
+            if let head = addedBestEffort.first {
+                return addedBestEffort.dropFirst().reduce(head, +)
             } else {
-                let flatten = l.flatAdd() + r.flatAdd()
-                let (numbers, nonNumbers) = flatten.seperate({if case .Number(_) = $0 {return true} else {return false}})
-                let addedNumbers = numbers.reduce(Self.zero, +).eval()
-                return nonNumbers.reduce(addedNumbers, +)
+                fatalError()
             }
-        case let .Mul(l, r):
-            let l = l.eval()
-            let r = r.eval()
-            if l == Self.id {
-                return r
-            } else if r == Self.id {
-                return l
-            } else if case let (.Number(l), .Number(r)) = (l,r) {
-                return .Number(l * r)
+        case let .Mul(_l, _r):
+            let l = _l.eval()
+            let r = _r.eval()
+            
+            
+            if case let .Add(x,y) = l {
+                let xr = x * r
+                let yr = y * r
+                return (xr + yr).eval()
+            } else if case let .Add(x,y) = r {
+               let lx = l * x
+               let ly = l * y
+               return (lx + ly).eval()
             } else {
                 let flatten = l.flatMul() + r.flatMul()
-                let (numbers, nonNumbers) = flatten.seperate({if case .Number(_) = $0 {return true} else {return false}})
-                let multipliedNumbers = numbers.reduce(Self.id, *).eval()
-                return nonNumbers.reduce(multipliedNumbers, *)
+                let flatCodable = flatten.map({Cod($0)})
+                let bestEffort = edgeMerge(objs: flatCodable) { (_l, _r) -> Cod? in
+                    let l = _l.x
+                    let r = _r.x
+                    
+                    if l == Self.id {
+                        return Cod(r)
+                    } else if r == Self.id {
+                        return Cod(l)
+                    } else if l == Self.zero {
+                        return Cod(Self.zero)
+                    } else if r == Self.zero {
+                        return Cod(Self.zero)
+                    } else if case let (.Number(ln), .Number(rn)) = (l,r) {
+                        return Cod(.Number(ln * rn))
+                    }
+                    return nil
+                }.map({$0.x})
+                if let head = bestEffort.first {
+                    return bestEffort.dropFirst().reduce(head, *)
+                } else {
+                    fatalError()
+                }
             }
+            return l * r
         case let .Div(l, r):
             return (l * ~r).eval()
         case let .Subtract(l, r):
@@ -134,4 +175,3 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
         }
     }
 }
-

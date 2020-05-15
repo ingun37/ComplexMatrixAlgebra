@@ -27,6 +27,15 @@
           "revision": "a29903f82329df499e0a422f7c4824f9093e5df8",
           "version": "2.3.7"
         }
+      },
+      {
+        "package": "SwiftGraph",
+        "repositoryURL": "https://github.com/davecom/SwiftGraph",
+        "state": {
+          "branch": null,
+          "revision": "3e9ed26e380b40fcadf80ef5d588829ced251673",
+          "version": "3.0.0"
+        }
       }
     ]
   },

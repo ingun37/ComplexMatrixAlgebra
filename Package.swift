@@ -18,13 +18,14 @@ let package = Package(
         .package(name: "NumberKit", url: "https://github.com/objecthub/swift-numberkit", from: "2.3.7"),
         .package(url: "https://github.com/Quick/Quick.git", from: "2.2.0"),
         .package(url: "https://github.com/Quick/Nimble.git", from: "8.0.7"),
+        .package(url: "https://github.com/davecom/SwiftGraph", from: "3.0.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "ComplexMatrixAlgebra",
-            dependencies: ["NumberKit"]),
+            dependencies: ["NumberKit", "SwiftGraph"]),
         .testTarget(
             name: "ComplexMatrixAlgebraTests",
             dependencies: ["ComplexMatrixAlgebra", "Quick", "Nimble"]),

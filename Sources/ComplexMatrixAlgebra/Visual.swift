@@ -19,18 +19,29 @@ func genLaTex(real:Real) -> String {
             return r.description
         }
     case let .Add(l,r):
-        return "{\(genLaTex(real: l))} + {\(genLaTex(real: r))}"
+        return "\(wrappedLatex(real: l)) + \(wrappedLatex(real: r))"
     case let .Mul(l, r):
-        return "{\(genLaTex(real: l))} \times {\(genLaTex(real: r))}"
+        return "\(wrappedLatex(real: l)) \\times \(wrappedLatex(real: r))"
     case let .Div(l, r):
         return "\\frac{\(genLaTex(real: l))}{\(genLaTex(real: r))}"
     case let .Subtract(l, r):
-        return "{\(genLaTex(real: l))} - {\(genLaTex(real: r))}"
+        return "\(wrappedLatex(real: l)) - \(wrappedLatex(real: r))"
     case let .Negate(x):
-        return "-{\(genLaTex(real: x))}"
+        return "-{\(wrappedLatex(real: x))}"
     case let .Var(v):
         return v
     case let .Inverse(x):
-        return "\\left({\(genLaTex(real: x))}\\right)^{-1}"
+        return "{\(wrappedLatex(real: x))}^{-1}"
+    }
+}
+
+func wrappedLatex(real:Real)-> String {
+    switch real {
+    case .Number(_):
+        return genLaTex(real: real)
+    case .Var(_):
+        return genLaTex(real: real)
+    default:
+        return "\\left({\(genLaTex(real: real))}\\right)"
     }
 }
