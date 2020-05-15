@@ -9,6 +9,8 @@ import Foundation
 import NumberKit
 
 enum RealNumber: Equatable, FieldSet {
+    
+    
     static func / (lhs: RealNumber, rhs: RealNumber) -> RealNumber {
         return lhs * (~rhs)
     }

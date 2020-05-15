@@ -8,6 +8,7 @@ import struct NumberKit.Rational
 final class ComplexMatrixAlgebraTests: XCTestCase {
     func testUtil() {
         print([1,2,3,4].comb2())
+        print(Array((-3)..<0))
     }
     func testOutput() {
         let xy = "x".rvar - "y".rvar
@@ -74,6 +75,8 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         
         expect((2.complex(i: 3) * 3.complex(i: 4)).eval()).to(equal((-6).complex(i: 17)))
         
+        expect(RealNumber.N(2)^2).to(equal(RealNumber.N(4)))
+        expect(RealNumber.N(2)^(-2)).to(equal(RealNumber.Q(1.on(4))))
         
 //
 //        let m22_1 = Matrix.a(Elements(e: [[c1, c0],[c0, c1]]))

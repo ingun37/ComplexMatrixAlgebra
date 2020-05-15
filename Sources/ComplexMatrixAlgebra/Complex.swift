@@ -8,6 +8,7 @@
 import Foundation
 
 struct ComplexNumber: FieldSet {
+    
     static func / (lhs: ComplexNumber, rhs: ComplexNumber) -> ComplexNumber {
         //compiling never ends
         let a1 = lhs.r
