@@ -31,6 +31,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         expect((1.real - 2.real).eval()).to(equal((-1).real))
         expect(("x".rvar + 0.real).eval()).to(equal("x".rvar))
         expect((1.real + .Var("x") + 1.real).eval()).to(equal(2.real + .Var("x")))
+        expect((4.real / (-2).real).eval()).to(equal((-2).real))
 //        expect((1.real + .Var("x") + 1.real).eval()).to(equal(2.real + .Var("x")))
 //        expect(Real.Subtract(RealBinary(l: 1.real, r: 2.real)).eval()).to(equal((-1).real))
 //        expect(Real.Add(RealBinary(l: Real.Add(RealBinary(l: 1.real, r: .Var("x"))), r: 1.real)).eval()).to(equal(Real.Add(RealBinary(l: .Var("x"), r: 2.real))))
