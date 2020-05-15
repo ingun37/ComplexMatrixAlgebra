@@ -18,6 +18,8 @@ protocol Algebra: Equatable {
     static prefix func ~ (lhs: Self) -> Self
     
     func flatAdd() -> [Self]
+    
+    func same(_ to:Self)-> Bool
 }
 
 protocol Field: Algebra {
@@ -43,6 +45,19 @@ protocol FieldSet: Equatable {
     static prefix func ~ (lhs: Self) -> Self
     static func ^ (lhs: Self, rhs: Self) -> Self?
 }
+
+func commuteSame<C:Collection, T:Algebra>(_ xs:C, _ ys:C) -> Bool where C.Element == T, C.Index == Int{
+    guard xs.count == ys.count else { return false }
+    let len = xs.count
+    if len == 0 { return true }
+    let aa = (0..<len).flatMap({i in (0..<len).map({(i,$0)})})
+    if let match = aa.first(where: { xs[$0].same(ys[$1]) }) {
+        return commuteSame(xs.without(at:match.0), ys.without(at: match.1))
+    } else {
+        return false
+    }
+    
+}
 extension FieldSet {
     static func ^ (lhs: Self, rhs: Int) -> Self {
         if rhs == 0 {
@@ -56,6 +71,17 @@ extension FieldSet {
     }
 }
 indirect enum FieldImp<Num>: Field where Num:FieldSet{
+    func same(_ to: FieldImp<Num>) -> Bool {
+        switch (self, to) {
+        case (.Add(_, _), .Add(_, _)):
+            return commuteSame(self.flatAdd(), to.flatAdd())
+        case (.Mul(_, _), .Mul(_, _)):
+            return commuteSame(self.flatMul(), to.flatMul())
+        default:
+            return self == to
+        }
+    }
+    
     struct Cod:Codable&Equatable {
         func encode(to encoder: Encoder) throws { }
         init(from decoder: Decoder) throws { self.x = .Number(.id) }
@@ -128,18 +154,13 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
                     let l = _l.x
                     let r = _r.x
                     
-                    if l == Self.id {
-                        return Cod(r)
-                    } else if r == Self.id {
-                        return Cod(l)
-                    } else if l == Self.zero {
-                        return Cod(Self.zero)
-                    } else if r == Self.zero {
-                        return Cod(Self.zero)
-                    } else if case let (.Number(ln), .Number(rn)) = (l,r) {
-                        return Cod(.Number(ln * rn))
+                    if let symmetric = tryMul(l, r) {
+                        return Cod(symmetric)
+                    } else if let symmetric = tryMul(r, l) {
+                        return Cod(symmetric)
+                    } else {
+                        return nil
                     }
-                    return nil
                 }.map({$0.x})
                 if let head = bestEffort.first {
                     return bestEffort.dropFirst().reduce(head, *)
@@ -204,4 +225,23 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
             return [self]
         }
     }
+    func tryMul(_ l:FieldImp<Num>, _ r:FieldImp<Num>) -> FieldImp<Num>? {
+        if l == Self.id {
+            return r
+        } else if l == Self.zero {
+            return Self.zero
+        } else if case let (.Number(ln), .Number(rn)) = (l,r) {
+            return FieldImp<Num>.Number(ln * rn).eval()
+        }
+        switch (l,r) {
+        case (.Power(base: let lbase, exponent: let lexp), .Power(base: let rbase, exponent: let rexp)):
+            if lbase.same(rbase) {
+                return FieldImp<Num>.Power(base: lbase, exponent: lexp + rexp).eval()
+            }
+        default:
+            return nil
+        }
+        return nil
+    }
+
 }

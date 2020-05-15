@@ -23,7 +23,9 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let i1 = 2.real + "x".rvar
         let bbb = 2.real + 1.real
         let hhh = Complex.Number(ComplexNumber(r: 4.real, i: "x".rvar))
-        let samples:[Sum] = [.R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4))]
+        let uc = "x".rvar + 1.real
+        let cu = 1.real + "x".rvar
+        let samples:[Sum] = [.R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4)), .R((uc^2.real) * (cu^2.real))]
         
         let tex = samples.map { (expression) in
             switch expression {

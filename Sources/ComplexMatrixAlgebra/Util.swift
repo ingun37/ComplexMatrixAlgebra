@@ -23,6 +23,7 @@ extension Collection {
         let f = filter { !criteria($0) }
         return (t,f)
     }
+    
 }
 
 extension Collection where Index == Int {
@@ -33,6 +34,9 @@ extension Collection where Index == Int {
     func permutations() -> [[Element]] {
         guard let (head, tail) = decompose() else { return [[]] }
         return tail.permutations().flatMap { between(x: head, $0) }
+    }
+    func without(at:Int)->[Element] {
+        return (0..<count).without(at).map({self[$0]})
     }
 }
 
