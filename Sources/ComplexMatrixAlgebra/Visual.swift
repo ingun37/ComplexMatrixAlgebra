@@ -21,7 +21,18 @@ func genLaTex(real:Real) -> String {
     case let .Add(l,r):
         return "\(wrappedLatex(real: l)) + \(wrappedLatex(real: r))"
     case let .Mul(l, r):
+        if case let (.Number(.N(ln)),r) = (l,r) {
+            if ln == -1 {
+                return "-\(wrappedLatex(real: r))"
+            }
+        }
+        if case let (l,.Number(.N(rn))) = (l,r) {
+            if rn == -1 {
+                return "-\(wrappedLatex(real: l))"
+            }
+        }
         return "\(wrappedLatex(real: l)) \\times \(wrappedLatex(real: r))"
+        
     case let .Quotient(l, r):
         return "\\frac{\(genLaTex(real: l))}{\(genLaTex(real: r))}"
     case let .Subtract(l, r):
