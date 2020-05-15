@@ -56,7 +56,7 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
     case Number(Num)
     case Add(FieldImp, FieldImp)
     case Mul(FieldImp, FieldImp)
-    case Div(FieldImp, FieldImp)
+    case Quotient(FieldImp, FieldImp)
     case Subtract(FieldImp, FieldImp)
     case Negate(FieldImp)
     case Var(String)
@@ -68,7 +68,7 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
     static func + (lhs: FieldImp<Num>, rhs: FieldImp<Num>) -> FieldImp<Num> { return .Add(lhs, rhs) }
     static var zero: FieldImp<Num> { return .Number(Num.zero)}
     static var id: FieldImp<Num>{ return .Number(Num.id)}
-    static func / (lhs: FieldImp<Num>, rhs: FieldImp<Num>) -> FieldImp<Num> { return .Div(lhs, rhs) }
+    static func / (lhs: FieldImp<Num>, rhs: FieldImp<Num>) -> FieldImp<Num> { return .Quotient(lhs, rhs) }
     static func * (lhs: FieldImp<Num>, rhs: FieldImp<Num>) -> FieldImp<Num> { return .Mul(lhs, rhs) }
 
     func eval() -> FieldImp<Num> {
@@ -136,7 +136,7 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
                 }
             }
             return l * r
-        case let .Div(l, r):
+        case let .Quotient(l, r):
             return (l * ~r).eval()
         case let .Subtract(l, r):
             return (l + -r).eval()
@@ -149,8 +149,8 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
             switch x {
             case let .Number(number):
                 return .Number(~number)
-            case let .Div(numer, denom):
-                return FieldImp<Num>.Div(denom, numer).eval()
+            case let .Quotient(numer, denom):
+                return FieldImp<Num>.Quotient(denom, numer).eval()
             case let .Inverse(x):
                 return x.eval()
             default:
