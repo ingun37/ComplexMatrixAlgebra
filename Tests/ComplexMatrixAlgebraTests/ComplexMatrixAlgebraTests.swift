@@ -93,6 +93,10 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         expect(RealNumber.N(2)^2).to(equal(RealNumber.N(4)))
         expect(RealNumber.N(2)^(-2)).to(equal(RealNumber.Q(1.on(4))))
         
+        let uc = "x".rvar + 1.real
+        let cu = 1.real + "x".rvar
+        let aoeu = (uc^2.real) * (cu^2.real)
+        expect(aoeu.eval()).to(equal(uc^(4.real)))
 //
 //        let m22_1 = Matrix.a(Elements(e: [[c1, c0],[c0, c1]]))
 //        let m22_2 = Matrix.a(Elements(e: [[c2, c0],[c0, c2]]))
