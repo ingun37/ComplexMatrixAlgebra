@@ -1,13 +1,21 @@
 import XCTest
 import Nimble
+import Cocoa
 import struct NumberKit.Rational
 
 @testable import ComplexMatrixAlgebra
 
 final class ComplexMatrixAlgebraTests: XCTestCase {
     func testOutput() {
-        print([1,2,3,4].comb2())
-        print([1,2,3,4].permutations())
+        let template = """
+            <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+            <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+            $$
+            aoeuaoeu
+            $$
+        """
+        try? template.replacingOccurrences(of: "aoeuaoeu", with: genLaTex(real: "x".rvar + "y".rvar)).write(toFile: "preview.html", atomically: true, encoding: String.Encoding.utf8)
+        NSWorkspace.shared.open(URL(fileURLWithPath: "preview.html"))
     }
     func testExample() {
         let r1 = 1.real
@@ -55,6 +63,8 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         ))
         
         expect((2.complex(i: 3) * 3.complex(i: 4)).eval()).to(equal((-6).complex(i: 17)))
+        
+        
 //
 //        let m22_1 = Matrix.a(Elements(e: [[c1, c0],[c0, c1]]))
 //        let m22_2 = Matrix.a(Elements(e: [[c2, c0],[c0, c2]]))
