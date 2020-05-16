@@ -79,4 +79,4 @@ struct ComplexNumber: FieldSet {
     
 }
 
-typealias Complex = FieldImp<ComplexNumber>
+typealias Complex = Field<ComplexNumber>

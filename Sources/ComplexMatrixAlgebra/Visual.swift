@@ -7,7 +7,7 @@
 
 import Foundation
 
-func genLaTex<T>(_ x:FieldImp<T>) -> String {
+func genLaTex<T>(_ x:Field<T>) -> String {
     switch x {
     case let .Number(num):
         if let num = num as? RealNumber {
@@ -56,7 +56,7 @@ func genLaTex<T>(_ x:FieldImp<T>) -> String {
     }
 }
 
-func wrappedLatex<T>(_ x:FieldImp<T>)-> String {
+func wrappedLatex<T>(_ x:Field<T>)-> String {
     switch x {
     case .Number(_):
         return genLaTex(x)

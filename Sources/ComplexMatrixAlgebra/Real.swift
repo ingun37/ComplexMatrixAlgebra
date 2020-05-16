@@ -102,4 +102,4 @@ enum RealNumber: Equatable, FieldSet {
     case R(Double)
 }
 
-typealias Real = FieldImp<RealNumber>
+typealias Real = Field<RealNumber>
