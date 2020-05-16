@@ -38,10 +38,10 @@ extension FieldSet {
 indirect enum Field<Num>: Algebra where Num:FieldSet{
     func same(_ to: Field<Num>) -> Bool {
         switch (self, to) {
-        case (.Add(_, _), .Add(_, _)):
-            return commuteSame(self.flatAdd().all, to.flatAdd().all)
-        case (.Mul(_, _), .Mul(_, _)):
-            return commuteSame(self.flatMul().all, to.flatMul().all)
+        case let (.Add(x), .Add(y)):
+            return commuteSame(x.flat().all, y.flat().all)
+        case let (.Mul(x), .Mul(y)):
+            return commuteSame(x.flat().all, y.flat().all)
         default:
             return self == to
         }
@@ -49,8 +49,8 @@ indirect enum Field<Num>: Algebra where Num:FieldSet{
     
     
     case Number(Num)
-    case Add(Field, Field)
-    case Mul(Field, Field)
+    case Add(FAdd<Num>)
+    case Mul(FMul<Num>)
     case Quotient(Field, Field)
     case Subtract(Field, Field)
     case Negate(Field)
@@ -60,57 +60,20 @@ indirect enum Field<Num>: Algebra where Num:FieldSet{
     static prefix func ~ (lhs: Field<Num>) -> Field<Num> { return .Inverse(lhs) }
     static prefix func - (lhs: Field<Num>) -> Field<Num> { return .Negate(lhs) }
     static func - (lhs: Field<Num>, rhs: Field<Num>) -> Field<Num> { return .Subtract(lhs, rhs) }
-    static func + (lhs: Field<Num>, rhs: Field<Num>) -> Field<Num> { return .Add(lhs, rhs) }
+    static func + (lhs: Field<Num>, rhs: Field<Num>) -> Field<Num> { return .Add(FAdd(lhs, rhs)) }
     static var zero: Field<Num> { return .Number(Num.zero)}
     static var id: Field<Num>{ return .Number(Num.id)}
     static func / (lhs: Field<Num>, rhs: Field<Num>) -> Field<Num> { return .Quotient(lhs, rhs) }
-    static func * (lhs: Field<Num>, rhs: Field<Num>) -> Field<Num> { return .Mul(lhs, rhs) }
+    static func * (lhs: Field<Num>, rhs: Field<Num>) -> Field<Num> { return .Mul(FMul(lhs, rhs)) }
     static func ^ (lhs: Field<Num>, rhs: Field<Num>) -> Field<Num> { return .Power(base: lhs, exponent: rhs) }
 
     func eval() -> Field<Num> {
         switch self {
         case let .Number(number): return .Number(number.eval())
-        case let .Add(_l, _r):
-            let l = _l.eval()
-            let r = _r.eval()
-            let flatten = (l.flatAdd() + r.flatAdd())
-            let best = edgeMerge(_objs: flatten) { (l, r) in
-                if l == Self.zero {
-                    return r
-                } else if r == Self.zero {
-                    return l
-                } else if case let (.Number(l), .Number(r)) = (l,r) {
-                    return .Number(l + r)
-                }
-                return nil
-            }
-            return best.tail.reduce(best.head, +)
-        case let .Mul(_l, _r):
-            let l = _l.eval()
-            let r = _r.eval()
-            
-            if case let .Add(x,y) = l {
-                let xr = x * r
-                let yr = y * r
-                return (xr + yr).eval()
-            } else if case let .Add(x,y) = r {
-               let lx = l * x
-               let ly = l * y
-               return (lx + ly).eval()
-            } else {
-                let flatten = l.flatMul() + r.flatMul()
-                let bestEffort = edgeMerge(_objs: flatten) { (l, r) in
-                    
-                    if let symmetric = tryMul(l, r) {
-                        return symmetric
-                    } else if let symmetric = tryMul(r, l) {
-                        return symmetric
-                    } else {
-                        return nil
-                    }
-                }
-                return bestEffort.tail.reduce(bestEffort.head, *)
-            }
+        case let .Add(pair):
+            return pair.eval()
+        case let .Mul(pair):
+            return pair.eval()
         case let .Quotient(l, r):
             return (l * ~r).eval()
         case let .Subtract(l, r):
@@ -152,27 +115,87 @@ indirect enum Field<Num>: Algebra where Num:FieldSet{
             return .Power(base: base, exponent: exponent)
         }
     }
-    
-    func flatAdd() -> List<Field<Num>> {
-        if case let .Add(x, y) = self {
-            return x.flatAdd() + y.flatAdd()
-        } else {
-            return List(self,[])
+
+}
+
+protocol FieldBinary:Equatable {
+    associatedtype Num:FieldSet
+    typealias A = Field<Num>
+    var l: A {get}
+    var r: A {get}
+    static func match(_ a:A)->Self?
+    static func tryCollapse(_ l:A, _ r:A)-> A?
+    static func operation(lhs:A, rhs:A)-> A
+    init(_ l:A, _ r:A)
+}
+extension FieldBinary {
+    func flat() -> List<A> {
+        let lll = Self.match(l)?.flat() ?? List(l, [])
+        let rrr = Self.match(r)?.flat() ?? List(r, [])
+        return lll + rrr
+    }
+    func eval() -> A {
+        let l = self.l.eval()
+        let r = self.r.eval()
+        let flatten = Self(l, r).flat()
+        let best = edgeMerge(_objs: flatten) { (l, r) in
+            if let symmetric = Self.tryCollapse(l, r) {
+                return symmetric
+            } else if let symmetric = Self.tryCollapse(r, l) {
+                return symmetric
+            } else {
+                return nil
+            }
         }
+        return best.tail.reduce(best.head, Self.operation)
+    }
+}
+struct FAdd<Num:FieldSet>:FieldBinary {
+    static func operation(lhs: A, rhs: A) -> A {
+        return lhs + rhs
     }
     
-    func flatMul() -> List<Field<Num>> {
-        if case let .Mul(x, y) = self {
-            return x.flatMul() + y.flatMul()
-        } else {
-            return List(self, [])
-        }
-    }
-    func tryMul(_ l:Field<Num>, _ r:Field<Num>) -> Field<Num>? {
-        if l == Self.id {
+    typealias A = Field<Num>
+    static func tryCollapse(_ l: A, _ r: A) -> A? {
+        if l == A.zero {
             return r
-        } else if l == Self.zero {
-            return Self.zero
+        } else if case let (.Number(l), .Number(r)) = (l,r) {
+            return .Number(l + r)
+        } else {
+            return nil
+        }
+    }
+    
+    static func match(_ a: Field<Num>) -> FAdd<Num>? {
+        if case let .Add(x) = a {
+            return x
+        } else {
+            return nil
+        }
+    }
+    
+    let l: Field<Num>
+    let r: Field<Num>
+    init(_ l:A, _ r:A) {
+        self.l = l
+        self.r = r
+    }
+}
+struct FMul<Num:FieldSet>:FieldBinary {
+    static func operation(lhs: A, rhs: A) -> A {
+        return lhs * rhs
+    }
+    
+    typealias A = Field<Num>
+    static func tryCollapse(_ l: A, _ r: A) -> A? {
+        if case let .Add(xy) = l {
+            let xr = xy.l * r
+            let yr = xy.r * r
+            return (xr + yr).eval()
+        } else if l == A.id {
+            return r
+        } else if l == A.zero {
+            return A.zero
         } else if case let (.Number(ln), .Number(rn)) = (l,r) {
             return Field<Num>.Number(ln * rn).eval()
         }
@@ -186,5 +209,19 @@ indirect enum Field<Num>: Algebra where Num:FieldSet{
         }
         return nil
     }
-
+    
+    static func match(_ a: Field<Num>) -> FMul<Num>? {
+        if case let .Mul(x) = a {
+            return x
+        } else {
+            return nil
+        }
+    }
+    
+    let l: Field<Num>
+    let r: Field<Num>
+    init(_ l:A, _ r:A) {
+        self.l = l
+        self.r = r
+    }
 }

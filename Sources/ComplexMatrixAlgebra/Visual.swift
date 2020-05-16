@@ -24,10 +24,10 @@ func genLaTex<T>(_ x:Field<T>) -> String {
         } else {
             return "unknown"
         }
-    case let .Add(l,r):
-        return "\(wrappedLatex(l)) + \(wrappedLatex(r))"
-    case let .Mul(l, r):
-        if let (l,r) = (l,r) as? (Real, Real){
+    case let .Add(lr):
+        return "\(wrappedLatex(lr.l)) + \(wrappedLatex(lr.r))"
+    case let .Mul(lr):
+        if let (l,r) = (lr.l,lr.r) as? (Real, Real){
             if case let (.Number(.N(ln)),r) = (l,r) {
                 if ln == -1 {
                     return "-\(wrappedLatex(r))"
@@ -39,7 +39,7 @@ func genLaTex<T>(_ x:Field<T>) -> String {
                 }
             }
         }
-        return "\(wrappedLatex(l)) \\times \(wrappedLatex(r))"
+        return "\(wrappedLatex(lr.l)) \\times \(wrappedLatex(lr.r))"
         
     case let .Quotient(l, r):
         return "\\frac{\(genLaTex(l))}{\(genLaTex(r))}"
