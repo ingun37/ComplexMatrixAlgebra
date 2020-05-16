@@ -44,6 +44,9 @@ struct List<T> {
     static func + (lhs: List, rhs: List) -> List {
         return List(lhs.head, lhs.tail + rhs.all)
     }
+    func reduce(_ next:(T,T)->T) -> T  {
+        return tail.reduce(head, next)
+    }
 }
 extension Collection where Index == Int {
     
