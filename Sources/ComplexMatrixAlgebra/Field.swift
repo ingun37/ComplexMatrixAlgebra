@@ -155,9 +155,7 @@ indirect enum Field<Num>: Algebra where Num:FieldSet{
     
     func flatAdd() -> List<Field<Num>> {
         if case let .Add(x, y) = self {
-            let x = x.flatAdd()
-            let y = y.flatAdd()
-            return List(x.head, x.tail + [y.head] + y.tail)
+            return x.flatAdd() + y.flatAdd()
         } else {
             return List(self,[])
         }
@@ -165,9 +163,7 @@ indirect enum Field<Num>: Algebra where Num:FieldSet{
     
     func flatMul() -> List<Field<Num>> {
         if case let .Mul(x, y) = self {
-            let x = x.flatMul()
-            let y = y.flatMul()
-            return List(x.head, x.tail + [y.head] + y.tail)
+            return x.flatMul() + y.flatMul()
         } else {
             return List(self, [])
         }
