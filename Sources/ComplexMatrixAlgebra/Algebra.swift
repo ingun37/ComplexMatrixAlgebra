@@ -11,16 +11,37 @@ import NumberKit
 //TODO: Change once accepted: https://forums.swift.org/t/accepted-se-0280-enum-cases-as-protocol-witnesses/34850
 protocol Algebra: Equatable {
     func eval() -> Self
-    static func + (lhs: Self, rhs: Self) -> Self
-    static func - (lhs: Self, rhs: Self) -> Self
-    static func * (lhs: Self, rhs: Self) -> Self
-    static prefix func - (lhs: Self) -> Self
-    static prefix func ~ (lhs: Self) -> Self
-    
-    func flatAdd() -> [Self]
-    
     func same(_ to:Self)-> Bool
 }
+
+protocol AbelianGroup:Algebra {
+    associatedtype BinaryOp:AbelianGroupBinary where BinaryOp.A == Self //Add or Mul?
+    var asBinary: BinaryOp? { get }
+}
+protocol AbelianGroupBinary {
+    associatedtype A:AbelianGroup where A.BinaryOp == Self
+    var l: A { get }
+    var r: A { get }
+    static var id:A {get}
+}
+struct TempCodable<T:AbelianGroup>:Codable&Equatable {
+    func encode(to encoder: Encoder) throws { }
+    init(from decoder: Decoder) throws { self.x = T.BinaryOp.id }
+    init(_ x:T) {
+        self.x = x
+    }
+    let x:T
+}
+extension AbelianGroupBinary {
+    func flatten() -> (A,[A]) {
+        let (lh,lt) = l.asBinary?.flatten() ?? (l,[])
+        let (rh,rt) = r.asBinary?.flatten() ?? (r,[])
+        return (lh, lt + [rh] + rt)
+    }
+    
+}
+
+
 
 protocol Field: Algebra {
     
@@ -31,6 +52,12 @@ protocol Field: Algebra {
      */
     static var id:Self {get}
     static func / (lhs: Self, rhs: Self) -> Self
+    static func + (lhs: Self, rhs: Self) -> Self
+    static func - (lhs: Self, rhs: Self) -> Self
+    static func * (lhs: Self, rhs: Self) -> Self
+    static prefix func - (lhs: Self) -> Self
+    static prefix func ~ (lhs: Self) -> Self
+    
 }
 
 protocol FieldSet: Equatable {
@@ -46,6 +73,7 @@ protocol FieldSet: Equatable {
     static func ^ (lhs: Self, rhs: Self) -> Self?
 }
 
+
 func commuteSame<C:Collection, T:Algebra>(_ xs:C, _ ys:C) -> Bool where C.Element == T, C.Index == Int{
     guard xs.count == ys.count else { return false }
     let len = xs.count
@@ -58,6 +86,7 @@ func commuteSame<C:Collection, T:Algebra>(_ xs:C, _ ys:C) -> Bool where C.Elemen
     }
     
 }
+
 extension FieldSet {
     static func ^ (lhs: Self, rhs: Int) -> Self {
         if rhs == 0 {
@@ -74,23 +103,15 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
     func same(_ to: FieldImp<Num>) -> Bool {
         switch (self, to) {
         case (.Add(_, _), .Add(_, _)):
-            return commuteSame(self.flatAdd(), to.flatAdd())
+            return commuteSame(self.flatAdd().all, to.flatAdd().all)
         case (.Mul(_, _), .Mul(_, _)):
-            return commuteSame(self.flatMul(), to.flatMul())
+            return commuteSame(self.flatMul().all, to.flatMul().all)
         default:
             return self == to
         }
     }
     
-    struct Cod:Codable&Equatable {
-        func encode(to encoder: Encoder) throws { }
-        init(from decoder: Decoder) throws { self.x = .Number(.id) }
-        init(_ x:FieldImp<Num>) {
-            self.x = x
-        }
-        let x:FieldImp<Num>
-        
-    }
+    
     case Number(Num)
     case Add(FieldImp, FieldImp)
     case Mul(FieldImp, FieldImp)
@@ -116,25 +137,18 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
         case let .Add(_l, _r):
             let l = _l.eval()
             let r = _r.eval()
-            let flatten = l.flatAdd() + r.flatAdd()
-            let flatCodables = flatten.map({Cod($0)})
-            let addedBestEffort = edgeMerge(objs: flatCodables) { (_l, _r) -> Cod? in
-                let l = _l.x
-                let r = _r.x
+            let flatten = (l.flatAdd() + r.flatAdd())
+            let best = edgeMerge(_objs: flatten) { (l, r) in
                 if l == Self.zero {
-                    return Cod(r)
+                    return r
                 } else if r == Self.zero {
-                    return Cod(l)
+                    return l
                 } else if case let (.Number(l), .Number(r)) = (l,r) {
-                    return Cod(.Number(l + r))
+                    return .Number(l + r)
                 }
                 return nil
-            }.map({$0.x})
-            if let head = addedBestEffort.first {
-                return addedBestEffort.dropFirst().reduce(head, +)
-            } else {
-                fatalError()
             }
+            return best.tail.reduce(best.head, +)
         case let .Mul(_l, _r):
             let l = _l.eval()
             let r = _r.eval()
@@ -149,24 +163,17 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
                return (lx + ly).eval()
             } else {
                 let flatten = l.flatMul() + r.flatMul()
-                let flatCodable = flatten.map({Cod($0)})
-                let bestEffort = edgeMerge(objs: flatCodable) { (_l, _r) -> Cod? in
-                    let l = _l.x
-                    let r = _r.x
+                let bestEffort = edgeMerge(_objs: flatten) { (l, r) in
                     
                     if let symmetric = tryMul(l, r) {
-                        return Cod(symmetric)
+                        return symmetric
                     } else if let symmetric = tryMul(r, l) {
-                        return Cod(symmetric)
+                        return symmetric
                     } else {
                         return nil
                     }
-                }.map({$0.x})
-                if let head = bestEffort.first {
-                    return bestEffort.dropFirst().reduce(head, *)
-                } else {
-                    fatalError()
                 }
+                return bestEffort.tail.reduce(bestEffort.head, *)
             }
         case let .Quotient(l, r):
             return (l * ~r).eval()
@@ -210,19 +217,23 @@ indirect enum FieldImp<Num>: Field where Num:FieldSet{
         }
     }
     
-    func flatAdd() -> [FieldImp<Num>] {
+    func flatAdd() -> List<FieldImp<Num>> {
         if case let .Add(x, y) = self {
-            return x.flatAdd() + y.flatAdd()
+            let x = x.flatAdd()
+            let y = y.flatAdd()
+            return List(x.head, x.tail + [y.head] + y.tail)
         } else {
-            return [self]
+            return List(self,[])
         }
     }
     
-    func flatMul() -> [FieldImp<Num>] {
+    func flatMul() -> List<FieldImp<Num>> {
         if case let .Mul(x, y) = self {
-            return x.flatMul() + y.flatMul()
+            let x = x.flatMul()
+            let y = y.flatMul()
+            return List(x.head, x.tail + [y.head] + y.tail)
         } else {
-            return [self]
+            return List(self, [])
         }
     }
     func tryMul(_ l:FieldImp<Num>, _ r:FieldImp<Num>) -> FieldImp<Num>? {

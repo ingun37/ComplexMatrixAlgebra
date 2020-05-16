@@ -23,16 +23,32 @@ extension Collection {
         let f = filter { !criteria($0) }
         return (t,f)
     }
-    
-}
-
-extension Collection where Index == Int {
-    func decompose() -> (Element, [Element])? {
+    func decompose() -> List<Element>? {
         guard let x = first else { return nil }
-        return (x, Array(dropFirst()))
+        return List(x, dropFirst())
     }
+}
+struct List<T> {
+    typealias Element = T
+    let head:T
+    let tail:[T]
+    init<C:Sequence>(_ h:T, _ t:C) where C.Element == T {
+        head = h
+        tail = Array(t)
+    }
+    var pair:(T,[T]) { return (head, tail)}
+    var all:[T] {return [head] + tail}
+    func fmap<Q>(_ f:@escaping (T)->Q) -> List<Q> {
+        return List<Q>(f(head), tail.map(f))
+    }
+    static func + (lhs: List, rhs: List) -> List {
+        return List(lhs.head, lhs.tail + rhs.all)
+    }
+}
+extension Collection where Index == Int {
+    
     func permutations() -> [[Element]] {
-        guard let (head, tail) = decompose() else { return [[]] }
+        guard let (head, tail) = decompose()?.pair else { return [[]] }
         return tail.permutations().flatMap { between(x: head, $0) }
     }
     func without(at:Int)->[Element] {
@@ -41,7 +57,7 @@ extension Collection where Index == Int {
 }
 
 func between<T>(x: T, _ ys: [T]) -> [[T]] {
-    guard let (head, tail) = ys.decompose() else { return [[x]] }
+    guard let (head, tail) = ys.decompose()?.pair else { return [[x]] }
     return [[x] + ys] + between(x:x, tail).map { [head] + $0 }
 }
 

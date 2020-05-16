@@ -18,6 +18,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         return "$$\n" + genLaTex(x) + "=" + genLaTex(x.eval()) + "\n$$"
     }
     func testOutput() {
+        let x = "x".rvar
         let xy = "x".rvar - "y".rvar
         let xyxy = xy * xy
         let i1 = 2.real + "x".rvar
@@ -25,7 +26,9 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let hhh = Complex.Number(ComplexNumber(r: 4.real, i: "x".rvar))
         let uc = "x".rvar + 1.real
         let cu = 1.real + "x".rvar
-        let samples:[Sum] = [.R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4)), .R((uc^2.real) * (cu^2.real))]
+        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4)), .R((uc^2.real) * (cu^2.real))]
+        
+        let results = (x*x).eval()
         
         let tex = samples.map { (expression) in
             switch expression {
@@ -70,7 +73,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
          */
         do {
             let x = 1.real + "x".rvar
-            expect((x + 1.real).eval()).to(equal("x".rvar + 2.real))
+            expect((x + 1.real).eval()).to(equal(2.real + "x".rvar))
         }
         
         expect((4.real / (-2).real).eval()).to(equal((-2).real))
@@ -78,7 +81,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         do {
             let x = (-3.real * "x".rvar)
             let y = (x * (-4).real)
-            expect((y * "y".rvar).eval()).to(equal("x".rvar * 12.real * "y".rvar))
+            expect((y * "y".rvar).eval()).to(equal(12.real * "x".rvar * "y".rvar))
         }
         
         expect((4.complex(i: 3)/3.complex(i: 4)).eval()).to(equal(24.on(25).complex(i: (-7).on(25))))
