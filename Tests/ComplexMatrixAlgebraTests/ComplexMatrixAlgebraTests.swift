@@ -20,6 +20,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
     func testOutput() {
         
         let x = "x".rvar
+        let y = "y".rvar
         let _x = -x
         let xy = "x".rvar - "y".rvar
         let xyxy = xy * xy
@@ -31,7 +32,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let auhs = 3.complex(i: 4).f
         let ggg = Complex.Number(ComplexNumber(r: "a_1".rvar, i: "b_1".rvar))
         let hch = Complex.Number(ComplexNumber(r: "a_2".rvar, i: "b_2".rvar))
-        let z = 3.complex(i: 4).f
+        let z = Complex.Number(ComplexNumber(r: x, i: y))
         let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)),
                              .C(~auhs), .C(ggg*hch), .C(z * *z)]
         
