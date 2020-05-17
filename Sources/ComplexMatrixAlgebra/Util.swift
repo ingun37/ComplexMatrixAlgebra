@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+import NumberKit
 extension Collection {
     func comb2() -> [(Element, Element)] {
         guard let h = first else { return [] }
@@ -120,3 +120,40 @@ struct Dimension:Hashable {
 //        return .Number(ComplexNumber(i: Real.zero, real: Real.zero))
 //    }
 //}
+
+
+extension Int {
+    var real: RealNumber {
+        return .N(self)
+    }
+    func on(_ deno:Int)-> Rational<Int> {
+        return Rational(self, deno)
+    }
+    func complex(i:Int) -> ComplexNumber {
+        return ComplexNumber(r: real.f, i: i.real.f)
+    }
+}
+extension FieldSet{
+    var f:Field<Self>  {
+        return .Number(self)
+    }
+}
+extension Double {
+    var real: RealNumber {
+        return (RealNumber.R(self))
+    }
+}
+extension Rational where T == Int {
+    var real: RealNumber {
+        return (.Q(self))
+    }
+    func complex(i:Rational) -> ComplexNumber {
+        return (ComplexNumber(r: real.f, i: i.real.f))
+    }
+}
+extension String {
+    var rvar: Real {
+        return .Var(self)
+    }
+}
+

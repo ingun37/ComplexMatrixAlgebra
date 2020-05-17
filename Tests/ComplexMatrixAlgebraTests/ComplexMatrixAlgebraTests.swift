@@ -23,16 +23,16 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let _x = -x
         let xy = "x".rvar - "y".rvar
         let xyxy = xy * xy
-        let i1 = 2.real + "x".rvar
-        let bbb = 2.real + 1.real
-        let hhh = Complex.Number(ComplexNumber(r: 4.real, i: "x".rvar))
-        let uc = "x".rvar + 1.real
-        let cu = 1.real + "x".rvar
-        let auhs = 3.complex(i: 4)
+        let i1 = 2.real.f + "x".rvar
+        let bbb = 2.real.f + 1.real.f
+        let hhh = Complex.Number(ComplexNumber(r: 4.real.f, i: "x".rvar))
+        let uc = "x".rvar + 1.real.f
+        let cu = 1.real.f + "x".rvar
+        let auhs = 3.complex(i: 4).f
         let ggg = Complex.Number(ComplexNumber(r: "a_1".rvar, i: "b_1".rvar))
         let hch = Complex.Number(ComplexNumber(r: "a_2".rvar, i: "b_2".rvar))
         
-        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4)), .R((uc^2.real) * (cu^2.real)),
+        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)),
                              .C(~auhs), .C(ggg*hch)]
         
         let tex = samples.map { (expression) in
@@ -53,9 +53,9 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         NSWorkspace.shared.open(URL(fileURLWithPath: "preview.html"))
     }
     func testExample() {
-        let r1 = 1.real
-        let r0 = 0.real
-        let r2 = 2.real
+        let r1 = 1.real.f
+        let r0 = 0.real.f
+        let r2 = 2.real.f
         
         let r_1 = (-1).real
         
@@ -64,29 +64,29 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         // results.
         XCTAssertEqual(ComplexMatrixAlgebra().text, "Hello, World!")
         
-        expect((3.real + -3.real).eval()).to(equal(0.real))
-        expect((2.real * 4.real).eval()).to(equal(8.real))
-        expect((2.real * 0.5.real).eval()).to(equal(1.real))
+        expect((3.real.f + -3.real.f).eval()).to(equal(0.real.f))
+        expect((2.real.f * 4.real.f).eval()).to(equal(8.real.f))
+        expect((2.real.f * 0.5.real.f).eval()).to(equal(1.real.f))
         // 1/2 * 2 = 1
-        expect((Rational(1,2).real * 2.real).eval()).to(equal(1.real))
+        expect((Rational(1,2).real.f * 2.real.f).eval()).to(equal(1.real.f))
         // 1 - 2 = -1
-        expect((1.real - 2.real).eval()).to(equal((-1).real))
-        expect(("x".rvar + 0.real).eval()).to(equal("x".rvar))
+        expect((1.real.f - 2.real.f).eval()).to(equal((-1).real.f))
+        expect(("x".rvar + 0.real.f).eval()).to(equal("x".rvar))
             
         /**
          Terms are distributed otherwise compiling won't end.
          */
         do {
-            let x = 1.real + "x".rvar
-            expect((x + 1.real).eval()).to(equal(2.real + "x".rvar))
+            let x = 1.real.f + "x".rvar
+            expect((x + 1.real.f).eval()).to(equal(2.real.f + "x".rvar))
         }
         
-        expect((4.real / (-2).real).eval()).to(equal((-2).real))
+        expect((4.real.f / (-2).real.f).eval()).to(equal((-2).real.f))
             
         do {
-            let x = (-3.real * "x".rvar)
-            let y = (x * (-4).real)
-            expect((y * "y".rvar).eval()).to(equal(12.real * "x".rvar * "y".rvar))
+            let x = (-3.real.f * "x".rvar)
+            let y = (x * (-4).real.f)
+            expect((y * "y".rvar).eval()).to(equal(12.real.f * "x".rvar * "y".rvar))
         }
         
         expect((4.complex(i: 3)/3.complex(i: 4)).eval()).to(equal(24.on(25).complex(i: (-7).on(25))))
@@ -101,10 +101,10 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         expect(RealNumber.N(2)^2).to(equal(RealNumber.N(4)))
         expect(RealNumber.N(2)^(-2)).to(equal(RealNumber.Q(1.on(4))))
         
-        let uc = "x".rvar + 1.real
-        let cu = 1.real + "x".rvar
-        let aoeu = (uc^2.real) * (cu^2.real)
-        expect(aoeu.eval()).to(equal(uc^(4.real)))
+        let uc = "x".rvar + 1.real.f
+        let cu = 1.real.f + "x".rvar
+        let aoeu = (uc^2.real.f) * (cu^2.real.f)
+        expect(aoeu.eval()).to(equal(uc^(4.real.f)))
         let auhs = 3.complex(i: 4)
         expect((~auhs).eval()).to(equal(3.on(25).complex(i: (-4).on(25))))
 //
@@ -142,33 +142,3 @@ extension Collection where Element:Collection, Element.Element == (Int, Int){
 //        return Matrix.a(Elements(e: map({$0.complexes})))
 //    }
 }
-extension Int {
-    var real: Real {
-        return Real.Number(RealNumber.N(self))
-    }
-    func on(_ deno:Int)-> Rational<Int> {
-        return Rational(self, deno)
-    }
-    func complex(i:Int) -> Complex {
-        return Complex.Number(ComplexNumber(r: real, i: i.real))
-    }
-}
-extension Double {
-    var real: Real {
-        return Real.Number(RealNumber.R(self))
-    }
-}
-extension Rational where T == Int {
-    var real: Real {
-        return Real.Number(.Q(self))
-    }
-    func complex(i:Rational) -> Complex {
-        return .Number(ComplexNumber(r: real, i: i.real))
-    }
-}
-extension String {
-    var rvar: Real {
-        return .Var(self)
-    }
-}
-
