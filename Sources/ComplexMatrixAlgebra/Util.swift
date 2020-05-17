@@ -162,7 +162,7 @@ extension Rational where T == Int {
     }
 }
 extension String {
-    func f<F:_Field>() -> F {
+    func f<F:Field>() -> F {
         return F(op: .Var(self))
     }
     var rvar: Real {

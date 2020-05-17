@@ -107,7 +107,7 @@ enum RealNumber: Equatable, FieldSet {
 }
 
 //typealias Real = Field<RealNumber>
-struct Real:_Field {
+struct Real:Field {
     
     let op: FieldOperators<Real, RealNumber>
     

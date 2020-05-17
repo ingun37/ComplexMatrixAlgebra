@@ -80,7 +80,7 @@ struct ComplexNumber: FieldSet {
     
 }
 
-struct Complex:_Field {
+struct Complex:Field {
     
     let op: FieldOperators<Complex, ComplexNumber>
     
