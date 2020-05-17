@@ -175,6 +175,8 @@ struct FAdd<Num:FieldSet>:FieldBinary {
             return r
         } else if case let (.Number(l), .Number(r)) = (l,r) {
             return .Number(l + r)
+        } else if (-l).eval().same(r) {
+            return A.zero
         } else {
             return nil
         }
