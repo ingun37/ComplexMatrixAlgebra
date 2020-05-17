@@ -18,7 +18,9 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         return "$$\n" + genLaTex(x) + "=" + genLaTex(x.eval()) + "\n$$"
     }
     func testOutput() {
+        
         let x = "x".rvar
+        let _x = -x
         let xy = "x".rvar - "y".rvar
         let xyxy = xy * xy
         let i1 = 2.real + "x".rvar
@@ -30,7 +32,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let ggg = Complex.Number(ComplexNumber(r: "a_1".rvar, i: "b_1".rvar))
         let hch = Complex.Number(ComplexNumber(r: "a_2".rvar, i: "b_2".rvar))
         
-        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4)), .R((uc^2.real) * (cu^2.real)),
+        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4)), .R((uc^2.real) * (cu^2.real)),
                              .C(~auhs), .C(ggg*hch)]
         
         let tex = samples.map { (expression) in

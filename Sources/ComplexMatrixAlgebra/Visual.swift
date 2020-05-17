@@ -6,6 +6,11 @@
 //
 
 import Foundation
+extension String {
+    var paren: String {
+        return "\\left( \(self) \\right)"
+    }
+}
 func genLaTex(r:Real)-> String? {
     switch r {
     case let .Number(num):
@@ -42,6 +47,14 @@ func genLaTex(c:Complex)-> String? {
     }
     return nil
 }
+func unNegateMul<T>(_ lr:FMul<T>) -> (Bool, List<Field<T>>) {
+    let flat = lr.flat()
+    let minus1 = (-Field<T>.id).eval()
+    let abs = flat.all.filter { $0 != minus1 }
+    let negates = flat.all.count - abs.count
+    let unNegated = abs.decompose() ?? List(Field<T>.id, [])
+    return (negates%2 == 0, unNegated)
+}
 func genLaTex<T>(_ x:Field<T>) -> String {
     if let x = x as? Real, let tex = genLaTex(r: x) {
         return tex
@@ -51,22 +64,45 @@ func genLaTex<T>(_ x:Field<T>) -> String {
     }
     switch x {
     case let .Add(lr):
-        return "\(wrappedLatex(lr.l)) + \(wrappedLatex(lr.r))"
-    case let .Mul(lr):
         let flat = lr.flat()
-        let minus1 = (-Field<T>.id).eval()
-        let abs = flat.all.filter { $0 != minus1 }
-        let negates = flat.all.count - abs.count
-        if negates > 0 {
-            let unNegated = (abs.decompose() ?? List(Field<T>.id, [])).reduce(*)
-            let tex = wrappedLatex(unNegated)
-            return (negates%2 == 0 ? "" : "-") + tex
+        let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
+            switch x {
+            case let .Negate(v):
+                return str + " - \\left( \(genLaTex(v)) \\right)"
+            case let .Mul(v):
+                let (sign, unNeg) = unNegateMul(v)
+                return str + (sign ? " + " : " - ") + genLaTex(unNeg.reduce(*))
+            default:
+                return str + " + " + genLaTex(x)
+            }
         }
-        return "\(wrappedLatex(lr.l)) \(wrappedLatex(lr.r))"
+        return tex
+    case let .Mul(lr):
+        let (sign, unNegated) = unNegateMul(lr)
+        let signTex = sign ? "" : "-"
+        let headTex:String
+        
+        switch unNegated.head {
+        case .Var(_): headTex = genLaTex(unNegated.head)
+        case .Power(_,_): headTex = genLaTex(unNegated.head)
+        default:
+            headTex = genLaTex(unNegated.head).paren
+        }
+        
+        let tailTex = unNegated.tail.map { (f) -> String in
+            let tex = genLaTex(f)
+            switch f {
+            case .Var(_): return tex
+            case .Power(_, _): return tex
+            default:
+                return "\\left(\(tex)\\right)"
+            }
+        }.joined(separator: " ")
+        return "\(signTex) \(headTex) \(tailTex)"
     case let .Quotient(l, r):
         return "\\frac{\(genLaTex(l))}{\(genLaTex(r))}"
     case let .Subtract(l, r):
-        return "\(wrappedLatex(l)) - \(wrappedLatex(r))"
+        return "\(genLaTex(l)) - \(genLaTex(r))"
     case let .Negate(x):
         return "-{\(wrappedLatex(x))}"
     case let .Var(v):
