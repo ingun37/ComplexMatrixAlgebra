@@ -8,6 +8,10 @@
 import Foundation
 
 struct ComplexNumber: FieldSet {
+    static prefix func * (lhs: ComplexNumber) -> ComplexNumber {
+        return ComplexNumber(r: lhs.r, i: -lhs.i).eval()
+    }
+    
     static func ^ (lhs: ComplexNumber, rhs: ComplexNumber) -> ComplexNumber? {
         if rhs.i == .zero {
             if case let .Number(.N(intExp)) = rhs.r {
@@ -38,12 +42,9 @@ struct ComplexNumber: FieldSet {
     
     
     static prefix func ~ (lhs: ComplexNumber) -> ComplexNumber {
-        return (lhs.conjugate / (lhs * lhs.conjugate)).eval()
+        return (*lhs / (lhs * *lhs)).eval()
     }
     
-    var conjugate:ComplexNumber {
-        return ComplexNumber(r: r, i: -i).eval()
-    }
     static prefix func - (lhs: ComplexNumber) -> ComplexNumber {
         return ComplexNumber(r: -lhs.r, i: -lhs.i).eval()
     }

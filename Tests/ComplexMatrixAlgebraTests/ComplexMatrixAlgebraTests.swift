@@ -31,9 +31,9 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let auhs = 3.complex(i: 4).f
         let ggg = Complex.Number(ComplexNumber(r: "a_1".rvar, i: "b_1".rvar))
         let hch = Complex.Number(ComplexNumber(r: "a_2".rvar, i: "b_2".rvar))
-        
+        let z = 3.complex(i: 4).f
         let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)),
-                             .C(~auhs), .C(ggg*hch)]
+                             .C(~auhs), .C(ggg*hch), .C(z * *z)]
         
         let tex = samples.map { (expression) in
             switch expression {
@@ -107,6 +107,9 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         expect(aoeu.eval()).to(equal(uc^(4.real.f)))
         let auhs = 3.complex(i: 4).f
         expect((~auhs).eval()).to(equal(3.on(25).complex(i: (-4).on(25)).f))
+        
+        let zz = 3.complex(i: 4).f
+        expect((zz * *zz).eval()).to(equal(25.complex(i: 0).f))
 //
 //        let m22_1 = Matrix.a(Elements(e: [[c1, c0],[c0, c1]]))
 //        let m22_2 = Matrix.a(Elements(e: [[c2, c0],[c0, c2]]))

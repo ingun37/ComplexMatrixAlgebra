@@ -18,6 +18,7 @@ protocol FieldSet: Equatable {
     static func / (lhs: Self, rhs: Self) -> Self
     static prefix func - (lhs: Self) -> Self
     static prefix func ~ (lhs: Self) -> Self
+    static prefix func * (lhs: Self) -> Self
     static func ^ (lhs: Self, rhs: Self) -> Self?
 }
 
@@ -35,6 +36,7 @@ extension FieldSet {
         }
     }
 }
+prefix operator *
 indirect enum Field<Num>: Algebra where Num:FieldSet{
     func same(_ to: Field<Num>) -> Bool {
         switch (self, to) {
@@ -57,8 +59,11 @@ indirect enum Field<Num>: Algebra where Num:FieldSet{
     case Var(String)
     case Inverse(Field)
     case Power(base:Field, exponent:Field)
+    case Conjugate(Field)
     static prefix func ~ (lhs: Field<Num>) -> Field<Num> { return .Inverse(lhs) }
     static prefix func - (lhs: Field<Num>) -> Field<Num> { return .Negate(lhs) }
+    static prefix func * (lhs: Field<Num>) -> Field<Num> { return .Conjugate(lhs) }
+
     static func - (lhs: Field<Num>, rhs: Field<Num>) -> Field<Num> { return .Subtract(lhs, rhs) }
     static func + (lhs: Field<Num>, rhs: Field<Num>) -> Field<Num> { return .Add(FAdd(lhs, rhs)) }
     static var zero: Field<Num> { return .Number(Num.zero)}
@@ -114,6 +119,14 @@ indirect enum Field<Num>: Algebra where Num:FieldSet{
                 }
             }
             return .Power(base: base, exponent: exponent)
+        case let .Conjugate(xx):
+            let x = xx.eval()
+            switch x {
+            case let .Number(n):
+                return .Number(*n)
+            default:
+                return .Conjugate(x)
+            }
         }
     }
 

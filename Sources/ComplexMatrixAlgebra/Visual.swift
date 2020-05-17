@@ -103,6 +103,8 @@ func genLaTex<T>(_ x:Field<T>) -> String {
         let expTex = genLaTex(exponent)
         let baseTex = wrappedLatex(base)
         return "{\(baseTex)}^{\(expTex)}"
+    case let .Conjugate(xx):
+        return "\\overline{ \(genLaTex(xx)) }"
     default:
         return "error"
     }

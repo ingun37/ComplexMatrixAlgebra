@@ -9,6 +9,10 @@ import Foundation
 import NumberKit
 
 enum RealNumber: Equatable, FieldSet {
+    static prefix func * (lhs: RealNumber) -> RealNumber {
+        return lhs
+    }
+    
     static func ^ (lhs: RealNumber, rhs: RealNumber) -> RealNumber? {
         if case let .N(intExp) = rhs {
             return lhs^intExp
