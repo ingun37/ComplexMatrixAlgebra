@@ -22,17 +22,6 @@ func genLaTex(r:Real)-> String? {
         case let .R(r):
             return r.description
         }
-    case let .Mul(lr):
-        if case let (.Number(.N(ln)),r) = (lr.l,lr.r) {
-            if ln == -1 {
-                return "-\(wrappedLatex(r))"
-            }
-        }
-        if case let (l,.Number(.N(rn))) = (lr.l,lr.r) {
-            if rn == -1 {
-                return "-\(wrappedLatex(l))"
-            }
-        }
     default:
         return nil
     }
@@ -49,13 +38,14 @@ func genLaTex(c:Complex)-> String? {
 }
 func unNegateMul<T>(_ lr:FMul<T>) -> (Bool, List<Field<T>>) {
     let flat = lr.flat()
-    let minus1 = (-Field<T>.id).eval()
+    let minus1 = Field<T>._id
     let abs = flat.all.filter { $0 != minus1 }
     let negates = flat.all.count - abs.count
     let unNegated = abs.decompose() ?? List(Field<T>.id, [])
     return (negates%2 == 0, unNegated)
 }
 func genLaTex<T>(_ x:Field<T>) -> String {
+    typealias F = Field<T>
     if let x = x as? Real, let tex = genLaTex(r: x) {
         return tex
     }
@@ -102,32 +92,32 @@ func genLaTex<T>(_ x:Field<T>) -> String {
     case let .Quotient(l, r):
         return "\\frac{\(genLaTex(l))}{\(genLaTex(r))}"
     case let .Subtract(l, r):
-        return "\(genLaTex(l)) - \(genLaTex(r))"
+        return genLaTex(.Add(FAdd<T>(l, F._id * r)))
     case let .Negate(x):
-        return "-{\(wrappedLatex(x))}"
+        return genLaTex(F._id * x)
     case let .Var(v):
         return v
     case let .Inverse(x):
         return "{\(wrappedLatex(x))}^{-1}"
     case .Power(base: let base, exponent: let exponent):
-        return "{\(wrappedLatex(base))}^{\(genLaTex(exponent))}"
+        let expTex = genLaTex(exponent)
+        let baseTex = wrappedLatex(base)
+        return "{\(baseTex)}^{\(expTex)}"
     default:
         return "error"
     }
 }
 
 func wrappedLatex<T>(_ x:Field<T>)-> String {
+    let tex = genLaTex(x)
     switch x {
-    case .Number(_):
-        return genLaTex(x)
-    case .Var(_):
-        return genLaTex(x)
-    default:
-        let tex = genLaTex(x)
-        if !tex.contains(" \\times ") && !tex.contains("+") && !tex.contains("-") {
+    case let .Number(n):
+        if n is RealNumber {
             return tex
-        } else {
-            return "\\left({\(tex)}\\right)"
         }
+    case .Var(_):        return tex
+    case .Power(base: _, exponent: _):        return tex
+    default: break
     }
+    return tex.paren
 }

@@ -63,6 +63,7 @@ indirect enum Field<Num>: Algebra where Num:FieldSet{
     static func + (lhs: Field<Num>, rhs: Field<Num>) -> Field<Num> { return .Add(FAdd(lhs, rhs)) }
     static var zero: Field<Num> { return .Number(Num.zero)}
     static var id: Field<Num>{ return .Number(Num.id)}
+    static var _id: Field<Num>{ return .Number(-Num.id)}
     static func / (lhs: Field<Num>, rhs: Field<Num>) -> Field<Num> { return .Quotient(lhs, rhs) }
     static func * (lhs: Field<Num>, rhs: Field<Num>) -> Field<Num> { return .Mul(FMul(lhs, rhs)) }
     static func ^ (lhs: Field<Num>, rhs: Field<Num>) -> Field<Num> { return .Power(base: lhs, exponent: rhs) }
