@@ -133,11 +133,21 @@ extension Int {
         return ComplexNumber(r: real.f, i: i.real.f)
     }
 }
-extension FieldSet{
-    var f:Field<Self>  {
-        return .Number(self)
+extension RealNumber {
+    var f: Real {
+        return Real(op: .Number(self))
     }
 }
+extension ComplexNumber {
+    var f: Complex {
+        return Complex(op: .Number(self))
+    }
+}
+//extension FieldSet{
+//    func f<F:_Field>() -> F where F.Num == Self {
+//        return F(op: .Number(self))
+//    }
+//}
 extension Double {
     var real: RealNumber {
         return (RealNumber.R(self))
@@ -152,8 +162,11 @@ extension Rational where T == Int {
     }
 }
 extension String {
+    func f<F:_Field>() -> F {
+        return F(op: .Var(self))
+    }
     var rvar: Real {
-        return .Var(self)
+        return f()
     }
 }
 

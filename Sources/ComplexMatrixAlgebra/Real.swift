@@ -106,4 +106,14 @@ enum RealNumber: Equatable, FieldSet {
     case R(Double)
 }
 
-typealias Real = Field<RealNumber>
+//typealias Real = Field<RealNumber>
+struct Real:_Field {
+    
+    let op: FieldOperators<Real, RealNumber>
+    
+    typealias Num = RealNumber
+    
+    typealias OperatorSum = FieldOperators<Real, RealNumber>
+    
+    
+}
