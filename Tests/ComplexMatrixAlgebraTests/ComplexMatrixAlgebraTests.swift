@@ -89,14 +89,14 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
             expect((y * "y".rvar).eval()).to(equal(12.real.f * "x".rvar * "y".rvar))
         }
         
-        expect((4.complex(i: 3)/3.complex(i: 4)).eval()).to(equal(24.on(25).complex(i: (-7).on(25))))
+        expect((4.complex(i: 3).f/3.complex(i: 4).f).eval()).to(equal(24.on(25).complex(i: (-7).on(25)).f))
         expect(
-            (~(3.complex(i: 4))).eval()
+            (~(3.complex(i: 4).f)).eval()
         ).to(equal(
-            3.on(25).complex(i: -4.on(25)).eval()
+            3.on(25).complex(i: -4.on(25)).f.eval()
         ))
         
-        expect((2.complex(i: 3) * 3.complex(i: 4)).eval()).to(equal((-6).complex(i: 17)))
+        expect((2.complex(i: 3).f * 3.complex(i: 4).f).eval()).to(equal((-6).complex(i: 17).f))
         
         expect(RealNumber.N(2)^2).to(equal(RealNumber.N(4)))
         expect(RealNumber.N(2)^(-2)).to(equal(RealNumber.Q(1.on(4))))
@@ -105,8 +105,8 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let cu = 1.real.f + "x".rvar
         let aoeu = (uc^2.real.f) * (cu^2.real.f)
         expect(aoeu.eval()).to(equal(uc^(4.real.f)))
-        let auhs = 3.complex(i: 4)
-        expect((~auhs).eval()).to(equal(3.on(25).complex(i: (-4).on(25))))
+        let auhs = 3.complex(i: 4).f
+        expect((~auhs).eval()).to(equal(3.on(25).complex(i: (-4).on(25)).f))
 //
 //        let m22_1 = Matrix.a(Elements(e: [[c1, c0],[c0, c1]]))
 //        let m22_2 = Matrix.a(Elements(e: [[c2, c0],[c0, c2]]))
