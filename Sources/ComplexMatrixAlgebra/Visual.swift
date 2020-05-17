@@ -6,12 +6,12 @@
 //
 
 import Foundation
-extension String {
+private extension String {
     var paren: String {
         return "\\left( \(self) \\right)"
     }
 }
-func genLaTex(r:Real)-> String? {
+private func genLaTex(r:Real)-> String? {
     switch r {
     case let .Number(num):
         switch num {
@@ -27,7 +27,7 @@ func genLaTex(r:Real)-> String? {
     }
     return nil
 }
-func genLaTex(c:Complex)-> String? {
+private func genLaTex(c:Complex)-> String? {
     switch c {
     case let .Number(num):
         return "\(wrappedLatex(num.r)) + \(wrappedLatex(num.i)) i"
@@ -36,7 +36,7 @@ func genLaTex(c:Complex)-> String? {
     }
     return nil
 }
-func unNegateMul<T>(_ lr:FMul<T>) -> (Bool, List<Field<T>>) {
+private func unNegateMul<T>(_ lr:FMul<T>) -> (Bool, List<Field<T>>) {
     let flat = lr.flat()
     let minus1 = Field<T>._id
     let abs = flat.all.filter { $0 != minus1 }
@@ -108,7 +108,7 @@ func genLaTex<T>(_ x:Field<T>) -> String {
     }
 }
 
-func wrappedLatex<T>(_ x:Field<T>)-> String {
+private func wrappedLatex<T>(_ x:Field<T>)-> String {
     let tex = genLaTex(x)
     switch x {
     case let .Number(n):
