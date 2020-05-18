@@ -36,8 +36,8 @@ private func genLaTex(c:Complex)-> String? {
     }
     return nil
 }
-private func unNegateMul<A>(_ lr:FMul<A>) -> (Bool, List<A>) {
-    let flat = lr.flat()
+private func unNegateMul<A:Field>(_ l:A, _ r:A) -> (Bool, List<A>) {
+    let flat = flatMul(l) + flatMul(r)
     let minus1 = A._id
     let abs = flat.all.filter { $0 != minus1 }
     let negates = flat.all.count - abs.count
@@ -53,14 +53,13 @@ func genLaTex<F:Field>(_ x:F) -> String {
     }
     switch x.op.op {
     case let .Add(l,r):
-        let lr = FAdd(l, r)
-        let flat = lr.flat()
+        let flat = flatAdd(x)
         let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
             switch x.op.op {
             case let .Negate(v):
                 return str + " - \\left( \(genLaTex(v)) \\right)"
             case let .Mul(l,r):
-                let (sign, unNeg) = unNegateMul(FMul(l, r))
+                let (sign, unNeg) = unNegateMul(l, r)
                 return str + (sign ? " + " : " - ") + genLaTex(unNeg.reduce(*))
             default:
                 return str + " + " + genLaTex(x)
@@ -68,8 +67,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
         }
         return tex
     case let .Mul(l,r):
-        let lr = FMul(l, r)
-        let (sign, unNegated) = unNegateMul(lr)
+        let (sign, unNegated) = unNegateMul(l, r)
         let signTex = sign ? "" : "-"
         let headTex:String
         

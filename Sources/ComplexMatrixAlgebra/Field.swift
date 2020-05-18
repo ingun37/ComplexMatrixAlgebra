@@ -68,14 +68,10 @@ prefix operator *
 extension Field {
     func sameField(_ to: Self) -> Bool {
         switch (op.op, to.op.op) {
-        case let (.Add(xl,xr), .Add(yl,yr)):
-            let x = FAdd(xl, xr)
-            let y = FAdd(yl, yr)
-            return commuteSame(x.flat().all, y.flat().all)
+        case let (.Add(_,_), .Add(_,_)):
+            return commuteSame(flatAdd(self).all, flatAdd(to).all)
         case let (.Mul(xl,xr), .Mul(yl,yr)):
-            let x = FMul(xl, xr)
-            let y = FMul(yl, yr)
-            return commuteSame(x.flat().all, y.flat().all)
+            return commuteSame(flatMul(self).all, flatMul(to).all)
         default:
             return self == to
         }
@@ -97,9 +93,9 @@ extension Field {
         switch op.op {
         case let .Number(number): return OpSum.O.Number(number).f
         case let .Add(x,y):
-            return FAdd(x,y).eval()
+            return operateFieldAdd(x.eval(), y.eval())
         case let .Mul(x,y):
-            return FMul(x,y).eval()
+            return operateFieldMul(x.eval(), y.eval())
         case let .Quotient(l, r):
             return (l * ~r).eval()
         case let .Subtract(l, r):
@@ -161,104 +157,3 @@ protocol ACBinary:Equatable {
     static func operation(lhs:A, rhs:A)-> A
     init(_ l:A, _ r:A)
 }
-
-extension ACBinary {
-    func flat() -> List<A> {
-        let lll = Self.match(l)?.flat() ?? List(l, [])
-        let rrr = Self.match(r)?.flat() ?? List(r, [])
-        return lll + rrr
-    }
-    func eval() -> A {
-        let l = self.l.eval()
-        let r = self.r.eval()
-        let flatten = Self(l, r).flat()
-        let best = edgeMerge(_objs: flatten) { (l, r) in
-            if let symmetric = Self.tryCollapse(l, r) {
-                return symmetric
-            } else if let symmetric = Self.tryCollapse(r, l) {
-                return symmetric
-            } else {
-                return nil
-            }
-        }
-        return best.tail.reduce(best.head, Self.operation)
-    }
-}
-
-struct FAdd<A:Field>:ACBinary {
-    static func operation(lhs: A, rhs: A) -> A {
-        return lhs + rhs
-    }
-    
-    static func tryCollapse(_ l: A, _ r: A) -> A? {
-        if l == A.zero {
-            return r
-        } else if case let (.Number(l), .Number(r)) = (l.op.op,r.op.op) {
-            return A.OpSum.O.Number(l + r).f
-        } else if (-l).eval().sameField(r) {
-            return A.zero
-        } else {
-            return nil
-        }
-    }
-    
-    static func match(_ a: A) -> FAdd? {
-        if case let A.OpSum.O.Add(xl,xr) = a.op.op {
-            return FAdd(xl,xr)
-        } else {
-            return nil
-        }
-    }
-    
-    let l: A
-    let r: A
-    init(_ l:A, _ r:A) {
-        self.l = l
-        self.r = r
-    }
-}
-struct FMul<A:Field>:ACBinary {
-    static func operation(lhs: A, rhs: A) -> A {
-        return lhs * rhs
-    }
-    
-    typealias A = A
-    static func tryCollapse(_ l: A, _ r: A) -> A? {
-        if case let .Add(x, y) = l.op.op {
-            let xr = x * r
-            let yr = y * r
-            return (xr + yr).eval()
-        } else if l == A.id {
-            return r
-        } else if l == A.zero {
-            return A.zero
-        } else if case let (.Number(ln), .Number(rn)) = (l.op.op,r.op.op) {
-            return A.OpSum.O.Number(ln * rn).f.eval()
-        }
-        switch (l.op.op,r.op.op) {
-        case (.Power(base: let lbase, exponent: let lexp), .Power(base: let rbase, exponent: let rexp)):
-            if lbase.sameField(rbase) {
-                return A.OpSum.O.Power(base: lbase, exponent: lexp + rexp).f.eval()
-            }
-        default:
-            return nil
-        }
-        return nil
-    }
-    
-    static func match(_ a: A) -> FMul? {
-        if case let A.OpSum.O.Mul(xl,xr) = a.op.op {
-            return FMul(xl, xr)
-        } else {
-            return nil
-        }
-    }
-    
-    let l: A
-    let r: A
-    init(_ l:A, _ r:A) {
-        self.l = l
-        self.r = r
-    }
-}
-

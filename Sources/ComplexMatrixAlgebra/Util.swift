@@ -172,3 +172,81 @@ extension String {
     }
 }
 
+/**
+ associative & commutative
+ */
+func flatAlgebra<A>(_ x:A, flatter:@escaping (A)->[A])->List<A> {
+    let kx = flatter(x)
+    if let y = kx.decompose() {
+        return y.fmap({flatAlgebra($0, flatter: flatter)}).reduce(+)
+    } else {
+        return List(x, [])
+    }
+}
+func flatAdd<A:Field>(_ x:A)-> List<A> {
+    return flatAlgebra(x) { (x) -> [A] in
+        if case let .Add(l,r) = x.op.op {
+            return [l,r]
+        } else {
+            return []
+        }
+    }
+}
+func flatMul<A:Field>(_ x:A)-> List<A> {
+    return flatAlgebra(x) { (x) -> [A] in
+        if case let .Mul(l,r) = x.op.op {
+            return [l,r]
+        } else {
+            return []
+        }
+    }
+}
+func operateCommutativeBinary<A>(_ trial:(A, A)->A?, _ xs:List<A> ) -> List<A> {
+    return edgeMerge(_objs: xs) { (l, r) in
+        if let symmetric = trial(l, r) {
+            return symmetric
+        } else if let symmetric = trial(r, l) {
+            return symmetric
+        } else {
+            return nil
+        }
+    }
+}
+func operateFieldAdd<A:Field>(_ x:A, _ y:A)-> A {
+    return operateCommutativeBinary({ (_ l: A, _ r: A) -> A? in
+        if l == A.zero {
+            return r
+        } else if case let (.Number(l), .Number(r)) = (l.op.op,r.op.op) {
+            return A.OpSum.O.Number(l + r).f
+        } else if (-l).eval().sameField(r) {
+            return A.zero
+        } else {
+            return nil
+        }
+    }, flatAdd(x) + flatAdd(y)).reduce(+)
+}
+
+func operateFieldMul<A:Field>(_ x:A, _ y:A)-> A {
+    return operateCommutativeBinary({ (_ l: A, _ r: A) -> A? in
+        if case let .Add(x, y) = l.op.op {
+            let xr = x * r
+            let yr = y * r
+            return (xr + yr).eval()
+        } else if l == A.id {
+            return r
+        } else if l == A.zero {
+            return A.zero
+        } else if case let (.Number(ln), .Number(rn)) = (l.op.op,r.op.op) {
+            return A.OpSum.O.Number(ln * rn).f.eval()
+        }
+        switch (l.op.op,r.op.op) {
+        case (.Power(base: let lbase, exponent: let lexp), .Power(base: let rbase, exponent: let rexp)):
+            if lbase.sameField(rbase) {
+                return A.OpSum.O.Power(base: lbase, exponent: lexp + rexp).f.eval()
+            }
+        default:
+            return nil
+        }
+        return nil
+    }, flatMul(x) + flatMul(y)).reduce(*)
+}

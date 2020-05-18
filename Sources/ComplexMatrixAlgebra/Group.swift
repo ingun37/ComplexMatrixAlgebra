@@ -16,6 +16,8 @@ protocol AbelianAddGroupSet:Underlying {
      */
     static func - (lhs: Self, rhs: Self) -> Self
 }
+
+
 //enum AbelianAddOperators<F,Num> {
 //    case Number(Num)
 //    case Add(F,F)

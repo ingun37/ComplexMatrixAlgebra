@@ -9,6 +9,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
     func testUtil() {
         print([1,2,3,4].comb2())
         print(Array((-3)..<0))
+        print(operateFieldAdd(3.real.f + 4.real.f + 5.real.f, 9.real.f))
     }
     enum Sum {
         case C(Complex)
