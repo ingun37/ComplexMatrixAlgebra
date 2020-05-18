@@ -70,7 +70,7 @@ enum RealNumber: Equatable, FieldSet {
     
     static var id: RealNumber {return .N(1)}
     
-    func eval() -> RealNumber {
+    private func eval() -> RealNumber {
         switch self {
         case .N(_): return self
         case let .Q(q):

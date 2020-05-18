@@ -22,9 +22,9 @@ extension FieldSet {
             return id
         } else if rhs < 0 {
             let inv = ~lhs
-            return (rhs+1..<0).map({_ in inv}).reduce(inv, *).eval()
+            return (rhs+1..<0).map({_ in inv}).reduce(inv, *)
         } else {
-            return (1..<rhs).map({_ in lhs}).reduce(lhs, *).eval()
+            return (1..<rhs).map({_ in lhs}).reduce(lhs, *)
         }
     }
 }
@@ -95,7 +95,7 @@ extension Field {
     
     func evalField() -> Self {
         switch op.op {
-        case let .Number(number): return OpSum.O.Number(number.eval()).f
+        case let .Number(number): return OpSum.O.Number(number).f
         case let .Add(x,y):
             return FAdd(x,y).eval()
         case let .Mul(x,y):

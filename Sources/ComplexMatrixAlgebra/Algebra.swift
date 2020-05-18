@@ -22,7 +22,6 @@ protocol Algebra: Equatable {
 }
 
 protocol Underlying:Equatable {
-    func eval() -> Self
 }
 func commuteSame<C:Collection, T:Algebra>(_ xs:C, _ ys:C) -> Bool where C.Element == T, C.Index == Int{
     guard xs.count == ys.count else { return false }
