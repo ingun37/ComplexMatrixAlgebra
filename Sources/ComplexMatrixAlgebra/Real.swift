@@ -112,6 +112,14 @@ struct RealOperatorSum:FieldOpSum {
 }
 //typealias Real = Field<RealNumber>
 struct Real:Field {
+    func same(_ to: Real) -> Bool {
+        return sameField(to)
+    }
+    
+    func eval() -> Real {
+        return evalField()
+    }
+    
     let op: RealOperatorSum
     typealias OpSum = RealOperatorSum
     

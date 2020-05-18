@@ -66,7 +66,7 @@ extension FieldOperators where F:Field, Num == F.OpSum.Num {
 prefix operator *
 
 extension Field {
-    func same(_ to: Self) -> Bool {
+    func sameField(_ to: Self) -> Bool {
         switch (op.op, to.op.op) {
         case let (.Add(xl,xr), .Add(yl,yr)):
             let x = FAdd(xl, xr)
@@ -93,7 +93,7 @@ extension Field {
     static func * (lhs: Self, rhs: Self) -> Self { return OpSum.O.Mul(lhs, rhs).f }
     static func ^ (lhs: Self, rhs: Self) -> Self { return OpSum.O.Power(base: lhs, exponent: rhs).f }
     
-    func eval() -> Self {
+    func evalField() -> Self {
         switch op.op {
         case let .Number(number): return OpSum.O.Number(number.eval()).f
         case let .Add(x,y):
@@ -195,7 +195,7 @@ struct FAdd<A:Field>:ACBinary {
             return r
         } else if case let (.Number(l), .Number(r)) = (l.op.op,r.op.op) {
             return A.OpSum.O.Number(l + r).f
-        } else if (-l).eval().same(r) {
+        } else if (-l).eval().sameField(r) {
             return A.zero
         } else {
             return nil
@@ -237,7 +237,7 @@ struct FMul<A:Field>:ACBinary {
         }
         switch (l.op.op,r.op.op) {
         case (.Power(base: let lbase, exponent: let lexp), .Power(base: let rbase, exponent: let rexp)):
-            if lbase.same(rbase) {
+            if lbase.sameField(rbase) {
                 return A.OpSum.O.Power(base: lbase, exponent: lexp + rexp).f.eval()
             }
         default:

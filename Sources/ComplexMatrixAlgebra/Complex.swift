@@ -91,6 +91,14 @@ struct ComplexOperatorSum:FieldOpSum {
 }
 
 struct Complex:Field {
+    func eval() -> Complex {
+        return evalField()
+    }
+    
+    func same(_ to: Complex) -> Bool {
+        return sameField(to)
+    }
+    
     
     let op: ComplexOperatorSum
     

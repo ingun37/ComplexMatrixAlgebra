@@ -16,3 +16,19 @@ protocol AbelianAddGroupSet:Underlying {
      */
     static func - (lhs: Self, rhs: Self) -> Self
 }
+enum AbelianAddOperators<F,Num> {
+    case Number(Num)
+    case Add(F,F)
+    case Subtract(F, F)
+    case Negate(F)
+    case Var(String)
+    case Inverse(F)
+}
+protocol AbelianAddOpSum:OperatorSum where A:AbelianAdd, Num:AbelianAddGroupSet {
+    typealias O = AbelianAddOperators<A,Num>
+    init(abelianAddOp:O)
+    var abelianAddOp:O {get}
+}
+protocol AbelianAdd:Algebra where OpSum: AbelianAddOpSum {
+    
+}
