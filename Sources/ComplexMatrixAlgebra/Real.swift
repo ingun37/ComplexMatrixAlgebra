@@ -105,15 +105,14 @@ enum RealNumber: Equatable, FieldSet {
     case Q(Rational<Int>)
     case R(Double)
 }
-
+struct RealOperatorSum:FieldOpSum {
+    let op: O
+    typealias A = Real
+    typealias Num = RealNumber
+}
 //typealias Real = Field<RealNumber>
 struct Real:Field {
-    
-    let op: FieldOperators<Real, RealNumber>
-    
-    typealias Num = RealNumber
-    
-    typealias OperatorSum = FieldOperators<Real, RealNumber>
-    
+    let op: RealOperatorSum
+    typealias OpSum = RealOperatorSum
     
 }

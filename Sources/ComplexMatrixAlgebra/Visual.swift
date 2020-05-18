@@ -12,7 +12,7 @@ private extension String {
     }
 }
 private func genLaTex(r:Real)-> String? {
-    switch r.op {
+    switch r.op.op {
     case let .Number(num):
         switch num {
         case let .N(n):
@@ -28,7 +28,7 @@ private func genLaTex(r:Real)-> String? {
     return nil
 }
 private func genLaTex(c:Complex)-> String? {
-    switch c.op {
+    switch c.op.op {
     case let .Number(num):
         return "\(wrappedLatex(num.r)) + \(wrappedLatex(num.i)) i"
     default:
@@ -51,12 +51,12 @@ func genLaTex<F:Field>(_ x:F) -> String {
     if let x = x as? Complex, let tex = genLaTex(c: x) {
         return tex
     }
-    switch x.op {
+    switch x.op.op {
     case let .Add(l,r):
         let lr = FAdd(l, r)
         let flat = lr.flat()
         let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
-            switch x.op {
+            switch x.op.op {
             case let .Negate(v):
                 return str + " - \\left( \(genLaTex(v)) \\right)"
             case let .Mul(l,r):
@@ -73,7 +73,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
         let signTex = sign ? "" : "-"
         let headTex:String
         
-        switch unNegated.head.op {
+        switch unNegated.head.op.op {
         case .Var(_): headTex = genLaTex(unNegated.head)
         case .Power(_,_): headTex = genLaTex(unNegated.head)
         default:
@@ -82,7 +82,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
         
         let tailTex = unNegated.tail.map { (f) -> String in
             let tex = genLaTex(f)
-            switch f.op {
+            switch f.op.op {
             case .Var(_): return tex
             case .Power(_, _): return tex
             default:
@@ -93,7 +93,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
     case let .Quotient(l, r):
         return "\\frac{\(genLaTex(l))}{\(genLaTex(r))}"
     case let .Subtract(l, r):
-        return genLaTex(F.OperatorSum.Add(l, F._id * r).f)
+        return genLaTex(F.OpSum.O.Add(l, F._id * r).f)
     case let .Negate(x):
         return genLaTex(F._id * x)
     case let .Var(v):
@@ -113,7 +113,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
 
 private func wrappedLatex<A:Field>(_ x:A)-> String {
     let tex = genLaTex(x)
-    switch x.op {
+    switch x.op.op {
     case let .Number(n):
         if n is RealNumber {
             return tex

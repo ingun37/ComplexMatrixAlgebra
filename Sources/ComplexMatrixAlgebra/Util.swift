@@ -135,12 +135,13 @@ extension Int {
 }
 extension RealNumber {
     var f: Real {
-        return Real(op: .Number(self))
+        return Real(op: RealOperatorSum(op: .Number(self)))// Real(op: .Number(self))
     }
 }
 extension ComplexNumber {
     var f: Complex {
-        return Complex(op: .Number(self))
+        return Complex(op: ComplexOperatorSum(op: .Number(self)))
+//        return Complex(op: .Number(self))
     }
 }
 //extension FieldSet{
@@ -163,7 +164,8 @@ extension Rational where T == Int {
 }
 extension String {
     func f<F:Field>() -> F {
-        return F(op: .Var(self))
+        return F(op: F.OpSum(op: .Var(self)))
+//        return F(op: .Var(self))
     }
     var rvar: Real {
         return f()

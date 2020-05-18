@@ -8,15 +8,17 @@
 import Foundation
 import NumberKit
 
+protocol OperatorSum:Equatable {
+    associatedtype A:Algebra
+    associatedtype Num:Underlying
+}
 //TODO: Change once accepted: https://forums.swift.org/t/accepted-se-0280-enum-cases-as-protocol-witnesses/34850
 protocol Algebra: Equatable {
-    associatedtype OperatorSum
+    associatedtype OpSum:OperatorSum where OpSum.A == Self
     func eval() -> Self
     func same(_ to:Self)-> Bool
-    init(op:OperatorSum)
-    var op: OperatorSum {
-        get
-    }
+    init(op:OpSum)
+    var op: OpSum { get }
 }
 
 protocol Underlying:Equatable {

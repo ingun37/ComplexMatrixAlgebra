@@ -14,7 +14,7 @@ struct ComplexNumber: FieldSet {
     
     static func ^ (lhs: ComplexNumber, rhs: ComplexNumber) -> ComplexNumber? {
         if rhs.i == .zero {
-            if case let .Number(.N(intExp)) = rhs.r.op {
+            if case let .Number(.N(intExp)) = rhs.r.op.op {
                 return lhs^intExp
             }
         }
@@ -80,13 +80,19 @@ struct ComplexNumber: FieldSet {
     
 }
 
-struct Complex:Field {
+struct ComplexOperatorSum:FieldOpSum {
+    let op: O
     
-    let op: FieldOperators<Complex, ComplexNumber>
+    typealias A = Complex
     
     typealias Num = ComplexNumber
     
-    typealias OperatorSum = FieldOperators<Complex, ComplexNumber>
+    
+}
+
+struct Complex:Field {
+    
+    let op: ComplexOperatorSum
     
     
 }
