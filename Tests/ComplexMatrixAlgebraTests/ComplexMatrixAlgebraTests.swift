@@ -108,12 +108,6 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let zz = 3.complex(i: 4).f
         expect((zz * *zz).eval()).to(equal(25.complex(i: 0).f))
         
-//
-//        let m22_1 = Matrix.a(Elements(e: [[c1, c0],[c0, c1]]))
-//        let m22_2 = Matrix.a(Elements(e: [[c2, c0],[c0, c2]]))
-//        expect(Matrix.Scale(c2, m22_1).eval()).to(equal(m22_2))
-//        expect(Matrix.Add(MatrixBinary(l: m22_1, r: m22_1)).eval()).to(equal(m22_2))
-//
         let m1 = [[(1,0),(0,-1)],
                   [(1,1),(4,-1)]].matrix
         let m2 = [[(0,1),(1,-1)],
@@ -129,8 +123,6 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         expect((Matrix.OpSum.Add(m1, m2)).asMatrix.eval()).to(equal(expectedAdd))
         expect((Matrix.OpSum.Scale(2.complex(i: 0).f, m2)).asMatrix.eval()).to(equal(expectedScaleBy2))
         
-//        expect(Matrix.Mul(MatrixBinary(l: m1, r: m2)).eval()).to(equal(expectedMul))
-//        expect(Matrix.Add(MatrixBinary(l: m1, r: m2)).eval()).to(equal(expectedAdd))
         
     }
     static var allTests = [
