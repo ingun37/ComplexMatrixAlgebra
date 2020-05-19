@@ -102,7 +102,7 @@ struct MatrixNumber<N:NatRep, F:Field>:RingNumber {
 }
 
 
-struct MatrixOperatorSum<N:NatRep>:RingOpSum {
+struct MatrixOperable<N:NatRep>:RingOperable {
     var ringOp: RingO? {
         switch op {
         case let .Ring(r):
@@ -124,12 +124,12 @@ struct MatrixOperatorSum<N:NatRep>:RingOpSum {
         case Ring(RingO)
         case Scale(Complex, A)
         
-        var sum: MatrixOperatorSum<N>{
+        var sum: MatrixOperable<N>{
             return .init(matrixOp: self)
         }
     }
     typealias A = Matrix<N>
-    typealias Num = MatrixNumber<N,Complex>
+    typealias U = MatrixNumber<N,Complex>
     
 }
 struct Matrix<N:NatRep>:Ring {
@@ -167,9 +167,9 @@ struct Matrix<N:NatRep>:Ring {
     static func * (l:Complex, r:Self)-> Self {
         return OpSum.MatrixOp.Scale(l, r).sum.ring
     }
-    let op: MatrixOperatorSum<N>
+    let op: MatrixOperable<N>
     
-    typealias OpSum = MatrixOperatorSum
+    typealias OpSum = MatrixOperable
     
     
 }

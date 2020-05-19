@@ -6,7 +6,7 @@
 //
 
 import Foundation
-protocol RingNumber:Underlying {
+protocol RingNumber:UnderlyingSet {
     static func * (l:Self, r:Self)->Self
     static func + (l:Self, r:Self)->Self
     static prefix func - (l:Self)->Self
@@ -14,18 +14,18 @@ protocol RingNumber:Underlying {
     static var Id:Self {get}
 }
 extension RingNumber {
-    func asNumber<R:Ring>(_ a:R.Type) -> R where R.OpSum.Num == Self{
-        return R.OpSum.RingO.Number(self).sum.ring
+    func asNumber<R:Ring>(_ a:R.Type) -> R where R.O.U == Self{
+        return R.O.RingO.Number(self).sum.ring
     }
 }
-protocol Ring:Algebra where OpSum:RingOpSum{}
+protocol Ring:Algebra where O:RingOperable{}
 
-protocol RingOpSum:OperatorSum where A:Ring, Num:RingNumber {
-    typealias RingO = RingOperators<A, Num>
+protocol RingOperable:Operable where A:Ring, U:RingNumber {
+    typealias RingO = RingOperators<A, U>
     init(ringOp:RingO)
     var ringOp: RingO? { get }
 }
-extension RingOpSum where A.OpSum == Self{
+extension RingOperable where A.O == Self{
     var ring:A {
         return A(op: self)
     }
@@ -36,9 +36,9 @@ indirect enum RingOperators<R:Equatable,Num:Equatable>:Equatable {
     case Negate(R)
     case Number(Num)
 }
-extension RingOperators where R:Ring, R.OpSum.Num == Num {
-    var sum:R.OpSum {
-        return R.OpSum(ringOp: self)
+extension RingOperators where R:Ring, R.O.U == Num {
+    var sum:R.O {
+        return R.O(ringOp: self)
     }
 }
 func flatRingAdd<A:Ring>(_ x:A)-> List<A> {
@@ -64,14 +64,14 @@ func operateRingAdd<A:Ring>(_ x:A, _ y:A)-> A {
         if l == A.Zero  {
             return r
         } else if case let (.Number(l), .Number(r)) = (l.op.ringOp,r.op.ringOp) {
-            return A.OpSum(ringOp: .Number(l + r)).ring
-        } else if A.OpSum.RingO.Negate(l).sum.ring.eval().sameRing(r) {
-            return A.OpSum.Num.Zero.asNumber(A.self).op.ring
+            return A.O(ringOp: .Number(l + r)).ring
+        } else if A.O.RingO.Negate(l).sum.ring.eval().sameRing(r) {
+            return A.O.U.Zero.asNumber(A.self).op.ring
         } else {
             return nil
         }
     }, flatRingAdd(x) + flatRingAdd(y)).reduce { (l, r) -> A in
-        A.OpSum.RingO.Add(l, r).sum.ring
+        A.O.RingO.Add(l, r).sum.ring
     }
 }
 func operateRingMul<A:Ring>(_ x:A, _ y:A)-> A {
@@ -85,29 +85,29 @@ func operateRingMul<A:Ring>(_ x:A, _ y:A)-> A {
         } else if l == A.Zero {
             return A.Zero
         } else if case let (.Number(ln), .Number(rn)) = (l.op.ringOp,r.op.ringOp) {
-            return A.OpSum.RingO.Number(ln * rn).sum.ring
+            return A.O.RingO.Number(ln * rn).sum.ring
         }
         return nil
     }.reduce(*)
 }
 extension Ring {
     static func * (l:Self, r:Self)-> Self {
-        return OpSum.RingO.Mul(l, r).sum.ring
+        return O.RingO.Mul(l, r).sum.ring
     }
     static func + (l:Self, r:Self)-> Self {
-        return OpSum.RingO.Add(l, r).sum.ring
+        return O.RingO.Add(l, r).sum.ring
     }
     static prefix func - (l:Self)-> Self {
-        return OpSum.RingO.Negate(l).sum.ring
+        return O.RingO.Negate(l).sum.ring
     }
     static var Zero:Self {
-        return OpSum.Num.Zero.asNumber(self).op.ring
+        return O.U.Zero.asNumber(self).op.ring
     }
     static var Id:Self {
-        return OpSum.Num.Id.asNumber(self).op.ring
+        return O.U.Id.asNumber(self).op.ring
     }
     static var _Id:Self {
-        return (-OpSum.Num.Id).asNumber(self).op.ring
+        return (-O.U.Id).asNumber(self).op.ring
     }
     func sameRing(_ to:Self) -> Bool {
         switch (op.ringOp, to.op.ringOp) {

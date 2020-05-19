@@ -8,7 +8,7 @@
 import Foundation
 
 
-protocol AbelianAddGroupSet:Underlying {
+protocol AbelianAddGroupSet:UnderlyingSet {
     static var zero: Self {get}
     static func + (lhs: Self, rhs: Self) -> Self
     /**

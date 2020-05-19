@@ -91,7 +91,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
     case let .Quotient(l, r):
         return "\\frac{\(genLaTex(l))}{\(genLaTex(r))}"
     case let .Subtract(l, r):
-        return genLaTex(F.OpSum.O.Add(l, F._id * r).f)
+        return genLaTex(F.O.O.Add(l, F._id * r).f)
     case let .Negate(x):
         return genLaTex(F._id * x)
     case let .Var(v):

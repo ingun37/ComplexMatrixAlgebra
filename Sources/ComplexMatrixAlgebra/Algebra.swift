@@ -8,21 +8,21 @@
 import Foundation
 import NumberKit
 
-protocol OperatorSum:Equatable {
+protocol Operable:Equatable {
     associatedtype A:Algebra
-    associatedtype Num:Underlying
+    associatedtype U:UnderlyingSet
 }
 //TODO: Change once accepted: https://forums.swift.org/t/accepted-se-0280-enum-cases-as-protocol-witnesses/34850
 protocol Algebra: Equatable {
-    associatedtype OpSum:OperatorSum where OpSum.A == Self
+    associatedtype O:Operable where O.A == Self
     func eval() -> Self
     func same(_ to:Self)-> Bool
-    init(op:OpSum)
-    var op: OpSum { get }
+    init(op:O)
+    var op: O { get }
 }
 
-protocol Underlying:Equatable {
-}
+protocol UnderlyingSet:Equatable {}
+
 func commuteSame<C:Collection, T:Algebra>(_ xs:C, _ ys:C) -> Bool where C.Element == T, C.Index == Int{
     guard xs.count == ys.count else { return false }
     let len = xs.count

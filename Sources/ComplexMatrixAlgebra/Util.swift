@@ -108,12 +108,12 @@ extension Int {
 }
 extension RealNumber {
     var f: Real {
-        return Real(op: RealOperatorSum(op: .Number(self)))// Real(op: .Number(self))
+        return Real(op: RealOperable(op: .Number(self)))// Real(op: .Number(self))
     }
 }
 extension ComplexNumber {
     var f: Complex {
-        return Complex(op: ComplexOperatorSum(op: .Number(self)))
+        return Complex(op: ComplexOperable(op: .Number(self)))
 //        return Complex(op: .Number(self))
     }
 }
@@ -137,7 +137,7 @@ extension Rational where T == Int {
 }
 extension String {
     func f<F:Field>() -> F {
-        return F(op: F.OpSum(op: .Var(self)))
+        return F(op: F.O(op: .Var(self)))
 //        return F(op: .Var(self))
     }
     var rvar: Real {
@@ -191,7 +191,7 @@ func operateFieldAdd<A:Field>(_ x:A, _ y:A)-> A {
         if l == A.zero {
             return r
         } else if case let (.Number(l), .Number(r)) = (l.op.op,r.op.op) {
-            return A.OpSum.O.Number(l + r).f
+            return A.O.O.Number(l + r).f
         } else if (-l).eval().sameField(r) {
             return A.zero
         } else {
@@ -212,12 +212,12 @@ func operateFieldMul<A:Field>(_ x:A, _ y:A)-> A {
         } else if l == A.zero {
             return A.zero
         } else if case let (.Number(ln), .Number(rn)) = (l.op.op,r.op.op) {
-            return A.OpSum.O.Number(ln * rn).f.eval()
+            return A.O.O.Number(ln * rn).f.eval()
         }
         switch (l.op.op,r.op.op) {
         case (.Power(base: let lbase, exponent: let lexp), .Power(base: let rbase, exponent: let rexp)):
             if lbase.sameField(rbase) {
-                return A.OpSum.O.Power(base: lbase, exponent: lexp + rexp).f.eval()
+                return A.O.O.Power(base: lbase, exponent: lexp + rexp).f.eval()
             }
         default:
             return nil

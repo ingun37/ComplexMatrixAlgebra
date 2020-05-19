@@ -29,14 +29,14 @@ extension FieldSet {
     }
 }
 
-protocol Field:Algebra where OpSum:FieldOpSum {
+protocol Field:Algebra where O:FieldOperable {
 }
-protocol FieldOpSum:OperatorSum where A: Field, Num:FieldSet {
-    typealias O = FieldOperators<A,Num>
+protocol FieldOperable:Operable where A: Field, U:FieldSet {
+    typealias O = FieldOperators<A,U>
     var op: O { get }
     init(op:O)
 }
-extension FieldOpSum where A.OpSum == Self {
+extension FieldOperable where A.O == Self {
     var asField:A {
         return A(op: self)
     }
@@ -55,8 +55,8 @@ indirect enum FieldOperators<F:Equatable,Num:Equatable>:Equatable {
     case Conjugate(F)
 }
 
-extension FieldOperators where F:Field, Num == F.OpSum.Num {
-    var asSum: F.OpSum { return F.OpSum(op: self)}
+extension FieldOperators where F:Field, Num == F.O.U {
+    var asSum: F.O { return F.O(op: self)}
     var f: F {
         return asSum.asField
     }
@@ -76,22 +76,22 @@ extension Field {
             return self == to
         }
     }
-    static prefix func ~ (lhs: Self) -> Self { return OpSum.O.Inverse(lhs).f }
-    static prefix func - (lhs: Self) -> Self { return OpSum.O.Negate(lhs).f }
-    static prefix func * (lhs: Self) -> Self { return OpSum.O.Conjugate(lhs).f }
+    static prefix func ~ (lhs: Self) -> Self { return O.O.Inverse(lhs).f }
+    static prefix func - (lhs: Self) -> Self { return O.O.Negate(lhs).f }
+    static prefix func * (lhs: Self) -> Self { return O.O.Conjugate(lhs).f }
 
-    static func - (lhs: Self, rhs: Self) -> Self { return OpSum.O.Subtract(lhs, rhs).f }
-    static func + (lhs: Self, rhs: Self) -> Self { return OpSum.O.Add(lhs, rhs).f }
-    static var zero: Self { return OpSum.O.Number(OpSum.Num.zero).f}
-    static var id: Self{ return OpSum.O.Number(OpSum.Num.id).f}
-    static var _id: Self{ return OpSum.O.Number(-OpSum.Num.id).f}
-    static func / (lhs: Self, rhs: Self) -> Self { return OpSum.O.Quotient(lhs, rhs).f }
-    static func * (lhs: Self, rhs: Self) -> Self { return OpSum.O.Mul(lhs, rhs).f }
-    static func ^ (lhs: Self, rhs: Self) -> Self { return OpSum.O.Power(base: lhs, exponent: rhs).f }
+    static func - (lhs: Self, rhs: Self) -> Self { return O.O.Subtract(lhs, rhs).f }
+    static func + (lhs: Self, rhs: Self) -> Self { return O.O.Add(lhs, rhs).f }
+    static var zero: Self { return O.O.Number(O.U.zero).f}
+    static var id: Self{ return O.O.Number(O.U.id).f}
+    static var _id: Self{ return O.O.Number(-O.U.id).f}
+    static func / (lhs: Self, rhs: Self) -> Self { return O.O.Quotient(lhs, rhs).f }
+    static func * (lhs: Self, rhs: Self) -> Self { return O.O.Mul(lhs, rhs).f }
+    static func ^ (lhs: Self, rhs: Self) -> Self { return O.O.Power(base: lhs, exponent: rhs).f }
     
     func evalField() -> Self {
         switch op.op {
-        case let .Number(number): return OpSum.O.Number(number).f
+        case let .Number(number): return O.O.Number(number).f
         case let .Add(x,y):
             return operateFieldAdd(x.eval(), y.eval())
         case let .Mul(x,y):
@@ -108,40 +108,40 @@ extension Field {
             let x = x.eval()
             switch x.op.op {
             case let .Number(number):
-                return OpSum.O.Number(~number).f
+                return O.O.Number(~number).f
             case let .Quotient(numer, denom):
-                return OpSum.O.Quotient(denom, numer).f.eval()
+                return O.O.Quotient(denom, numer).f.eval()
             case let .Inverse(x):
                 return x.eval()
             default:
-                return OpSum.O.Inverse(x).f
+                return O.O.Inverse(x).f
             }
         case .Power(base: let _base, exponent: let _exponent):
             let base = _base.eval()
             let exponent = _exponent.eval()
-            if case let OpSum.O.Number(numExp) = exponent.op.op {
+            if case let O.O.Number(numExp) = exponent.op.op {
                 if numExp == .zero {
-                    return OpSum.O.Number(.id).f
+                    return O.O.Number(.id).f
                 } else if numExp == .id {
                     return base
                 } else if numExp == -.id {
                     return ~base
                 }
                 
-                if case let OpSum.O.Number(numBase) = base.op.op {
+                if case let O.O.Number(numBase) = base.op.op {
                     if let evaled = numBase^numExp {
-                        return OpSum.O.Number(evaled).f
+                        return O.O.Number(evaled).f
                     }
                 }
             }
-            return OpSum.O.Power(base: base, exponent: exponent).f
+            return O.O.Power(base: base, exponent: exponent).f
         case let .Conjugate(xx):
             let x = xx.eval()
             switch x.op.op {
-            case let OpSum.O.Number(n):
-                return OpSum.O.Number(*n).f
+            case let O.O.Number(n):
+                return O.O.Number(*n).f
             default:
-                return OpSum.O.Conjugate(x).f
+                return O.O.Conjugate(x).f
             }
         }
     }

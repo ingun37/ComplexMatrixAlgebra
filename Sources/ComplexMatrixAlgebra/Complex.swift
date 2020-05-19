@@ -80,12 +80,12 @@ struct ComplexNumber: FieldSet {
     
 }
 
-struct ComplexOperatorSum:FieldOpSum {
+struct ComplexOperable:FieldOperable {
     let op: O
     
     typealias A = Complex
     
-    typealias Num = ComplexNumber
+    typealias U = ComplexNumber
     
     
 }
@@ -100,7 +100,7 @@ struct Complex:Field {
     }
     
     
-    let op: ComplexOperatorSum
+    let op: ComplexOperable
     
     
 }
