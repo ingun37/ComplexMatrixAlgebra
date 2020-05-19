@@ -16,11 +16,39 @@ struct Dimension:Hashable {
     }
 }
 
-struct MatrixNumber<F:Field>:Underlying {
+struct MatrixNumber<N:NatRep, F:Field>:RingNumber {
+    static prefix func - (l: Self) -> Self {
+        let newE = l.e.fmap { (row) in
+            row.fmap { (e) in
+                -e
+            }
+        }
+        return MatrixNumber(e: newE)
+    }
+    
+    
+    static var Zero: Self {
+        let r = (0..<N.n).decompose() ?? List(0)
+        let ee = r.fmap { (_) in
+            r.fmap { (_) in
+                F.zero
+            }
+        }
+        return MatrixNumber(e: ee)
+    }
+    
+    static var Id: Self {
+        let _2d = (0..<N.n).map { (r) in
+            (0..<N.n).map { (c) in
+                r == c ? F.id : F.zero
+            }.decompose()!
+        }.decompose()!
+        return MatrixNumber(e: _2d)
+    }
+    
     let e:List<List<F>>
     
-    static func * (l:MatrixNumber, r:MatrixNumber)->MatrixNumber? {
-        guard l.colLen == r.rowLen else { return nil }
+    static func * (l:MatrixNumber, r:MatrixNumber)->MatrixNumber {
         let newElems = l.rows.fmap { (lrow) in
             r.cols.fmap { (rcol) in
                 lrow.fzip(rcol).fmap(*).reduce(+).eval()
@@ -38,8 +66,7 @@ struct MatrixNumber<F:Field>:Underlying {
         return MatrixNumber(e: newE)
     }
     
-    static func + (l:MatrixNumber, r:MatrixNumber)->MatrixNumber? {
-        guard l.dim == r.dim else { return nil }
+    static func + (l:MatrixNumber, r:MatrixNumber)->MatrixNumber {
         let newElements = l.rows.fzip(r.rows).fmap { (l,r) in
             l.fzip(r).fmap(+).fmap({$0.eval()})
         }
@@ -72,173 +99,95 @@ struct MatrixNumber<F:Field>:Underlying {
     var cols:List<List<F>> {
         return List(0, (1..<colLen)).fmap({self.col($0)})
     }
-    var asOperator:MatrixOperators<F> {
-        return .Number(self)
-    }
-}
-indirect enum MatrixOperators<F:Field>:OperatorSum {
-    typealias A = Matrix<F>
-    typealias Num = MatrixNumber<F>
-    
-    case Add(A,A)
-    case Number(Num)
-    case Mul(A,A)
-    case Scale(F,A)
-    
-    var asMatrix:Matrix<F> {
-        return Matrix(op: self)
-    }
 }
 
-struct Matrix<F:Field>:Algebra {
-    func eval() -> Matrix {
+
+struct MatrixOperatorSum<N:NatRep>:RingOpSum {
+    var ringOp: RingO? {
         switch op {
-        case .Number(_):
-            return self
-        case let .Add(_l, _r):
-            let l = _l.eval()
-            let r = _r.eval()
-            switch (l.op,r.op) {
-            case let (.Number(ln), .Number(rn)):
-                return (ln + rn)?.asOperator.asMatrix ?? OpSum.Add(l,r).asMatrix
-            default:
-                return OpSum.Add(l,r).asMatrix
-            }
-        case let .Mul(_l, _r):
-            let l = _l
-            let r = _r
-            switch (l.op, r.op) {
-            case let (.Number(ln), .Number(rn)):
-                return (ln * rn)?.asOperator.asMatrix ?? OpSum.Mul(l, r).asMatrix
-            default:
-                return OpSum.Mul(l,r).asMatrix
-            }
+        case let .Ring(r):
+            return r
+        default:
+            return nil
+        }
+    }
+
+    init(ringOp: RingO) {
+        op = .Ring(ringOp)
+    }
+    init(matrixOp: MatrixOp) {
+        op = matrixOp
+    }
+    let op: MatrixOp
+    
+    indirect enum MatrixOp:Equatable {
+        case Ring(RingO)
+        case Scale(Complex, A)
+        
+        var sum: MatrixOperatorSum<N>{
+            return .init(matrixOp: self)
+        }
+    }
+    typealias A = Matrix<N>
+    typealias Num = MatrixNumber<N,Complex>
+    
+}
+struct Matrix<N:NatRep>:Ring {
+    func eval() -> Matrix {
+        switch op.op {
         case let .Scale(s, m):
             let s = s.eval()
             let m = m.eval()
-            switch m.op {
-            case let .Number(n):
-                return (s * n).asOperator.asMatrix
-            default:
-                return OpSum.Scale(s, m).asMatrix
+            switch m.op.op {
+            case let .Scale(s2, m):
+                return OpSum.MatrixOp.Scale(s*s2, m).sum.ring.eval()
+            case let .Ring(ro):
+                switch ro {
+                case let .Add(ml, mr):
+                    return ((s * ml) + (s * mr)).eval()
+                case let .Number(m):
+                    return m.e.fmap { (row) in
+                        row.fmap { (e) in
+                            (s * e).eval()
+                        }
+                    }.mat().asNumber(Self.self).op.ring
+                default:
+                    return s * m
+                }
             }
+        case .Ring(_):
+            return evalRing()
         }
     }
     
     func same(_ to: Matrix) -> Bool {
-        switch (op, to.op) {
-        case (.Add(_, _),.Add(_,_)):
-            return commuteSame(flatMatrixAdd(self).all, flatMatrixAdd(to).all)
-        default:
-            return self == to
-        }
+        return sameRing(to)
     }
-    let op: OpSum
     
-    typealias OpSum = MatrixOperators<F>
+    static func * (l:Complex, r:Self)-> Self {
+        return OpSum.MatrixOp.Scale(l, r).sum.ring
+    }
+    let op: MatrixOperatorSum<N>
+    
+    typealias OpSum = MatrixOperatorSum
     
     
 }
 
-
-//indirect enum Matrix: Algebra {
-//    case Scale(Complex, Matrix)
-//    case Mul(MatrixBinary)
-//    case Add(MatrixBinary)
-//    case a(Elements)
-//
-//    func eval() -> Matrix {
-//        switch self {
-//        case let .Scale(k, m):
-//            let k = k.eval()
-//            let m = m.eval()
-//            if case let Matrix.a(m) = m {
-//                let newElems = m.e.map { (row) in
-//                    row.map { (f) in
-//                        Complex.Mul(ComplexBinary(l: k, r: f)).eval()
-//                    }
-//                }
-//                return Matrix.a(Elements(e: newElems))
-//            }
-//            return .Scale(k, m)
-//        case let .Add(lr):
-//            let terms = lr.associativeFlat()
-//            return Matrix.addTerms(head: terms.first!, tail: terms.dropFirst())
-//        case let .a(m):
-//            let newElems = m.e.map { (row) in
-//                row.map { (f) in
-//                    f.eval()
-//                }
-//            }
-//            return .a(Elements(e: newElems))
-//        }
-//    }
-//
-//    static func addTerms<T:Collection>(head:Matrix, tail:T) -> Matrix where T.Element == Matrix{
-//        let terms = [head] + tail
-//        for i in 0..<terms.count {
-//            for j in (0..<terms.count).without(i) {
-//                let l = terms[i]
-//                let r = terms[j]
-//                if case let .a(l) = l, case let .a(r) = r {
-//                    if l.dim == r.dim {
-//                        let newElems = zip(l.e, r.e).map { (rowL, rowR) in
-//                            zip(rowL, rowR).map { (x,y) in
-//                                Complex.Add(ComplexBinary(l: x, r: y)).eval()
-//                            }
-//                        }
-//                        let resultMat = Matrix.a(Elements(e: newElems))
-//                        let newTerms = (0..<terms.count).without(i, j).map({terms[$0]})
-//                        return addTerms(head: resultMat, tail: newTerms)
-//                    }
-//                }
-//            }
-//        }
-//        return tail.reduce(head) { (x, fx) in
-//            Matrix.Add(MatrixBinary(l: x, r: fx))
-//        }
-//    }
-//    func iso(_ to: Matrix) -> Bool {
-//        switch self {
-//        case let .Scale(k, m):
-//            guard case let .Scale(_k, _m) = to else { return false }
-//            return k.iso(_k) && m.iso(_m)
-//        case let .Mul(x):
-//            guard case let .Mul(y) = to else { return false }
-//            return x.l.iso(y.l) && x.r.iso(y.r)
-//        case let .Add(x):
-//            guard case let .Add(y) = to else { return false }
-//            return x.commutativeIso(y)
-//        case let .a(x):
-//            guard case let .a(y) = to else { return false }
-//            guard x.dim == y.dim else { return false }
-//            return zip(y.e, x.e).allSatisfy { (rowX, rowY) -> Bool in
-//                zip(rowX, rowY).allSatisfy { (_x,_y) -> Bool in
-//                    _x.iso(_y)
-//                }
-//            }
-//        }
-//    }
-//
-//    static func == (lhs: Matrix, rhs: Matrix) -> Bool {
-//        switch lhs {
-//        case let .Scale(k, m):
-//            guard case let .Scale(_k, _m) = rhs else { return false }
-//            return k == (_k) && m == (_m)
-//        case let .Mul(x):
-//            guard case let .Mul(y) = rhs else { return false }
-//            return x.l == (y.l) && x.r == (y.r)
-//        case let .Add(x):
-//            guard case let .Add(y) = rhs else { return false }
-//            return x.l == (y.l) && x.r == (y.r)
-//        case let .a(x):
-//            guard case let .a(y) = rhs else { return false }
-//            guard x.dim == y.dim else { return false }
-//            return zip(y.e, x.e).allSatisfy { (rowX, rowY) -> Bool in
-//                zip(rowX, rowY).allSatisfy { (_x,_y) -> Bool in
-//                    _x == (_y)
-//                }
-//            }
-//        }
-//    }
-//}
+extension List where T == List<Complex> {
+    func mat<N:NatRep>()-> MatrixNumber<N,Complex> {
+        return MatrixNumber(e: self)
+    }
+}
+protocol NatRep:Equatable {
+    static var n:Int {get}
+}
+struct N1:NatRep { static var n = 1 }
+struct N2:NatRep { static var n = 2 }
+struct N3:NatRep { static var n = 3 }
+struct N4:NatRep { static var n = 4 }
+struct N5:NatRep { static var n = 5 }
+struct N6:NatRep { static var n = 6 }
+struct N7:NatRep { static var n = 7 }
+struct N8:NatRep { static var n = 8 }
+struct N9:NatRep { static var n = 9 }

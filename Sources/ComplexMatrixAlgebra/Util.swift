@@ -156,15 +156,7 @@ func flatAlgebra<A>(_ x:A, flatter:@escaping (A)->[A])->List<A> {
         return List(x, [])
     }
 }
-func flatMatrixAdd<F:Field>(_ x:Matrix<F>)-> List<Matrix<F>> {
-    return flatAlgebra(x) { (x) -> [Matrix<F>] in
-        if case let .Add(l,r) = x.op {
-            return [l,r]
-        } else {
-            return []
-        }
-    }
-}
+
 func flatAdd<A:Field>(_ x:A)-> List<A> {
     return flatAlgebra(x) { (x) -> [A] in
         if case let .Add(l,r) = x.op.op {
@@ -207,6 +199,7 @@ func operateFieldAdd<A:Field>(_ x:A, _ y:A)-> A {
         }
     }, flatAdd(x) + flatAdd(y)).reduce(+)
 }
+
 
 func operateFieldMul<A:Field>(_ x:A, _ y:A)-> A {
     return operateCommutativeBinary({ (_ l: A, _ r: A) -> A? in
