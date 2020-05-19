@@ -55,11 +55,6 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         NSWorkspace.shared.open(URL(fileURLWithPath: "preview.html"))
     }
     func testExample() {
-        let r1 = 1.real.f
-        let r0 = 0.real.f
-        let r2 = 2.real.f
-        
-        let r_1 = (-1).real
         
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct
@@ -128,9 +123,11 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
                            [(4,-13),(18,-4)]].matrix
         let expectedAdd = [[(1,1),(1,-2)],
                            [(3,-2),(8,-1)]].matrix
-        
+        let expectedScaleBy2 = [[(0,2),(2,-2)],
+                                [(4,-6),(8,0)]].matrix
         expect((Matrix.OpSum.Mul(m1, m2)).asMatrix.eval()).to(equal(expectedMul))
         expect((Matrix.OpSum.Add(m1, m2)).asMatrix.eval()).to(equal(expectedAdd))
+        expect((Matrix.OpSum.Scale(2.complex(i: 0).f, m2)).asMatrix.eval()).to(equal(expectedScaleBy2))
         
 //        expect(Matrix.Mul(MatrixBinary(l: m1, r: m2)).eval()).to(equal(expectedMul))
 //        expect(Matrix.Add(MatrixBinary(l: m1, r: m2)).eval()).to(equal(expectedAdd))

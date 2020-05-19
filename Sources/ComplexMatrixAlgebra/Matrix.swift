@@ -29,6 +29,15 @@ struct MatrixNumber<F:Field>:Underlying {
         return MatrixNumber(e: newElems)
     }
     
+    static func * (l:F, r:MatrixNumber)->MatrixNumber {
+        let newE = r.e.fmap { (row) in
+            row.fmap { (e) in
+                (l*e).eval()
+            }
+        }
+        return MatrixNumber(e: newE)
+    }
+    
     static func + (l:MatrixNumber, r:MatrixNumber)->MatrixNumber? {
         guard l.dim == r.dim else { return nil }
         let newElements = l.rows.fzip(r.rows).fmap { (l,r) in
@@ -74,6 +83,7 @@ indirect enum MatrixOperators<F:Field>:OperatorSum {
     case Add(A,A)
     case Number(Num)
     case Mul(A,A)
+    case Scale(F,A)
     
     var asMatrix:Matrix<F> {
         return Matrix(op: self)
@@ -102,6 +112,15 @@ struct Matrix<F:Field>:Algebra {
                 return (ln * rn)?.asOperator.asMatrix ?? OpSum.Mul(l, r).asMatrix
             default:
                 return OpSum.Mul(l,r).asMatrix
+            }
+        case let .Scale(s, m):
+            let s = s.eval()
+            let m = m.eval()
+            switch m.op {
+            case let .Number(n):
+                return (s * n).asOperator.asMatrix
+            default:
+                return OpSum.Scale(s, m).asMatrix
             }
         }
     }
