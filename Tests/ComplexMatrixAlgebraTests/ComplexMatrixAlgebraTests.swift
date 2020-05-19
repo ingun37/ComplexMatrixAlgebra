@@ -112,22 +112,26 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         
         let zz = 3.complex(i: 4).f
         expect((zz * *zz).eval()).to(equal(25.complex(i: 0).f))
+        
 //
 //        let m22_1 = Matrix.a(Elements(e: [[c1, c0],[c0, c1]]))
 //        let m22_2 = Matrix.a(Elements(e: [[c2, c0],[c0, c2]]))
 //        expect(Matrix.Scale(c2, m22_1).eval()).to(equal(m22_2))
 //        expect(Matrix.Add(MatrixBinary(l: m22_1, r: m22_1)).eval()).to(equal(m22_2))
 //
-//        let m1 = [[(1,0),(0,-1)],
-//                  [(1,1),(4,-1)]].matrix
-//        let m2 = [[(0,1),(1,-1)],
-//                  [(2,-3),(4,0)]].matrix
-//
-//        let expectedMul = [[(-3,-1),(1,-5)],
-//                           [(4,-13),(18,-4)]].matrix
-//        let expectedAdd = [[(1,1),(1,-2)],
-//                           [(3,-2),(8,-1)]].matrix
-//
+        let m1 = [[(1,0),(0,-1)],
+                  [(1,1),(4,-1)]].matrix
+        let m2 = [[(0,1),(1,-1)],
+                  [(2,-3),(4,0)]].matrix
+
+        let expectedMul = [[(-3,-1),(1,-5)],
+                           [(4,-13),(18,-4)]].matrix
+        let expectedAdd = [[(1,1),(1,-2)],
+                           [(3,-2),(8,-1)]].matrix
+        
+        expect((Matrix.OpSum.Mul(m1, m2)).asMatrix.eval()).to(equal(expectedMul))
+        expect((Matrix.OpSum.Add(m1, m2)).asMatrix.eval()).to(equal(expectedAdd))
+        
 //        expect(Matrix.Mul(MatrixBinary(l: m1, r: m2)).eval()).to(equal(expectedMul))
 //        expect(Matrix.Add(MatrixBinary(l: m1, r: m2)).eval()).to(equal(expectedAdd))
         
@@ -138,12 +142,18 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
 }
 
 extension Collection where Element == (Int, Int){
-//    var complexes: [Complex] {
-//        return map { (x,y) in x.complex(i: y) }
-//    }
+    var complexes:List<Complex> {
+        return map { (x,y) in x.complex(i: y) }.decompose()!.fmap { (x) in x.f }
+    }
 }
-extension Collection where Element:Collection, Element.Element == (Int, Int){
-//    var matrix:Matrix {
-//        return Matrix.a(Elements(e: map({$0.complexes})))
-//    }
+extension Collection where Element == List<Complex>{
+    var matrix:Matrix<Complex> {
+        let e = decompose()!
+        return Matrix(op: .Number(MatrixNumber(e: e)))
+    }
+}
+extension Collection where Element: Collection, Element.Element == (Int,Int) {
+    var matrix:Matrix<Complex> {
+        return map({$0.complexes}).matrix
+    }
 }

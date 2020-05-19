@@ -7,23 +7,127 @@
 
 import Foundation
 
+struct Dimension:Hashable {
+    let rows:Int
+    let cols:Int
+    init(_ rows:Int, _ cols:Int) {
+        self.rows = rows
+        self.cols = cols
+    }
+}
 
-//struct MatrixBinary: BinaryOperator {
-//    
-//    let l: Matrix
-//    let r: Matrix
-//}
-//
-//struct Elements: Equatable{
-//    let e:[[Complex]]
-//}
-//
+struct MatrixNumber<F:Field>:Underlying {
+    let e:List<List<F>>
+    
+    static func * (l:MatrixNumber, r:MatrixNumber)->MatrixNumber? {
+        guard l.colLen == r.rowLen else { return nil }
+        let newElems = l.rows.fmap { (lrow) in
+            r.cols.fmap { (rcol) in
+                lrow.fzip(rcol).fmap(*).reduce(+).eval()
+            }
+        }
+        return MatrixNumber(e: newElems)
+    }
+    
+    static func + (l:MatrixNumber, r:MatrixNumber)->MatrixNumber? {
+        guard l.dim == r.dim else { return nil }
+        let newElements = l.rows.fzip(r.rows).fmap { (l,r) in
+            l.fzip(r).fmap(+).fmap({$0.eval()})
+        }
+        return MatrixNumber(e: newElements)
+    }
+    
+    var rowLen:Int {
+        return e.all.count
+    }
+    var colLen:Int {
+        return e.all.map({$0.all.count}).max() ?? e.head.all.count
+    }
+    var dim:(Int, Int) {
+        return (rowLen, colLen)
+    }
+    var dimen:Dimension {
+        return Dimension(rowLen, colLen)
+    }
+    func row(_ i:Int) -> List<F> {
+        return e.all[i]
+    }
+    func col(_ i:Int) -> List<F> {
+        return e.reduce(head: {List($0.all[i])}) { (l, r) in
+            l + List(r.all[i])
+        }
+    }
+    var rows:List<List<F>> {
+        return e
+    }
+    var cols:List<List<F>> {
+        return List(0, (1..<colLen)).fmap({self.col($0)})
+    }
+    var asOperator:MatrixOperators<F> {
+        return .Number(self)
+    }
+}
+indirect enum MatrixOperators<F:Field>:OperatorSum {
+    typealias A = Matrix<F>
+    typealias Num = MatrixNumber<F>
+    
+    case Add(A,A)
+    case Number(Num)
+    case Mul(A,A)
+    
+    var asMatrix:Matrix<F> {
+        return Matrix(op: self)
+    }
+}
+
+struct Matrix<F:Field>:Algebra {
+    func eval() -> Matrix {
+        switch op {
+        case .Number(_):
+            return self
+        case let .Add(_l, _r):
+            let l = _l.eval()
+            let r = _r.eval()
+            switch (l.op,r.op) {
+            case let (.Number(ln), .Number(rn)):
+                return (ln + rn)?.asOperator.asMatrix ?? OpSum.Add(l,r).asMatrix
+            default:
+                return OpSum.Add(l,r).asMatrix
+            }
+        case let .Mul(_l, _r):
+            let l = _l
+            let r = _r
+            switch (l.op, r.op) {
+            case let (.Number(ln), .Number(rn)):
+                return (ln * rn)?.asOperator.asMatrix ?? OpSum.Mul(l, r).asMatrix
+            default:
+                return OpSum.Mul(l,r).asMatrix
+            }
+        }
+    }
+    
+    func same(_ to: Matrix) -> Bool {
+        switch (op, to.op) {
+        case (.Add(_, _),.Add(_,_)):
+            return commuteSame(flatMatrixAdd(self).all, flatMatrixAdd(to).all)
+        default:
+            return self == to
+        }
+    }
+    let op: OpSum
+    
+    typealias OpSum = MatrixOperators<F>
+    
+    
+}
+
+
 //indirect enum Matrix: Algebra {
 //    case Scale(Complex, Matrix)
 //    case Mul(MatrixBinary)
 //    case Add(MatrixBinary)
 //    case a(Elements)
-//    
+//
 //    func eval() -> Matrix {
 //        switch self {
 //        case let .Scale(k, m):
@@ -38,22 +142,6 @@ import Foundation
 //                return Matrix.a(Elements(e: newElems))
 //            }
 //            return .Scale(k, m)
-//        case let .Mul(lr):
-//            let l = lr.l.eval()
-//            let r = lr.r.eval()
-//            if case let .a(l) = l {
-//                if case let .a(r) = r {
-//                    if l.colLen == r.rowLen && l.rowLen == r.colLen {
-//                        let newElems = l.rows.map { (lrow) in
-//                            r.cols.map { (rcol) in
-//                                zip(lrow, rcol).map { (x,y) in Complex.Mul(ComplexBinary(l: x, r: y)) }.reduce(Complex.zero) { (x, fx) in Complex.Add(ComplexBinary(l: x, r: fx)) }.eval()
-//                            }
-//                        }
-//                        return .a(Elements(e: newElems))
-//                    }
-//                }
-//            }
-//            return .Mul(MatrixBinary(l: l, r: r))
 //        case let .Add(lr):
 //            let terms = lr.associativeFlat()
 //            return Matrix.addTerms(head: terms.first!, tail: terms.dropFirst())
@@ -66,7 +154,7 @@ import Foundation
 //            return .a(Elements(e: newElems))
 //        }
 //    }
-//    
+//
 //    static func addTerms<T:Collection>(head:Matrix, tail:T) -> Matrix where T.Element == Matrix{
 //        let terms = [head] + tail
 //        for i in 0..<terms.count {
@@ -112,7 +200,7 @@ import Foundation
 //            }
 //        }
 //    }
-//    
+//
 //    static func == (lhs: Matrix, rhs: Matrix) -> Bool {
 //        switch lhs {
 //        case let .Scale(k, m):

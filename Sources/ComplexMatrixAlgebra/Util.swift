@@ -36,6 +36,10 @@ struct List<T> {
         head = h
         tail = Array(t)
     }
+    init(_ h:T) {
+        head = h
+        tail = []
+    }
     var pair:(T,[T]) { return (head, tail)}
     var all:[T] {return [head] + tail}
     func fmap<Q>(_ f:@escaping (T)->Q) -> List<Q> {
@@ -47,6 +51,19 @@ struct List<T> {
     func reduce(_ next:(T,T)->T) -> T  {
         return tail.reduce(head, next)
     }
+    func reduce<R>(head transHead: (T)->R, _ reducer:(R, T)->R) -> R {
+        return tail.reduce(transHead(head)) { (l, r) in
+            reducer(l,r)
+        }
+    }
+    func fzip(_ with:List<T>) -> List<(T,T)> {
+        let newHead = (head, with.head)
+        let newTail = zip(tail, with.tail)
+        return List<(T,T)>(newHead, newTail)
+    }
+}
+extension List: Equatable where T:Equatable {
+    
 }
 extension Collection where Index == Int {
     
@@ -75,51 +92,7 @@ extension Collection where Element:Equatable {
     }
 }
 
-struct Dimension:Hashable {
-    let rows:Int
-    let cols:Int
-    init(_ rows:Int, _ cols:Int) {
-        self.rows = rows
-        self.cols = cols
-    }
-}
 
-//extension Elements {
-//    var rowLen:Int {
-//        return e.count
-//    }
-//    var colLen:Int {
-//        return e.reduce(0) { (x, fx) in x < fx.count ? fx.count : x }
-//    }
-//    var dim:(Int, Int) {
-//        return (rowLen, colLen)
-//    }
-//    var dimen:Dimension {
-//        return Dimension(rowLen, colLen)
-//    }
-//    func row(_ i:Int) -> [Complex] {
-//        return e[i]
-//    }
-//    func col(_ i:Int) -> [Complex] {
-//        return e.map { (row) in row[i] }
-//    }
-//    var rows:[[Complex]] {
-//        return e
-//    }
-//    var cols:[[Complex]] {
-//        return (0..<colLen).map { (coli) in col(coli) }
-//    }
-//}
-//extension Real {
-//    static var zero:Real {
-//        return .Number(.N(0))
-//    }
-//}
-//extension Complex {
-//    static var zero:Complex {
-//        return .Number(ComplexNumber(i: Real.zero, real: Real.zero))
-//    }
-//}
 
 
 extension Int {
@@ -181,6 +154,15 @@ func flatAlgebra<A>(_ x:A, flatter:@escaping (A)->[A])->List<A> {
         return y.fmap({flatAlgebra($0, flatter: flatter)}).reduce(+)
     } else {
         return List(x, [])
+    }
+}
+func flatMatrixAdd<F:Field>(_ x:Matrix<F>)-> List<Matrix<F>> {
+    return flatAlgebra(x) { (x) -> [Matrix<F>] in
+        if case let .Add(l,r) = x.op {
+            return [l,r]
+        } else {
+            return []
+        }
     }
 }
 func flatAdd<A:Field>(_ x:A)-> List<A> {
