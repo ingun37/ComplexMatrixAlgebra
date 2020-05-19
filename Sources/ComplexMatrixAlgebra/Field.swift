@@ -7,11 +7,8 @@
 
 import Foundation
 
-protocol FieldSet: AbelianAddGroupSet {
-    static var id: Self {get}
-    static func * (lhs: Self, rhs: Self) -> Self
+protocol FieldSet: RingNumber {
     static func / (lhs: Self, rhs: Self) -> Self
-    static prefix func - (lhs: Self) -> Self
     static prefix func ~ (lhs: Self) -> Self
     static prefix func * (lhs: Self) -> Self
     static func ^ (lhs: Self, rhs: Self) -> Self?
@@ -19,7 +16,7 @@ protocol FieldSet: AbelianAddGroupSet {
 extension FieldSet {
     static func ^ (lhs: Self, rhs: Int) -> Self {
         if rhs == 0 {
-            return id
+            return Id
         } else if rhs < 0 {
             let inv = ~lhs
             return (rhs+1..<0).map({_ in inv}).reduce(inv, *)
@@ -29,12 +26,12 @@ extension FieldSet {
     }
 }
 
-protocol Field:Algebra where O:FieldOperable {
+protocol Field:Ring where O:FieldOperable {
 }
-protocol FieldOperable:Operable where A: Field, U:FieldSet {
+protocol FieldOperable:RingOperable where A: Field, U:FieldSet {
     typealias O = FieldOperators<A,U>
-    var op: O { get }
-    init(op:O)
+    var fieldOp: O { get }
+    init(fieldOp:O)
 }
 extension FieldOperable where A.O == Self {
     var asField:A {
@@ -42,21 +39,17 @@ extension FieldOperable where A.O == Self {
     }
 }
 indirect enum FieldOperators<F:Equatable,Num:Equatable>:Equatable {
-    
-    case Number(Num)
-    case Add(F,F)
-    case Mul(F,F)
     case Quotient(F, F)
     case Subtract(F, F)
-    case Negate(F)
     case Var(String)
     case Inverse(F)
     case Power(base:F, exponent:F)
     case Conjugate(F)
+    case Ring(RingOperators<F,Num>)
 }
 
 extension FieldOperators where F:Field, Num == F.O.U {
-    var asSum: F.O { return F.O(op: self)}
+    var asSum: F.O { return F.O(fieldOp: self)}
     var f: F {
         return asSum.asField
     }
@@ -67,79 +60,94 @@ prefix operator *
 
 extension Field {
     func sameField(_ to: Self) -> Bool {
-        switch (op.op, to.op.op) {
-        case let (.Add(_,_), .Add(_,_)):
-            return commuteSame(flatAdd(self).all, flatAdd(to).all)
-        case let (.Mul(xl,xr), .Mul(yl,yr)):
-            return commuteSame(flatMul(self).all, flatMul(to).all)
-        default:
-            return self == to
+        switch (op.fieldOp, to.op.fieldOp) {
+        case let (.Ring(ringL), .Ring(ringR)):
+            switch (ringL,ringR) {
+            case let (.Add(_,_), .Add(_,_)):
+                return commuteSame(flatAdd(self).all, flatAdd(to).all)
+            case let (.Mul(xl,xr), .Mul(yl,yr)):
+                return commuteSame(flatMul(self).all, flatMul(to).all)
+            default: break
+            }
+        default: break
         }
+        return self == to
+
     }
     static prefix func ~ (lhs: Self) -> Self { return O.O.Inverse(lhs).f }
-    static prefix func - (lhs: Self) -> Self { return O.O.Negate(lhs).f }
     static prefix func * (lhs: Self) -> Self { return O.O.Conjugate(lhs).f }
 
     static func - (lhs: Self, rhs: Self) -> Self { return O.O.Subtract(lhs, rhs).f }
-    static func + (lhs: Self, rhs: Self) -> Self { return O.O.Add(lhs, rhs).f }
-    static var zero: Self { return O.O.Number(O.U.zero).f}
-    static var id: Self{ return O.O.Number(O.U.id).f}
-    static var _id: Self{ return O.O.Number(-O.U.id).f}
     static func / (lhs: Self, rhs: Self) -> Self { return O.O.Quotient(lhs, rhs).f }
-    static func * (lhs: Self, rhs: Self) -> Self { return O.O.Mul(lhs, rhs).f }
     static func ^ (lhs: Self, rhs: Self) -> Self { return O.O.Power(base: lhs, exponent: rhs).f }
     
     func evalField() -> Self {
-        switch op.op {
-        case let .Number(number): return O.O.Number(number).f
-        case let .Add(x,y):
-            return operateFieldAdd(x.eval(), y.eval())
-        case let .Mul(x,y):
-            return operateFieldMul(x.eval(), y.eval())
+        switch op.fieldOp {
+        case let .Ring(ringOp):
+            switch ringOp {
+            case let .Number(number): return O.RingO.Number(number).sum.asField
+            case let .Add(x,y):
+                return operateFieldAdd(x.eval(), y.eval())
+            case let .Mul(x,y):
+                return operateFieldMul(x.eval(), y.eval())
+            case let .Negate(x): return (Self._Id * x).eval()
+            }
+        
         case let .Quotient(l, r):
             return (l * ~r).eval()
         case let .Subtract(l, r):
             return (l + -r).eval()
-        case let .Negate(x):
-            return (Self._id * x).eval()
+        
         case .Var(_):
             return self
         case let .Inverse(x):
             let x = x.eval()
-            switch x.op.op {
-            case let .Number(number):
-                return O.O.Number(~number).f
+            switch x.op.fieldOp {
+            case let .Ring(ring):
+                switch ring {
+                case let .Number(number):
+                    return O.RingO.Number(~number).sum.asField
+                default: break
+                }
+            
             case let .Quotient(numer, denom):
                 return O.O.Quotient(denom, numer).f.eval()
             case let .Inverse(x):
                 return x.eval()
-            default:
-                return O.O.Inverse(x).f
+            default: break
             }
+            return O.O.Inverse(x).f
         case .Power(base: let _base, exponent: let _exponent):
             let base = _base.eval()
             let exponent = _exponent.eval()
-            if case let O.O.Number(numExp) = exponent.op.op {
-                if numExp == .zero {
-                    return O.O.Number(.id).f
-                } else if numExp == .id {
-                    return base
-                } else if numExp == -.id {
-                    return ~base
-                }
-                
-                if case let O.O.Number(numBase) = base.op.op {
-                    if let evaled = numBase^numExp {
-                        return O.O.Number(evaled).f
+            switch exponent.op.fieldOp {
+            case let .Ring(ring):
+                switch ring {
+                case let .Number(numExp):
+                    if numExp == .Zero {
+                        return O.RingO.Number(.Id).sum.asField
+                    } else if numExp == .Id {
+                        return base
+                    } else if numExp == -.Id {
+                        return ~base
                     }
+                    switch base.op.ringOp {
+                    case let .Number(numBase):
+                        if let evaled = numBase^numExp {
+                            return O.RingO.Number(evaled).sum.asField
+                        }
+                    default: break
+                    }
+                default: break
                 }
+            default: break
             }
             return O.O.Power(base: base, exponent: exponent).f
         case let .Conjugate(xx):
             let x = xx.eval()
-            switch x.op.op {
-            case let O.O.Number(n):
-                return O.O.Number(*n).f
+            switch x.op.ringOp {
+            case let .Number(n):
+                return O.RingO.Number(*n).sum.asField
             default:
                 return O.O.Conjugate(x).f
             }

@@ -27,13 +27,13 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let xyxy = xy * xy
         let i1 = 2.real.f + "x".rvar
         let bbb = 2.real.f + 1.real.f
-        let hhh = Complex.O.O.Number(ComplexNumber(r: 4.real.f, i: "x".rvar)).f
+        let hhh = ComplexNumber(r: 4.real.f, i: "x".rvar).f
         let uc = "x".rvar + 1.real.f
         let cu = 1.real.f + "x".rvar
         let auhs = 3.complex(i: 4).f
-        let ggg = Complex.O.O.Number(ComplexNumber(r: "a_1".rvar, i: "b_1".rvar)).f
-        let hch = Complex.O.O.Number(ComplexNumber(r: "a_2".rvar, i: "b_2".rvar)).f
-        let z = Complex.O.O.Number(ComplexNumber(r: x, i: y)).f
+        let ggg = (ComplexNumber(r: "a_1".rvar, i: "b_1".rvar)).f
+        let hch = (ComplexNumber(r: "a_2".rvar, i: "b_2".rvar)).f
+        let z = (ComplexNumber(r: x, i: y)).f
         let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)),
                              .C(~auhs), .C(ggg*hch), .C(z * *z)]
         

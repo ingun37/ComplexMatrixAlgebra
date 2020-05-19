@@ -31,7 +31,7 @@ struct MatrixNumber<N:NatRep, F:Field>:RingNumber {
         let r = (0..<N.n).decompose() ?? List(0)
         let ee = r.fmap { (_) in
             r.fmap { (_) in
-                F.zero
+                F.Zero
             }
         }
         return MatrixNumber(e: ee)
@@ -40,7 +40,7 @@ struct MatrixNumber<N:NatRep, F:Field>:RingNumber {
     static var Id: Self {
         let _2d = (0..<N.n).map { (r) in
             (0..<N.n).map { (c) in
-                r == c ? F.id : F.zero
+                r == c ? F.Id : F.Zero
             }.decompose()!
         }.decompose()!
         return MatrixNumber(e: _2d)

@@ -66,9 +66,9 @@ enum RealNumber: Equatable, FieldSet {
         }
     }
     
-    static var zero: RealNumber {return .N(0)}
+    static var Zero: RealNumber {return .N(0)}
     
-    static var id: RealNumber {return .N(1)}
+    static var Id: RealNumber {return .N(1)}
     
     private func eval() -> RealNumber {
         switch self {
@@ -106,7 +106,24 @@ enum RealNumber: Equatable, FieldSet {
     case R(Double)
 }
 struct RealOperable:FieldOperable {
-    let op: O
+    init(fieldOp: O) {
+        self.fieldOp = fieldOp
+    }
+    
+    init(ringOp: RingO) {
+        fieldOp = .Ring(ringOp)
+    }
+    
+    var ringOp: RingO? {
+        switch fieldOp {
+        case let .Ring(r):
+            return r
+        default:
+            return nil
+        }
+    }
+    
+    let fieldOp: O
     typealias A = Real
     typealias U = RealNumber
 }

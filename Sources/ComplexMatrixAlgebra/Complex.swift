@@ -8,13 +8,14 @@
 import Foundation
 
 struct ComplexNumber: FieldSet {
+    
     static prefix func * (lhs: ComplexNumber) -> ComplexNumber {
         return ComplexNumber(r: lhs.r, i: -lhs.i).eval()
     }
     
     static func ^ (lhs: ComplexNumber, rhs: ComplexNumber) -> ComplexNumber? {
-        if rhs.i == .zero {
-            if case let .Number(.N(intExp)) = rhs.r.op.op {
+        if rhs.i == .Zero {
+            if case let .Number(.N(intExp)) = rhs.r.op.ringOp {
                 return lhs^intExp
             }
         }
@@ -60,12 +61,12 @@ struct ComplexNumber: FieldSet {
     let r:Real
     let i:Real
 
-    static var zero: ComplexNumber {
-        return ComplexNumber(r: Real.zero, i: Real.zero)
+    static var Zero: ComplexNumber {
+        return ComplexNumber(r: Real.Zero, i: Real.Zero)
     }
     
-    static var id: ComplexNumber {
-        return ComplexNumber(r: Real.id, i: Real.zero)
+    static var Id: ComplexNumber {
+        return ComplexNumber(r: Real.Id, i: Real.Zero)
     }
     
     func eval() -> ComplexNumber {
@@ -81,7 +82,22 @@ struct ComplexNumber: FieldSet {
 }
 
 struct ComplexOperable:FieldOperable {
-    let op: O
+    init(fieldOp: O) {
+        self.fieldOp = fieldOp
+    }
+    
+    init(ringOp: RingO) {
+        fieldOp = .Ring(ringOp)
+    }
+    
+    var ringOp: RingO? {
+        switch fieldOp {
+        case let .Ring(r): return r
+        default:return nil
+        }
+    }
+    
+    let fieldOp: O
     
     typealias A = Complex
     
