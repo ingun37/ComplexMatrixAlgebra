@@ -35,6 +35,8 @@ indirect enum RingOperators<R:Equatable,Num:Equatable>:Equatable {
     case Mul(R,R)
     case Negate(R)
     case Number(Num)
+    case Subtract(R, R)
+
 }
 extension RingOperators where R:Ring, R.O.U == Num {
     var sum:R.O {
@@ -97,6 +99,10 @@ extension Ring {
     static func + (l:Self, r:Self)-> Self {
         return O.RingO.Add(l, r).sum.ring
     }
+    static func - (lhs: Self, rhs: Self) -> Self {
+        return O.RingO.Subtract(lhs, rhs).sum.ring
+    }
+
     static prefix func - (l:Self)-> Self {
         return O.RingO.Negate(l).sum.ring
     }
@@ -122,6 +128,8 @@ extension Ring {
         case .Number(_): return self
         case let .Add(x, y):
             return operateRingAdd(x.eval(), y.eval())
+        case let .Subtract(l, r):
+            return (l + -r).eval()
         case let .Mul(x, y):
             return operateRingMul(x.eval(), y.eval())
         case let .Negate(x):

@@ -54,6 +54,9 @@ func genLaTex<F:Field>(_ x:F) -> String {
     switch x.op.fieldOp {
     case let .Ring(ring):
         switch ring {
+        case let .Subtract(l, r):
+            return genLaTex(F.O.RingO.Add(l, F._Id * r).sum.asField)
+
         case let .Add(l,r):
             let flat = flatAdd(x)
             let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
@@ -98,8 +101,6 @@ func genLaTex<F:Field>(_ x:F) -> String {
     
     case let .Quotient(l, r):
         return "\\frac{\(genLaTex(l))}{\(genLaTex(r))}"
-    case let .Subtract(l, r):
-        return genLaTex(F.O.RingO.Add(l, F._Id * r).sum.asField)
 
     case let .Var(v):
         return v

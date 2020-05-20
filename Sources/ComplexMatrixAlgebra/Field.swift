@@ -40,7 +40,6 @@ extension FieldOperable where A.O == Self {
 }
 indirect enum FieldOperators<F:Equatable,Num:Equatable>:Equatable {
     case Quotient(F, F)
-    case Subtract(F, F)
     case Var(String)
     case Inverse(F)
     case Power(base:F, exponent:F)
@@ -77,7 +76,6 @@ extension Field {
     static prefix func ~ (lhs: Self) -> Self { return O.O.Inverse(lhs).f }
     static prefix func * (lhs: Self) -> Self { return O.O.Conjugate(lhs).f }
 
-    static func - (lhs: Self, rhs: Self) -> Self { return O.O.Subtract(lhs, rhs).f }
     static func / (lhs: Self, rhs: Self) -> Self { return O.O.Quotient(lhs, rhs).f }
     static func ^ (lhs: Self, rhs: Self) -> Self { return O.O.Power(base: lhs, exponent: rhs).f }
     
@@ -93,8 +91,7 @@ extension Field {
         
         case let .Quotient(l, r):
             return (l * ~r).eval()
-        case let .Subtract(l, r):
-            return (l + -r).eval()
+        
         
         case .Var(_):
             return self
