@@ -7,7 +7,6 @@
 
 import Foundation
 import NumberKit
-
 protocol Operable:Equatable {
     associatedtype A:Algebra
     associatedtype U:Basis

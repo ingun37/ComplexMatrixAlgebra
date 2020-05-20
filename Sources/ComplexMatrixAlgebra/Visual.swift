@@ -57,7 +57,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
         case let .Var(v):
             return v
         case let .Subtract(l, r):
-            return genLaTex(F.O.RingO.Add(l, F._Id * r).sum.asField)
+            return genLaTex(F(op: .init(ringOp: .Add(l, F._Id * r))))
 
         case let .Add(l,r):
             let flat = flatAdd(x)

@@ -82,9 +82,10 @@ struct ComplexBasis: FieldBasis {
 }
 
 struct ComplexOperable:FieldOperable {
-    init(fieldOp: O) {
+    init(fieldOp: FieldOperators<Complex, ComplexBasis>) {
         self.fieldOp = fieldOp
     }
+    
     
     init(ringOp: RingO) {
         fieldOp = .Ring(ringOp)
@@ -97,7 +98,7 @@ struct ComplexOperable:FieldOperable {
         }
     }
     
-    let fieldOp: O
+    let fieldOp: FieldOperators<A,U>
     
     typealias A = Complex
     

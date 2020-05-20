@@ -106,9 +106,10 @@ enum RealBasis: Equatable, FieldBasis {
     case R(Double)
 }
 struct RealOperable:FieldOperable {
-    init(fieldOp: O) {
+    init(fieldOp: FieldOperators<Real, RealBasis>) {
         self.fieldOp = fieldOp
     }
+    
     
     init(ringOp: RingO) {
         fieldOp = .Ring(ringOp)
@@ -123,7 +124,7 @@ struct RealOperable:FieldOperable {
         }
     }
     
-    let fieldOp: O
+    let fieldOp: FieldOperators<A,U>
     typealias A = Real
     typealias U = RealBasis
 }

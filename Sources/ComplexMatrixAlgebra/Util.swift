@@ -191,7 +191,7 @@ func operateFieldAdd<A:Field>(_ x:A, _ y:A)-> A {
         if l == A.Zero {
             return r
         } else if case let (.Number(l), .Number(r)) = (l.op.ringOp,r.op.ringOp) {
-            return A.O.RingO.Number(l + r).sum.asField
+            return (l + r).asNumber(A.self)
         } else if (-l).eval().sameField(r) {
             return A.Zero
         } else {
@@ -212,12 +212,12 @@ func operateFieldMul<A:Field>(_ x:A, _ y:A)-> A {
         } else if l == A.Zero {
             return A.Zero
         } else if case let (.Number(ln), .Number(rn)) = (l.op.ringOp,r.op.ringOp) {
-            return A.O.RingO.Number(ln * rn).sum.asField.eval()
+            return (ln * rn).asNumber(A.self)
         }
         switch (l.op.fieldOp,r.op.fieldOp) {
         case (.Power(base: let lbase, exponent: let lexp), .Power(base: let rbase, exponent: let rexp)):
             if lbase.sameField(rbase) {
-                return A.O.O.Power(base: lbase, exponent: lexp + rexp).f.eval()
+                return A(op: .init(fieldOp: .Power(base: lbase, exponent: lexp + rexp))).eval()
             }
         default:
             return nil
