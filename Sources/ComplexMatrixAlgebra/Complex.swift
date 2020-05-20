@@ -15,7 +15,7 @@ struct ComplexBasis: FieldBasis {
     
     static func ^ (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis? {
         if rhs.i == .Zero {
-            if case let .Number(.N(intExp)) = rhs.r.op.ringOp {
+            if case let .Number(.N(intExp)) = rhs.r.op.basisOp {
                 return lhs^intExp
             }
         }
@@ -81,30 +81,6 @@ struct ComplexBasis: FieldBasis {
     
 }
 
-struct ComplexOperable:FieldOperable {
-    init(fieldOp: FieldOperators<Complex>) {
-        self.fieldOp = fieldOp
-    }
-    
-    
-    init(ringOp: RingO) {
-        fieldOp = .Ring(ringOp)
-    }
-    
-    var ringOp: RingO? {
-        switch fieldOp {
-        case let .Ring(r): return r
-        default:return nil
-        }
-    }
-    
-    let fieldOp: FieldOperators<A>
-    
-    typealias A = Complex
-    
-    
-    
-}
 
 struct Complex:Field {
     typealias B = ComplexBasis
@@ -118,7 +94,7 @@ struct Complex:Field {
     }
     
     
-    let op: ComplexOperable
+    let op: FieldOperators<Self>
     
     
 }

@@ -102,51 +102,56 @@ struct MatrixBasis<N:NatRep, F:Field>:RingBasis {
 }
 
 
-struct MatrixOperable<N:NatRep>:RingOperable {
+indirect enum MatrixOp<N:NatRep>:RingOperable {
+    init(basisOp: BasisOperators<Matrix<N>>) {
+        self = .Ring(.Basis(basisOp))
+    }
+    
+    var basisOp: BasisOperators<Matrix<N>>? {
+        switch self {
+        case let .Ring(.Basis(b)):
+            return b
+        default:
+            return nil
+        }
+    }
+    
+    typealias RingO = RingOperators<Matrix<N>>
+    init(ringOp: RingO) {
+        self = .Ring(ringOp)
+    }
+    
     var ringOp: RingO? {
-        switch op {
+        switch self {
         case let .Ring(r):
             return r
         default:
             return nil
         }
     }
-
-    init(ringOp: RingO) {
-        op = .Ring(ringOp)
-    }
-    init(matrixOp: MatrixOp) {
-        op = matrixOp
-    }
-    let op: MatrixOp
     
-    indirect enum MatrixOp:Equatable {
-        case Ring(RingO)
-        case Scale(Complex, A)
-        
-        var sum: MatrixOperable<N>{
-            return .init(matrixOp: self)
-        }
-    }
     typealias A = Matrix<N>
     
+    case Ring(RingO)
+    case Scale(Complex, A)
 }
+
 struct Matrix<N:NatRep>:Ring {
     typealias B = MatrixBasis<N,Complex>
 
     func eval() -> Matrix {
-        switch op.op {
+        switch op {
         case let .Scale(s, m):
             let s = s.eval()
             let m = m.eval()
-            switch m.op.op {
+            switch m.op {
             case let .Scale(s2, m):
-                return OpSum.MatrixOp.Scale(s*s2, m).sum.ring.eval()
+                return MatrixOp<N>.Scale(s*s2, m).ring.eval()
             case let .Ring(ro):
                 switch ro {
                 case let .Add(ml, mr):
                     return ((s * ml) + (s * mr)).eval()
-                case let .Number(m):
+                case let .Basis( .Number(m)):
                     return m.e.fmap { (row) in
                         row.fmap { (e) in
                             (s * e).eval()
@@ -166,12 +171,9 @@ struct Matrix<N:NatRep>:Ring {
     }
     
     static func * (l:Complex, r:Self)-> Self {
-        return OpSum.MatrixOp.Scale(l, r).sum.ring
+        return MatrixOp<N>.Scale(l, r).ring
     }
-    let op: MatrixOperable<N>
-    
-    typealias OpSum = MatrixOperable
-    
+    let op: MatrixOp<N>
     
 }
 

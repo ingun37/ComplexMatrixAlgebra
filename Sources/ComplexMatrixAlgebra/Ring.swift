@@ -15,7 +15,7 @@ protocol RingBasis:Basis {
 }
 extension RingBasis {
     func asNumber<R:Ring>(_ a:R.Type) -> R where R.O.B == Self{
-        return R.O.RingO.Number(self).sum
+        return R(op: .init(basisOp: .Number(self))) 
     }
 }
 protocol Ring:Algebra where O:RingOperable, B:RingBasis{}
@@ -31,6 +31,17 @@ extension RingOperable where A.O == Self{
     }
 }
 indirect enum RingOperators<A:Ring >:Equatable, RingOperable {
+    init(basisOp: BasisOperators<A>) {
+        self = .Basis(basisOp)
+    }
+    
+    var basisOp: BasisOperators<A>? {
+        switch self {
+        case let .Basis(b): return b
+        default: return nil
+        }
+    }
+    
     init(ringOp: RingO) {
         self = ringOp
     }
@@ -42,9 +53,8 @@ indirect enum RingOperators<A:Ring >:Equatable, RingOperable {
     case Add(A,A)
     case Mul(A,A)
     case Negate(A)
-    case Number(B)
     case Subtract(A, A)
-    case Var(String)
+    case Basis(BasisOperators<A>)
 }
 extension RingOperators {
     var sum:A {
@@ -73,8 +83,8 @@ func operateRingAdd<A:Ring>(_ x:A, _ y:A)-> A {
     return operateCommutativeBinary({ (_ l: A, _ r: A) -> A? in
         if l == A.Zero  {
             return r
-        } else if case let (.Number(l), .Number(r)) = (l.op.ringOp,r.op.ringOp) {
-            return A.O(ringOp: .Number(l + r)).ring
+        } else if case let (.Number(l), .Number(r)) = (l.op.basisOp,r.op.basisOp) {
+            return A.O(basisOp: .Number(l + r)).ring
         } else if (-l).eval().same(r) {
             return A.Zero
         } else {
@@ -94,8 +104,8 @@ func operateRingMul<A:Ring>(_ x:A, _ y:A)-> A {
             return r
         } else if l == A.Zero {
             return A.Zero
-        } else if case let (.Number(ln), .Number(rn)) = (l.op.ringOp,r.op.ringOp) {
-            return A.O.RingO.Number(ln * rn).sum
+        } else if case let (.Number(ln), .Number(rn)) = (l.op.basisOp,r.op.basisOp) {
+            return (ln * rn).asNumber(A.self)
         }
         return nil
     }.reduce(*)
@@ -133,7 +143,6 @@ extension Ring {
     }
     func evalRing() -> Self {
         switch op.ringOp {
-        case .Number(_): return self
         case let .Add(x, y):
             return operateRingAdd(x.eval(), y.eval())
         case let .Subtract(l, r):
@@ -150,22 +159,16 @@ extension Ring {
                     return ((-l) * r).eval()
                 case let .Negate(x):
                     return x.eval()
-                case let .Number(x):
+                case let .Basis( .Number(x)):
                     return (-x).asNumber(Self.self)
                 case let .Subtract(l, r):
                     return (r - l).eval()
-                case let .Var(x):
-                    return self
+                default: break
                 }
             } else {
                 
             }
-//        return (Self._Id * x).eval()
-        case .none:
-            return self
-        
-        case .Var(_):
-            return self
+        default: break
         }
         return self
     }

@@ -12,7 +12,7 @@ private extension String {
     }
 }
 private func genLaTex(r:Real)-> String? {
-    switch r.op.ringOp {
+    switch r.op.basisOp {
     case let .Number(num):
         switch num {
         case let .N(n):
@@ -28,7 +28,7 @@ private func genLaTex(r:Real)-> String? {
     return nil
 }
 private func genLaTex(c:Complex)-> String? {
-    switch c.op.ringOp {
+    switch c.op.basisOp {
     case let .Number(num):
         return "\(wrappedLatex(num.r)) + \(wrappedLatex(num.i)) i"
     default:
@@ -40,7 +40,7 @@ private func unNeg<A:Ring>(_ x:A)-> (Bool, A) {
     if case let .Negate(nx) = x.op.ringOp {
         let aaa = unNeg(nx)
         return (!aaa.0, aaa.1)
-    } else if case let .Number(x) = x.op.ringOp, (x as? RealBasis)?.less0 ?? false {
+    } else if case let .Number(x) = x.op.basisOp, (x as? RealBasis)?.less0 ?? false {
         return (false, (-x).asNumber(A.self))
     } else {
         return (true, x)
@@ -65,7 +65,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
     switch x.op.fieldOp {
     case let .Ring(ring):
         switch ring {
-        case let .Var(v):
+        case let .Basis( .Var(v)):
             return v
         case let .Subtract(l, r):
             return genLaTex(F(op: .init(ringOp: .Add(l, -r))))
@@ -90,7 +90,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
             let headTex:String
             
             switch unNegated.head.op.fieldOp {
-            case .Ring(.Var(_)): headTex = genLaTex(unNegated.head)
+            case .Ring(.Basis(.Var(_))): headTex = genLaTex(unNegated.head)
             case .Power(_,_): headTex = genLaTex(unNegated.head)
             default:
                 headTex = genLaTex(unNegated.head).paren
@@ -99,7 +99,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
             let tailTex = unNegated.tail.map { (f) -> String in
                 let tex = genLaTex(f)
                 switch f.op.fieldOp {
-                case .Ring(.Var(_)): return tex
+                case .Ring(.Basis(.Var(_))): return tex
                 case .Power(_, _): return tex
                 default:
                     return "\\left(\(tex)\\right)"
@@ -135,13 +135,13 @@ private func wrappedLatex<A:Field>(_ x:A)-> String {
     switch x.op.fieldOp {
     case let .Ring(ring):
         switch ring {
-        case let .Number(n):
+        case let .Basis(.Number(n)):
             if let n = n as? RealBasis {
                 if !n.less0 {
                     return tex
                 }
             }
-        case .Var(_): return tex
+        case .Basis(.Var(_)): return tex
 
         default: break
         }

@@ -108,12 +108,13 @@ extension Int {
 }
 extension RealBasis {
     var f: Real {
-        return Real(op: RealOperable(ringOp: .Number(self)))// Real(op: .Number(self))
+        return Real(op: .init(basisOp: .Number(self)))
+//        return Real(op: RealOperable(ringOp: .Number(self)))// Real(op: .Number(self))
     }
 }
 extension ComplexBasis {
     var f: Complex {
-        return Complex(op: ComplexOperable(ringOp: .Number(self)))
+        return Complex(op: .init(basisOp: .Number(self)))
 //        return Complex(op: .Number(self))
     }
 }
@@ -137,7 +138,8 @@ extension Rational where T == Int {
 }
 extension String {
     func f<F:Field>() -> F {
-        return F(op: F.O(ringOp: .Var(self)))
+        return F(op: .init(basisOp: .Var(self)))
+        
 //        return F(op: .Var(self))
     }
     var rvar: Real {
@@ -190,7 +192,7 @@ func operateFieldAdd<A:Field>(_ x:A, _ y:A)-> A {
     return operateCommutativeBinary({ (_ l: A, _ r: A) -> A? in
         if l == A.Zero {
             return r
-        } else if case let (.Number(l), .Number(r)) = (l.op.ringOp,r.op.ringOp) {
+        } else if case let (.Number(l), .Number(r)) = (l.op.basisOp,r.op.basisOp) {
             return (l + r).asNumber(A.self)
         } else if (-l).eval().sameField(r) {
             return A.Zero
@@ -211,7 +213,7 @@ func operateFieldMul<A:Field>(_ x:A, _ y:A)-> A {
             return r
         } else if l == A.Zero {
             return A.Zero
-        } else if case let (.Number(ln), .Number(rn)) = (l.op.ringOp,r.op.ringOp) {
+        } else if case let (.Number(ln), .Number(rn)) = (l.op.basisOp,r.op.basisOp) {
             return (ln * rn).asNumber(A.self)
         }
         switch (l.op.fieldOp,r.op.fieldOp) {

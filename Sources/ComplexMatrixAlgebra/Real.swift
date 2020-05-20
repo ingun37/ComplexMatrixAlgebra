@@ -115,28 +115,6 @@ enum RealBasis: Equatable, FieldBasis {
     case Q(Rational<Int>)
     case R(Double)
 }
-struct RealOperable:FieldOperable {
-    init(fieldOp: FieldOperators<Real>) {
-        self.fieldOp = fieldOp
-    }
-    
-    
-    init(ringOp: RingO) {
-        fieldOp = .Ring(ringOp)
-    }
-    
-    var ringOp: RingO? {
-        switch fieldOp {
-        case let .Ring(r):
-            return r
-        default:
-            return nil
-        }
-    }
-    
-    let fieldOp: FieldOperators<A>
-    typealias A = Real
-}
 //typealias Real = Field<RealNumber>
 struct Real:Field {
     typealias B = RealBasis
@@ -149,7 +127,6 @@ struct Real:Field {
         return evalField()
     }
     
-    let op: RealOperable
-    typealias O = RealOperable
+    let op: FieldOperators<Self>
     
 }

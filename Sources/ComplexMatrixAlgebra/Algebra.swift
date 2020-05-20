@@ -7,9 +7,21 @@
 
 import Foundation
 import NumberKit
+indirect enum BasisOperators<A:Algebra>: Operable {
+    init(basisOp: BasisOperators<A>) {
+        self = basisOp
+    }
+    
+    var basisOp: BasisOperators<A>? {return self}
+    
+    case Number(B)
+    case Var(String)
+}
 protocol Operable:Equatable {
     associatedtype A:Algebra
     typealias B = A.B
+    init(basisOp:BasisOperators<A>)
+    var basisOp: BasisOperators<A>? {get}
 }
 
 //TODO: Change once accepted: https://forums.swift.org/t/accepted-se-0280-enum-cases-as-protocol-witnesses/34850

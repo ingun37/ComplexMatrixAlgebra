@@ -38,6 +38,19 @@ extension FieldOperable where A.O == Self {
     }
 }
 indirect enum FieldOperators<A:Field>:FieldOperable, Equatable {
+    init(basisOp: BasisOperators<A>) {
+        self = .Ring(.Basis(basisOp))
+    }
+    
+    var basisOp: BasisOperators<A>? {
+        switch self {
+        case let .Ring(.Basis(b)):
+            return b
+        default:
+            return nil
+        }
+    }
+    
     var fieldOp: Self {
         return self
     }
@@ -104,7 +117,7 @@ extension Field {
         case let .Inverse(x):
             let x = x.eval()
             switch x.op.fieldOp {
-            case let .Ring(.Number(number)):
+            case let .Ring(.Basis(.Number(number))):
                 return (~number).asNumber(Self.self)
             case let .Quotient(numer, denom):
                 return Self(op: .init(fieldOp: .Quotient(denom, numer))).eval()
@@ -126,9 +139,9 @@ extension Field {
             switch exponent.op.fieldOp {
             case let .Ring(ring):
                 switch ring {
-                case let .Number(numExp):
+                case let .Basis( .Number(numExp)):
                     switch base.op.ringOp {
-                    case let .Number(numBase):
+                    case let .Basis( .Number(numBase)):
                         if let evaled = numBase^numExp {
                             return evaled.asNumber(Self.self)
                         }
@@ -142,7 +155,7 @@ extension Field {
         case let .Conjugate(xx):
             let x = xx.eval()
             switch x.op.ringOp {
-            case let .Number(n):
+            case let .Basis( .Number(n)):
                 return (*n).asNumber(Self.self)
             default:
                 return Self(op: .init(fieldOp: .Conjugate(x)))
