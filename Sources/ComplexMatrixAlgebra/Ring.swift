@@ -18,10 +18,10 @@ extension RingBasis {
         return R.O.RingO.Number(self).sum
     }
 }
-protocol Ring:Algebra where O:RingOperable{}
+protocol Ring:Algebra where O:RingOperable, B:RingBasis{}
 
-protocol RingOperable:Operable where A:Ring, B:RingBasis {
-    typealias RingO = RingOperators<A, B>
+protocol RingOperable:Operable where A:Ring {
+    typealias RingO = RingOperators<A>
     init(ringOp:RingO)
     var ringOp: RingO? { get }
 }
@@ -30,7 +30,7 @@ extension RingOperable where A.O == Self{
         return A(op: self)
     }
 }
-indirect enum RingOperators<A:Ring, B:RingBasis >:Equatable, RingOperable {
+indirect enum RingOperators<A:Ring >:Equatable, RingOperable {
     init(ringOp: RingO) {
         self = ringOp
     }
@@ -46,7 +46,7 @@ indirect enum RingOperators<A:Ring, B:RingBasis >:Equatable, RingOperable {
     case Subtract(A, A)
     case Var(String)
 }
-extension RingOperators where A.O.A == A, A.O.B == B {
+extension RingOperators {
     var sum:A {
         return A(op: A.O(ringOp: self))
     }

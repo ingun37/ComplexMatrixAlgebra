@@ -9,11 +9,14 @@ import Foundation
 import NumberKit
 protocol Operable:Equatable {
     associatedtype A:Algebra
-    associatedtype B:Basis
+    typealias B = A.B
 }
+
 //TODO: Change once accepted: https://forums.swift.org/t/accepted-se-0280-enum-cases-as-protocol-witnesses/34850
 protocol Algebra: Equatable {
     associatedtype O:Operable where O.A == Self
+    associatedtype B:Basis
+
     func eval() -> Self
     func same(_ to:Self)-> Bool
     init(op:O)

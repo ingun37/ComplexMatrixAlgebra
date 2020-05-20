@@ -129,10 +129,11 @@ struct MatrixOperable<N:NatRep>:RingOperable {
         }
     }
     typealias A = Matrix<N>
-    typealias B = MatrixBasis<N,Complex>
     
 }
 struct Matrix<N:NatRep>:Ring {
+    typealias B = MatrixBasis<N,Complex>
+
     func eval() -> Matrix {
         switch op.op {
         case let .Scale(s, m):

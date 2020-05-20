@@ -82,7 +82,7 @@ struct ComplexBasis: FieldBasis {
 }
 
 struct ComplexOperable:FieldOperable {
-    init(fieldOp: FieldOperators<Complex, ComplexBasis>) {
+    init(fieldOp: FieldOperators<Complex>) {
         self.fieldOp = fieldOp
     }
     
@@ -98,16 +98,17 @@ struct ComplexOperable:FieldOperable {
         }
     }
     
-    let fieldOp: FieldOperators<A,B>
+    let fieldOp: FieldOperators<A>
     
     typealias A = Complex
     
-    typealias B = ComplexBasis
     
     
 }
 
 struct Complex:Field {
+    typealias B = ComplexBasis
+
     func eval() -> Complex {
         return evalField()
     }

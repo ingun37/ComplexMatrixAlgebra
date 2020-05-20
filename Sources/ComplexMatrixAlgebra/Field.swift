@@ -26,18 +26,18 @@ extension FieldBasis {
     }
 }
 
-protocol Field:Ring where O:FieldOperable {
+protocol Field:Ring where O:FieldOperable, B:FieldBasis {
 }
-protocol FieldOperable:RingOperable where A: Field, B:FieldBasis {
-    var fieldOp: FieldOperators<A,B> { get }
-    init(fieldOp:FieldOperators<A,B>)
+protocol FieldOperable:RingOperable where A: Field {
+    var fieldOp: FieldOperators<A> { get }
+    init(fieldOp:FieldOperators<A>)
 }
 extension FieldOperable where A.O == Self {
     var f:A {
         return A(op: self)
     }
 }
-indirect enum FieldOperators<A:Field,B:FieldBasis>:FieldOperable, Equatable {
+indirect enum FieldOperators<A:Field>:FieldOperable, Equatable {
     var fieldOp: Self {
         return self
     }
@@ -63,7 +63,7 @@ indirect enum FieldOperators<A:Field,B:FieldBasis>:FieldOperable, Equatable {
     case Inverse(A)
     case Power(base:A, exponent:A)
     case Conjugate(A)
-    case Ring(RingOperators<A,B>)
+    case Ring(RingOperators<A>)
 }
 
 /** conjugate prefix */
