@@ -93,31 +93,19 @@ extension Field {
 
     static func / (lhs: Self, rhs: Self) -> Self { return .init(op: .init(fieldOp: .Quotient(lhs, rhs))) }
     static func ^ (lhs: Self, rhs: Self) -> Self { return .init(op: .init(fieldOp: .Power(base: lhs, exponent: rhs))) }
-    
     func evalField() -> Self {
         switch op.fieldOp {
-        case let .Ring(ringOp):
-            switch ringOp {
-            case let .Mul(x,y):
-                return operateFieldMul(x.eval(), y.eval())
-            default:
-                return evalRing()
-            }
+        case let .Ring(.Mul(x, y)):
+            return operateFieldMul(x.eval(), y.eval())
         
         case let .Quotient(l, r):
             return (l * ~r).eval()
         
-        
         case let .Inverse(x):
             let x = x.eval()
             switch x.op.fieldOp {
-            case let .Ring(ring):
-                switch ring {
-                case let .Number(number):
-                    return (~number).asNumber(Self.self)
-                default: break
-                }
-            
+            case let .Ring(.Number(number)):
+                return (~number).asNumber(Self.self)
             case let .Quotient(numer, denom):
                 return Self(op: .init(fieldOp: .Quotient(denom, numer))).eval()
             case let .Inverse(x):
@@ -128,17 +116,17 @@ extension Field {
         case .Power(base: let _base, exponent: let _exponent):
             let base = _base.eval()
             let exponent = _exponent.eval()
+            if exponent == .Zero {
+                return .Id
+            } else if exponent == .Id {
+                return base
+            } else if exponent == ._Id {
+                return ~base
+            }
             switch exponent.op.fieldOp {
             case let .Ring(ring):
                 switch ring {
                 case let .Number(numExp):
-                    if numExp == .Zero {
-                        return .Id
-                    } else if numExp == .Id {
-                        return base
-                    } else if numExp == -.Id {
-                        return ~base
-                    }
                     switch base.op.ringOp {
                     case let .Number(numBase):
                         if let evaled = numBase^numExp {
@@ -159,7 +147,10 @@ extension Field {
             default:
                 return Self(op: .init(fieldOp: .Conjugate(x)))
             }
+        default:
+            break
         }
+        return evalRing()
     }
 }
 
