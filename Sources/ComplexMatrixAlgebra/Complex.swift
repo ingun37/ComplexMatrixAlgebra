@@ -98,11 +98,11 @@ struct ComplexOperable:FieldOperable {
         }
     }
     
-    let fieldOp: FieldOperators<A,U>
+    let fieldOp: FieldOperators<A,B>
     
     typealias A = Complex
     
-    typealias U = ComplexBasis
+    typealias B = ComplexBasis
     
     
 }

@@ -129,7 +129,7 @@ struct MatrixOperable<N:NatRep>:RingOperable {
         }
     }
     typealias A = Matrix<N>
-    typealias U = MatrixBasis<N,Complex>
+    typealias B = MatrixBasis<N,Complex>
     
 }
 struct Matrix<N:NatRep>:Ring {

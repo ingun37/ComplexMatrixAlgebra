@@ -12,12 +12,12 @@ protocol AbelianAddBasis:Basis {
     static var Zero:Self {get}
 }
 extension AbelianAddBasis {
-    func asNumber<R:AbelianAdd>(_ a:R.Type) -> R where R.O.U == Self{
+    func asNumber<R:AbelianAdd>(_ a:R.Type) -> R where R.O.B == Self{
         return R.O.AbelianAddO.Number(self).sum.abelianAdd
     }
 }
-protocol AbelianAddOperable:Operable where A:AbelianAddBasis, U:AbelianAddBasis{
-    typealias AbelianAddO = AbelianAddOperators<A,U>
+protocol AbelianAddOperable:Operable where A:AbelianAddBasis, B:AbelianAddBasis{
+    typealias AbelianAddO = AbelianAddOperators<A,B>
     init(abelianAddOp:AbelianAddO)
     var abelianAddOp: AbelianAddO? { get }
 }
@@ -40,7 +40,7 @@ extension AbelianAdd {
         return O.AbelianAddO.Negate(l).sum.abelianAdd
     }
     static var Zero:Self {
-        return O.U.Zero.asNumber(self).op.abelianAdd
+        return O.B.Zero.asNumber(self).op.abelianAdd
     }
     func sameAbelianAdd(_ to:Self)-> Bool {
         switch (op.abelianAddOp, to.op.abelianAddOp) {
@@ -82,7 +82,7 @@ indirect enum AbelianAddOperators<A:Equatable,B:Equatable>:Equatable {
     case Var(String)
 }
 
-extension AbelianAddOperators where A:AbelianAdd, A.O.U == B {
+extension AbelianAddOperators where A:AbelianAdd, A.O.B == B {
     var sum:A.O {
         return A.O(abelianAddOp: self)
     }

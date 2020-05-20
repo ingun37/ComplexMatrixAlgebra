@@ -14,14 +14,14 @@ protocol RingBasis:Basis {
     static var Id:Self {get}
 }
 extension RingBasis {
-    func asNumber<R:Ring>(_ a:R.Type) -> R where R.O.U == Self{
+    func asNumber<R:Ring>(_ a:R.Type) -> R where R.O.B == Self{
         return R.O.RingO.Number(self).sum
     }
 }
 protocol Ring:Algebra where O:RingOperable{}
 
-protocol RingOperable:Operable where A:Ring, U:RingBasis {
-    typealias RingO = RingOperators<A, U>
+protocol RingOperable:Operable where A:Ring, B:RingBasis {
+    typealias RingO = RingOperators<A, B>
     init(ringOp:RingO)
     var ringOp: RingO? { get }
 }
@@ -30,7 +30,7 @@ extension RingOperable where A.O == Self{
         return A(op: self)
     }
 }
-indirect enum RingOperators<A:Ring, U:RingBasis >:Equatable, RingOperable {
+indirect enum RingOperators<A:Ring, B:RingBasis >:Equatable, RingOperable {
     init(ringOp: RingO) {
         self = ringOp
     }
@@ -42,11 +42,11 @@ indirect enum RingOperators<A:Ring, U:RingBasis >:Equatable, RingOperable {
     case Add(A,A)
     case Mul(A,A)
     case Negate(A)
-    case Number(U)
+    case Number(B)
     case Subtract(A, A)
     case Var(String)
 }
-extension RingOperators where A.O.A == A, A.O.U == U {
+extension RingOperators where A.O.A == A, A.O.B == B {
     var sum:A {
         return A(op: A.O(ringOp: self))
     }
@@ -115,13 +115,13 @@ extension Ring {
         return O.RingO.Negate(l).sum
     }
     static var Zero:Self {
-        return O.U.Zero.asNumber(self).op.ring
+        return O.B.Zero.asNumber(self).op.ring
     }
     static var Id:Self {
-        return O.U.Id.asNumber(self).op.ring
+        return O.B.Id.asNumber(self).op.ring
     }
     static var _Id:Self {
-        return (-O.U.Id).asNumber(self).op.ring
+        return (-O.B.Id).asNumber(self).op.ring
     }
     func sameRing(_ to:Self) -> Bool {
         switch (op.ringOp, to.op.ringOp) {

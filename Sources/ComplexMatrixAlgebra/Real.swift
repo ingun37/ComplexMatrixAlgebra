@@ -124,9 +124,9 @@ struct RealOperable:FieldOperable {
         }
     }
     
-    let fieldOp: FieldOperators<A,U>
+    let fieldOp: FieldOperators<A,B>
     typealias A = Real
-    typealias U = RealBasis
+    typealias B = RealBasis
 }
 //typealias Real = Field<RealNumber>
 struct Real:Field {

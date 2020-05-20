@@ -9,7 +9,7 @@ import Foundation
 import NumberKit
 protocol Operable:Equatable {
     associatedtype A:Algebra
-    associatedtype U:Basis
+    associatedtype B:Basis
 }
 //TODO: Change once accepted: https://forums.swift.org/t/accepted-se-0280-enum-cases-as-protocol-witnesses/34850
 protocol Algebra: Equatable {
