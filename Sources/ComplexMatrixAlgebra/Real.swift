@@ -8,34 +8,34 @@
 import Foundation
 import NumberKit
 
-enum RealNumber: Equatable, FieldSet {
-    static prefix func * (lhs: RealNumber) -> RealNumber {
+enum RealBasis: Equatable, FieldBasis {
+    static prefix func * (lhs: RealBasis) -> RealBasis {
         return lhs
     }
     
-    static func ^ (lhs: RealNumber, rhs: RealNumber) -> RealNumber? {
+    static func ^ (lhs: RealBasis, rhs: RealBasis) -> RealBasis? {
         if case let .N(intExp) = rhs {
             return lhs^intExp
         }
         return nil
     }
     
-    static func / (lhs: RealNumber, rhs: RealNumber) -> RealNumber {
+    static func / (lhs: RealBasis, rhs: RealBasis) -> RealBasis {
         return lhs * (~rhs)
     }
     
-    static prefix func ~ (lhs: RealNumber) -> RealNumber {
+    static prefix func ~ (lhs: RealBasis) -> RealBasis {
         switch lhs {
         case let .N(n):
-            return (RealNumber.Q(Rational(1, n))).eval()
+            return (RealBasis.Q(Rational(1, n))).eval()
         case let .Q(q):
-            return RealNumber.Q(Rational(q.denominator, q.numerator)).eval()
+            return RealBasis.Q(Rational(q.denominator, q.numerator)).eval()
         case let .R(r):
-            return RealNumber.R(1/r).eval()
+            return RealBasis.R(1/r).eval()
         }
     }
     
-    static prefix func - (lhs: RealNumber) -> RealNumber {
+    static prefix func - (lhs: RealBasis) -> RealBasis {
         switch lhs {
         case let .N(n): return .N(-n)
         case let .Q(q): return .Q(-q)
@@ -43,34 +43,34 @@ enum RealNumber: Equatable, FieldSet {
         }
     }
     
-    static func - (lhs: RealNumber, rhs: RealNumber) -> RealNumber {
+    static func - (lhs: RealBasis, rhs: RealBasis) -> RealBasis {
         return lhs + (-rhs)
     }
     
-    static func + (lhs: RealNumber, rhs: RealNumber) -> RealNumber {
+    static func + (lhs: RealBasis, rhs: RealBasis) -> RealBasis {
         switch (lhs,rhs) {
         case let (.N(x), .N(y)): return (.N(x+y))
 
-        case let (.N(x), .Q(y)): return (RealNumber.Q(y + Rational<Int>(x))).eval()
-        case let (.Q(y), .N(x)): return (RealNumber.Q(y + Rational<Int>(x))).eval()
+        case let (.N(x), .Q(y)): return (RealBasis.Q(y + Rational<Int>(x))).eval()
+        case let (.Q(y), .N(x)): return (RealBasis.Q(y + Rational<Int>(x))).eval()
 
-        case let (.N(x), .R(y)): return (RealNumber.R(y + Double(x))).eval()
-        case let (.R(y), .N(x)): return (RealNumber.R(y + Double(x))).eval()
+        case let (.N(x), .R(y)): return (RealBasis.R(y + Double(x))).eval()
+        case let (.R(y), .N(x)): return (RealBasis.R(y + Double(x))).eval()
 
-        case let (.Q(x), .Q(y)): return (RealNumber.Q(y + x)).eval()
+        case let (.Q(x), .Q(y)): return (RealBasis.Q(y + x)).eval()
 
-        case let (.Q(x), .R(y)): return (RealNumber.R(x.doubleValue + y)).eval()
-        case let (.R(y), .Q(x)): return (RealNumber.R(x.doubleValue + y)).eval()
+        case let (.Q(x), .R(y)): return (RealBasis.R(x.doubleValue + y)).eval()
+        case let (.R(y), .Q(x)): return (RealBasis.R(x.doubleValue + y)).eval()
 
-        case let (.R(x), .R(y)): return (RealNumber.R(y + x)).eval()
+        case let (.R(x), .R(y)): return (RealBasis.R(y + x)).eval()
         }
     }
     
-    static var Zero: RealNumber {return .N(0)}
+    static var Zero: RealBasis {return .N(0)}
     
-    static var Id: RealNumber {return .N(1)}
+    static var Id: RealBasis {return .N(1)}
     
-    private func eval() -> RealNumber {
+    private func eval() -> RealBasis {
         switch self {
         case .N(_): return self
         case let .Q(q):
@@ -82,22 +82,22 @@ enum RealNumber: Equatable, FieldSet {
         }
     }
     
-    static func * (lhs: RealNumber, rhs: RealNumber) -> RealNumber {
+    static func * (lhs: RealBasis, rhs: RealBasis) -> RealBasis {
         switch (lhs,rhs) {
         case let (.N(x), .N(y)): return (.N(x*y))
 
-        case let (.N(x), .Q(y)): return (RealNumber.Q(y * Rational<Int>(x))).eval()
-        case let (.Q(y), .N(x)): return (RealNumber.Q(y * Rational<Int>(x))).eval()
+        case let (.N(x), .Q(y)): return (RealBasis.Q(y * Rational<Int>(x))).eval()
+        case let (.Q(y), .N(x)): return (RealBasis.Q(y * Rational<Int>(x))).eval()
 
-        case let (.N(x), .R(y)): return (RealNumber.R(y * Double(x))).eval()
-        case let (.R(y), .N(x)): return (RealNumber.R(y * Double(x))).eval()
+        case let (.N(x), .R(y)): return (RealBasis.R(y * Double(x))).eval()
+        case let (.R(y), .N(x)): return (RealBasis.R(y * Double(x))).eval()
 
-        case let (.Q(x), .Q(y)): return (RealNumber.Q(y * x)).eval()
+        case let (.Q(x), .Q(y)): return (RealBasis.Q(y * x)).eval()
 
-        case let (.Q(x), .R(y)): return (RealNumber.R(x.doubleValue * y)).eval()
-        case let (.R(y), .Q(x)): return (RealNumber.R(x.doubleValue * y)).eval()
+        case let (.Q(x), .R(y)): return (RealBasis.R(x.doubleValue * y)).eval()
+        case let (.R(y), .Q(x)): return (RealBasis.R(x.doubleValue * y)).eval()
 
-        case let (.R(x), .R(y)): return (RealNumber.R(y * x)).eval()
+        case let (.R(x), .R(y)): return (RealBasis.R(y * x)).eval()
         }
     }
     
@@ -125,7 +125,7 @@ struct RealOperable:FieldOperable {
     
     let fieldOp: O
     typealias A = Real
-    typealias U = RealNumber
+    typealias U = RealBasis
 }
 //typealias Real = Field<RealNumber>
 struct Real:Field {

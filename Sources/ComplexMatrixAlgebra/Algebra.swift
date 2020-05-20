@@ -10,7 +10,7 @@ import NumberKit
 
 protocol Operable:Equatable {
     associatedtype A:Algebra
-    associatedtype U:UnderlyingSet
+    associatedtype U:Basis
 }
 //TODO: Change once accepted: https://forums.swift.org/t/accepted-se-0280-enum-cases-as-protocol-witnesses/34850
 protocol Algebra: Equatable {
@@ -21,7 +21,7 @@ protocol Algebra: Equatable {
     var op: O { get }
 }
 
-protocol UnderlyingSet:Equatable {}
+protocol Basis:Equatable {}
 
 func commuteSame<C:Collection, T:Algebra>(_ xs:C, _ ys:C) -> Bool where C.Element == T, C.Index == Int{
     guard xs.count == ys.count else { return false }

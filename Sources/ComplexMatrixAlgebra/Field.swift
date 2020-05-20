@@ -7,13 +7,13 @@
 
 import Foundation
 
-protocol FieldSet: RingNumber {
+protocol FieldBasis: RingBasis {
     static func / (lhs: Self, rhs: Self) -> Self
     static prefix func ~ (lhs: Self) -> Self
     static prefix func * (lhs: Self) -> Self
     static func ^ (lhs: Self, rhs: Self) -> Self?
 }
-extension FieldSet {
+extension FieldBasis {
     static func ^ (lhs: Self, rhs: Int) -> Self {
         if rhs == 0 {
             return Id
@@ -28,7 +28,7 @@ extension FieldSet {
 
 protocol Field:Ring where O:FieldOperable {
 }
-protocol FieldOperable:RingOperable where A: Field, U:FieldSet {
+protocol FieldOperable:RingOperable where A: Field, U:FieldBasis {
     typealias O = FieldOperators<A,U>
     var fieldOp: O { get }
     init(fieldOp:O)

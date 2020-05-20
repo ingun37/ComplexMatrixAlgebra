@@ -16,14 +16,14 @@ struct Dimension:Hashable {
     }
 }
 
-struct MatrixNumber<N:NatRep, F:Field>:RingNumber {
+struct MatrixBasis<N:NatRep, F:Field>:RingBasis {
     static prefix func - (l: Self) -> Self {
         let newE = l.e.fmap { (row) in
             row.fmap { (e) in
                 -e
             }
         }
-        return MatrixNumber(e: newE)
+        return MatrixBasis(e: newE)
     }
     
     
@@ -34,7 +34,7 @@ struct MatrixNumber<N:NatRep, F:Field>:RingNumber {
                 F.Zero
             }
         }
-        return MatrixNumber(e: ee)
+        return MatrixBasis(e: ee)
     }
     
     static var Id: Self {
@@ -43,34 +43,34 @@ struct MatrixNumber<N:NatRep, F:Field>:RingNumber {
                 r == c ? F.Id : F.Zero
             }.decompose()!
         }.decompose()!
-        return MatrixNumber(e: _2d)
+        return MatrixBasis(e: _2d)
     }
     
     let e:List<List<F>>
     
-    static func * (l:MatrixNumber, r:MatrixNumber)->MatrixNumber {
+    static func * (l:MatrixBasis, r:MatrixBasis)->MatrixBasis {
         let newElems = l.rows.fmap { (lrow) in
             r.cols.fmap { (rcol) in
                 lrow.fzip(rcol).fmap(*).reduce(+).eval()
             }
         }
-        return MatrixNumber(e: newElems)
+        return MatrixBasis(e: newElems)
     }
     
-    static func * (l:F, r:MatrixNumber)->MatrixNumber {
+    static func * (l:F, r:MatrixBasis)->MatrixBasis {
         let newE = r.e.fmap { (row) in
             row.fmap { (e) in
                 (l*e).eval()
             }
         }
-        return MatrixNumber(e: newE)
+        return MatrixBasis(e: newE)
     }
     
-    static func + (l:MatrixNumber, r:MatrixNumber)->MatrixNumber {
+    static func + (l:MatrixBasis, r:MatrixBasis)->MatrixBasis {
         let newElements = l.rows.fzip(r.rows).fmap { (l,r) in
             l.fzip(r).fmap(+).fmap({$0.eval()})
         }
-        return MatrixNumber(e: newElements)
+        return MatrixBasis(e: newElements)
     }
     
     var rowLen:Int {
@@ -129,7 +129,7 @@ struct MatrixOperable<N:NatRep>:RingOperable {
         }
     }
     typealias A = Matrix<N>
-    typealias U = MatrixNumber<N,Complex>
+    typealias U = MatrixBasis<N,Complex>
     
 }
 struct Matrix<N:NatRep>:Ring {
@@ -175,8 +175,8 @@ struct Matrix<N:NatRep>:Ring {
 }
 
 extension List where T == List<Complex> {
-    func mat<N:NatRep>()-> MatrixNumber<N,Complex> {
-        return MatrixNumber(e: self)
+    func mat<N:NatRep>()-> MatrixBasis<N,Complex> {
+        return MatrixBasis(e: self)
     }
 }
 protocol NatRep:Equatable {

@@ -7,13 +7,13 @@
 
 import Foundation
 
-struct ComplexNumber: FieldSet {
+struct ComplexBasis: FieldBasis {
     
-    static prefix func * (lhs: ComplexNumber) -> ComplexNumber {
-        return ComplexNumber(r: lhs.r, i: -lhs.i).eval()
+    static prefix func * (lhs: ComplexBasis) -> ComplexBasis {
+        return ComplexBasis(r: lhs.r, i: -lhs.i).eval()
     }
     
-    static func ^ (lhs: ComplexNumber, rhs: ComplexNumber) -> ComplexNumber? {
+    static func ^ (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis? {
         if rhs.i == .Zero {
             if case let .Number(.N(intExp)) = rhs.r.op.ringOp {
                 return lhs^intExp
@@ -23,7 +23,7 @@ struct ComplexNumber: FieldSet {
     }
     
     
-    static func / (lhs: ComplexNumber, rhs: ComplexNumber) -> ComplexNumber {
+    static func / (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis {
         //compiling never ends
         let a1 = lhs.r
         let b1 = lhs.i
@@ -38,45 +38,45 @@ struct ComplexNumber: FieldSet {
         let a1b2 = a1 * b2
         let r = (a1a2 + b1b2) / a22_b22
         let i = (b1a2 - a1b2) / a22_b22
-        return ComplexNumber(r: r, i: i).eval()
+        return ComplexBasis(r: r, i: i).eval()
     }
     
     
-    static prefix func ~ (lhs: ComplexNumber) -> ComplexNumber {
+    static prefix func ~ (lhs: ComplexBasis) -> ComplexBasis {
         return (*lhs / (lhs * *lhs)).eval()
     }
     
-    static prefix func - (lhs: ComplexNumber) -> ComplexNumber {
-        return ComplexNumber(r: -lhs.r, i: -lhs.i).eval()
+    static prefix func - (lhs: ComplexBasis) -> ComplexBasis {
+        return ComplexBasis(r: -lhs.r, i: -lhs.i).eval()
     }
     
-    static func - (lhs: ComplexNumber, rhs: ComplexNumber) -> ComplexNumber {
-        return ComplexNumber(r: lhs.r - rhs.r, i: lhs.i - rhs.i).eval()
+    static func - (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis {
+        return ComplexBasis(r: lhs.r - rhs.r, i: lhs.i - rhs.i).eval()
     }
     
-    static func + (lhs: ComplexNumber, rhs: ComplexNumber) -> ComplexNumber {
-        return ComplexNumber(r: lhs.r + rhs.r, i: lhs.i + rhs.i).eval()
+    static func + (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis {
+        return ComplexBasis(r: lhs.r + rhs.r, i: lhs.i + rhs.i).eval()
     }
     
     let r:Real
     let i:Real
 
-    static var Zero: ComplexNumber {
-        return ComplexNumber(r: Real.Zero, i: Real.Zero)
+    static var Zero: ComplexBasis {
+        return ComplexBasis(r: Real.Zero, i: Real.Zero)
     }
     
-    static var Id: ComplexNumber {
-        return ComplexNumber(r: Real.Id, i: Real.Zero)
+    static var Id: ComplexBasis {
+        return ComplexBasis(r: Real.Id, i: Real.Zero)
     }
     
-    func eval() -> ComplexNumber {
-        ComplexNumber(r: r.eval(), i: i.eval())
+    func eval() -> ComplexBasis {
+        ComplexBasis(r: r.eval(), i: i.eval())
     }
     
-    static func * (lhs: ComplexNumber, rhs: ComplexNumber) -> ComplexNumber {
+    static func * (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis {
         let img = (lhs.r * rhs.i) + (lhs.i * rhs.r)
         let real = (lhs.r * rhs.r) - (lhs.i * rhs.i)
-        return ComplexNumber(r: real, i: img).eval()
+        return ComplexBasis(r: real, i: img).eval()
     }
     
 }
@@ -101,7 +101,7 @@ struct ComplexOperable:FieldOperable {
     
     typealias A = Complex
     
-    typealias U = ComplexNumber
+    typealias U = ComplexBasis
     
     
 }

@@ -123,7 +123,7 @@ private func wrappedLatex<A:Field>(_ x:A)-> String {
     case let .Ring(ring):
         switch ring {
         case let .Number(n):
-            if n is RealNumber {
+            if n is RealBasis {
                 return tex
             }
         default: break

@@ -6,21 +6,21 @@
 //
 
 import Foundation
-protocol RingNumber:UnderlyingSet {
+protocol RingBasis:Basis {
     static func * (l:Self, r:Self)->Self
     static func + (l:Self, r:Self)->Self
     static prefix func - (l:Self)->Self
     static var Zero:Self {get}
     static var Id:Self {get}
 }
-extension RingNumber {
+extension RingBasis {
     func asNumber<R:Ring>(_ a:R.Type) -> R where R.O.U == Self{
         return R.O.RingO.Number(self).sum.ring
     }
 }
 protocol Ring:Algebra where O:RingOperable{}
 
-protocol RingOperable:Operable where A:Ring, U:RingNumber {
+protocol RingOperable:Operable where A:Ring, U:RingBasis {
     typealias RingO = RingOperators<A, U>
     init(ringOp:RingO)
     var ringOp: RingO? { get }

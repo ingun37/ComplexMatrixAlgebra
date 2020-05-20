@@ -96,22 +96,22 @@ extension Collection where Element:Equatable {
 
 
 extension Int {
-    var real: RealNumber {
+    var real: RealBasis {
         return .N(self)
     }
     func on(_ deno:Int)-> Rational<Int> {
         return Rational(self, deno)
     }
-    func complex(i:Int) -> ComplexNumber {
-        return ComplexNumber(r: real.f, i: i.real.f)
+    func complex(i:Int) -> ComplexBasis {
+        return ComplexBasis(r: real.f, i: i.real.f)
     }
 }
-extension RealNumber {
+extension RealBasis {
     var f: Real {
         return Real(op: RealOperable(ringOp: .Number(self)))// Real(op: .Number(self))
     }
 }
-extension ComplexNumber {
+extension ComplexBasis {
     var f: Complex {
         return Complex(op: ComplexOperable(ringOp: .Number(self)))
 //        return Complex(op: .Number(self))
@@ -123,16 +123,16 @@ extension ComplexNumber {
 //    }
 //}
 extension Double {
-    var real: RealNumber {
-        return (RealNumber.R(self))
+    var real: RealBasis {
+        return (RealBasis.R(self))
     }
 }
 extension Rational where T == Int {
-    var real: RealNumber {
+    var real: RealBasis {
         return (.Q(self))
     }
-    func complex(i:Rational) -> ComplexNumber {
-        return (ComplexNumber(r: real.f, i: i.real.f))
+    func complex(i:Rational) -> ComplexBasis {
+        return (ComplexBasis(r: real.f, i: i.real.f))
     }
 }
 extension String {
