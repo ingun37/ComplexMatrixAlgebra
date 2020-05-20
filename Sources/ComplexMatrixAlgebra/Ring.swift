@@ -36,7 +36,7 @@ indirect enum RingOperators<R:Equatable,Num:Equatable>:Equatable {
     case Negate(R)
     case Number(Num)
     case Subtract(R, R)
-
+    case Var(String)
 }
 extension RingOperators where R:Ring, R.O.U == Num {
     var sum:R.O {
@@ -135,6 +135,9 @@ extension Ring {
         case let .Negate(x):
             return (Self._Id * x).eval()
         case .none:
+            return self
+        
+        case .Var(_):
             return self
         }
     }

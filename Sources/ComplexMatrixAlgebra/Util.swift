@@ -137,7 +137,7 @@ extension Rational where T == Int {
 }
 extension String {
     func f<F:Field>() -> F {
-        return F(op: F.O(fieldOp: .Var(self)))
+        return F(op: F.O(ringOp: .Var(self)))
 //        return F(op: .Var(self))
     }
     var rvar: Real {

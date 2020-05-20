@@ -40,7 +40,6 @@ extension FieldOperable where A.O == Self {
 }
 indirect enum FieldOperators<F:Equatable,Num:Equatable>:Equatable {
     case Quotient(F, F)
-    case Var(String)
     case Inverse(F)
     case Power(base:F, exponent:F)
     case Conjugate(F)
@@ -93,8 +92,6 @@ extension Field {
             return (l * ~r).eval()
         
         
-        case .Var(_):
-            return self
         case let .Inverse(x):
             let x = x.eval()
             switch x.op.fieldOp {

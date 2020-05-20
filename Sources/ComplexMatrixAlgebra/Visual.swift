@@ -54,6 +54,8 @@ func genLaTex<F:Field>(_ x:F) -> String {
     switch x.op.fieldOp {
     case let .Ring(ring):
         switch ring {
+        case let .Var(v):
+            return v
         case let .Subtract(l, r):
             return genLaTex(F.O.RingO.Add(l, F._Id * r).sum.asField)
 
@@ -77,7 +79,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
             let headTex:String
             
             switch unNegated.head.op.fieldOp {
-            case .Var(_): headTex = genLaTex(unNegated.head)
+            case .Ring(.Var(_)): headTex = genLaTex(unNegated.head)
             case .Power(_,_): headTex = genLaTex(unNegated.head)
             default:
                 headTex = genLaTex(unNegated.head).paren
@@ -86,7 +88,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
             let tailTex = unNegated.tail.map { (f) -> String in
                 let tex = genLaTex(f)
                 switch f.op.fieldOp {
-                case .Var(_): return tex
+                case .Ring(.Var(_)): return tex
                 case .Power(_, _): return tex
                 default:
                     return "\\left(\(tex)\\right)"
@@ -102,8 +104,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
     case let .Quotient(l, r):
         return "\\frac{\(genLaTex(l))}{\(genLaTex(r))}"
 
-    case let .Var(v):
-        return v
+    
     case let .Inverse(x):
         return "{\(wrappedLatex(x))}^{-1}"
     case .Power(base: let base, exponent: let exponent):
@@ -127,10 +128,11 @@ private func wrappedLatex<A:Field>(_ x:A)-> String {
             if n is RealBasis {
                 return tex
             }
+        case .Var(_):        return tex
+
         default: break
         }
     
-    case .Var(_):        return tex
     case .Power(base: _, exponent: _):        return tex
     default: break
     }
