@@ -85,12 +85,10 @@ extension Field {
         switch op.fieldOp {
         case let .Ring(ringOp):
             switch ringOp {
-            case let .Number(number): return O.RingO.Number(number).sum.asField
-            case let .Add(x,y):
-                return operateFieldAdd(x.eval(), y.eval())
             case let .Mul(x,y):
                 return operateFieldMul(x.eval(), y.eval())
-            case let .Negate(x): return (Self._Id * x).eval()
+            default:
+                return evalRing()
             }
         
         case let .Quotient(l, r):

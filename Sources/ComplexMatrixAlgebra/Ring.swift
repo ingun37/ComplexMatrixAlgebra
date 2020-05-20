@@ -65,8 +65,8 @@ func operateRingAdd<A:Ring>(_ x:A, _ y:A)-> A {
             return r
         } else if case let (.Number(l), .Number(r)) = (l.op.ringOp,r.op.ringOp) {
             return A.O(ringOp: .Number(l + r)).ring
-        } else if A.O.RingO.Negate(l).sum.ring.eval().sameRing(r) {
-            return A.O.U.Zero.asNumber(A.self).op.ring
+        } else if (-l).eval().same(r) {
+            return A.Zero
         } else {
             return nil
         }
