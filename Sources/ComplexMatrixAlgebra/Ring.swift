@@ -15,7 +15,7 @@ protocol RingBasis:Basis {
 }
 extension RingBasis {
     func asNumber<R:Ring>(_ a:R.Type) -> R where R.O.U == Self{
-        return R.O.RingO.Number(self).sum.ring
+        return R.O.RingO.Number(self).sum
     }
 }
 protocol Ring:Algebra where O:RingOperable{}
@@ -30,17 +30,25 @@ extension RingOperable where A.O == Self{
         return A(op: self)
     }
 }
-indirect enum RingOperators<R:Equatable,Num:Equatable>:Equatable {
-    case Add(R,R)
-    case Mul(R,R)
-    case Negate(R)
-    case Number(Num)
-    case Subtract(R, R)
+indirect enum RingOperators<A:Ring, U:RingBasis >:Equatable, RingOperable {
+    init(ringOp: RingO) {
+        self = ringOp
+    }
+    
+    var ringOp: RingO? {
+        return self
+    }
+    
+    case Add(A,A)
+    case Mul(A,A)
+    case Negate(A)
+    case Number(U)
+    case Subtract(A, A)
     case Var(String)
 }
-extension RingOperators where R:Ring, R.O.U == Num {
-    var sum:R.O {
-        return R.O(ringOp: self)
+extension RingOperators where A.O.A == A, A.O.U == U {
+    var sum:A {
+        return A(op: A.O(ringOp: self))
     }
 }
 func flatRingAdd<A:Ring>(_ x:A)-> List<A> {
@@ -73,7 +81,7 @@ func operateRingAdd<A:Ring>(_ x:A, _ y:A)-> A {
             return nil
         }
     }, flatRingAdd(x) + flatRingAdd(y)).reduce { (l, r) -> A in
-        A.O.RingO.Add(l, r).sum.ring
+        A.O.RingO.Add(l, r).sum
     }
 }
 func operateRingMul<A:Ring>(_ x:A, _ y:A)-> A {
@@ -87,24 +95,24 @@ func operateRingMul<A:Ring>(_ x:A, _ y:A)-> A {
         } else if l == A.Zero {
             return A.Zero
         } else if case let (.Number(ln), .Number(rn)) = (l.op.ringOp,r.op.ringOp) {
-            return A.O.RingO.Number(ln * rn).sum.ring
+            return A.O.RingO.Number(ln * rn).sum
         }
         return nil
     }.reduce(*)
 }
 extension Ring {
     static func * (l:Self, r:Self)-> Self {
-        return O.RingO.Mul(l, r).sum.ring
+        return O.RingO.Mul(l, r).sum
     }
     static func + (l:Self, r:Self)-> Self {
-        return O.RingO.Add(l, r).sum.ring
+        return O.RingO.Add(l, r).sum
     }
     static func - (lhs: Self, rhs: Self) -> Self {
-        return O.RingO.Subtract(lhs, rhs).sum.ring
+        return O.RingO.Subtract(lhs, rhs).sum
     }
 
     static prefix func - (l:Self)-> Self {
-        return O.RingO.Negate(l).sum.ring
+        return O.RingO.Negate(l).sum
     }
     static var Zero:Self {
         return O.U.Zero.asNumber(self).op.ring
