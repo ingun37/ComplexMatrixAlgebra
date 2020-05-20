@@ -36,13 +36,24 @@ private func genLaTex(c:Complex)-> String? {
     }
     return nil
 }
+private func unNeg<A:Ring>(_ x:A)-> (Bool, A) {
+    if case let .Negate(nx) = x.op.ringOp {
+        let aaa = unNeg(nx)
+        return (!aaa.0, aaa.1)
+    } else if case let .Number(x) = x.op.ringOp, (x as? RealBasis)?.less0 ?? false {
+        return (false, (-x).asNumber(A.self))
+    } else {
+        return (true, x)
+    }
+}
 private func unNegateMul<A:Field>(_ l:A, _ r:A) -> (Bool, List<A>) {
     let flat = flatMul(l) + flatMul(r)
-    let minus1 = A._Id
-    let abs = flat.all.filter { $0 != minus1 }
-    let negates = flat.all.count - abs.count
-    let unNegated = abs.decompose() ?? List(A.Id, [])
-    return (negates%2 == 0, unNegated)
+    let unNegs = flat.fmap(unNeg)
+    return unNegs.reduce(head: { (sign, term) in
+        (sign, List(term))
+    }) { (l,r) in
+        (l.0 == r.0 , l.1 + List(r.1) )
+    }
 }
 func genLaTex<F:Field>(_ x:F) -> String {
     if let x = x as? Real, let tex = genLaTex(r: x) {
@@ -57,14 +68,14 @@ func genLaTex<F:Field>(_ x:F) -> String {
         case let .Var(v):
             return v
         case let .Subtract(l, r):
-            return genLaTex(F(op: .init(ringOp: .Add(l, F._Id * r))))
+            return genLaTex(F(op: .init(ringOp: .Add(l, -r))))
 
         case let .Add(l,r):
             let flat = flatAdd(x)
             let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
                 switch x.op.ringOp {
                 case let .Negate(v):
-                    return str + " - \\left( \(genLaTex(v)) \\right)"
+                    return str + " - \(wrappedLatex(v))"
                 case let .Mul(l,r):
                     let (sign, unNeg) = unNegateMul(l, r)
                     return str + (sign ? " + " : " - ") + genLaTex(unNeg.reduce(*))
@@ -96,7 +107,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
             }.joined(separator: " ")
             return "\(signTex) \(headTex) \(tailTex)"
         case let .Negate(x):
-            return genLaTex(F._Id * x)
+            return "- \(wrappedLatex(x))"
         default:
             break
         }
@@ -125,10 +136,12 @@ private func wrappedLatex<A:Field>(_ x:A)-> String {
     case let .Ring(ring):
         switch ring {
         case let .Number(n):
-            if n is RealBasis {
-                return tex
+            if let n = n as? RealBasis {
+                if !n.less0 {
+                    return tex
+                }
             }
-        case .Var(_):        return tex
+        case .Var(_): return tex
 
         default: break
         }

@@ -141,12 +141,32 @@ extension Ring {
         case let .Mul(x, y):
             return operateRingMul(x.eval(), y.eval())
         case let .Negate(x):
-            return (Self._Id * x).eval()
+            let x = x.eval()
+            if let xRingOp = x.op.ringOp {
+                switch xRingOp {
+                case let .Add(l, r):
+                    return ((-l) + (-r)).eval()
+                case let .Mul(l, r):
+                    return ((-l) * r).eval()
+                case let .Negate(x):
+                    return x.eval()
+                case let .Number(x):
+                    return (-x).asNumber(Self.self)
+                case let .Subtract(l, r):
+                    return (r - l).eval()
+                case let .Var(x):
+                    return self
+                }
+            } else {
+                
+            }
+//        return (Self._Id * x).eval()
         case .none:
             return self
         
         case .Var(_):
             return self
         }
+        return self
     }
 }

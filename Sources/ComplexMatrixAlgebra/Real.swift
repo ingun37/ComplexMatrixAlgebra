@@ -101,6 +101,16 @@ enum RealBasis: Equatable, FieldBasis {
         }
     }
     
+    var less0:Bool {
+        switch self {
+        case let .N(n):
+            return n < 0
+        case let .Q(q):
+            return q < 0
+        case let .R(d):
+            return d < 0
+        }
+    }
     case N(Int)
     case Q(Rational<Int>)
     case R(Double)
