@@ -37,7 +37,7 @@ private func genLaTex(c:Complex)-> String? {
     return nil
 }
 private func unNeg<A:Ring>(_ x:A)-> (Bool, A) {
-    if case let .Negate(nx) = x.ringOp {
+    if case let .Negate(nx) = x.abelianOp {
         let aaa = unNeg(nx)
         return (!aaa.0, aaa.1)
     } else if case let .Number(x) = x.basisOp, (x as? RealBasis)?.less0 ?? false {
@@ -70,31 +70,37 @@ func genLaTex<F:Field>(_ x:F) -> String {
     switch x.fieldOp {
     case let .Ring(ring):
         switch ring {
-        case let .Subtract(l, r):
-            
-            return genLaTex(F(ringOp: .Add(l, -r)))
-
-        case let .Add(l,r):
-            let flat = flatAdd(x)
-            let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
-                switch x.ringOp {
-                case let .Negate(v):
-                    return str + " - \(wrappedLatex(v))"
-                case let .Mul(l,r):
-                    let (sign, unNeg) = unNegateMul(l, r)
-                    return str + (sign ? " + " : " - ") + genLaTex(unNeg.reduce(*))
-                default:
-                    return str + " + " + genLaTex(x)
+        case let .Abelian(abe):
+            switch abe {
+            case let .Subtract(l, r):
+                return genLaTex(F(abelianOp: .Add(l, -r)))
+            case let .Add(l,r):
+                let flat = flatAdd(x)
+                let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
+                    switch x.ringOp {
+                    case let .Abelian( .Negate(v)):
+                        return str + " - \(wrappedLatex(v))"
+                    case let .Mul(l,r):
+                        let (sign, unNeg) = unNegateMul(l, r)
+                        return str + (sign ? " + " : " - ") + genLaTex(unNeg.reduce(*))
+                    default:
+                        return str + " + " + genLaTex(x)
+                    }
                 }
+                return tex
+            case let .Negate(x):
+                return "- \(wrappedLatex(x))"
+            default:
+                break
             }
-            return tex
+
         case let .Mul(l,r):
             let (sign, unNegated) = unNegateMul(l, r)
             let signTex = sign ? "" : "-"
             let headTex:String
             
             switch unNegated.head.fieldOp {
-            case .Ring( .Algebra(.Var(_))): headTex = genLaTex(unNegated.head)
+            case .Ring( .Abelian( .Algebra(.Var(_)))): headTex = genLaTex(unNegated.head)
             case .Power(_,_): headTex = genLaTex(unNegated.head)
             default: headTex = genLaTex(unNegated.head).paren
             }
@@ -102,15 +108,14 @@ func genLaTex<F:Field>(_ x:F) -> String {
             let tailTex = unNegated.tail.map { (f) -> String in
                 let tex = genLaTex(f)
                 switch f.fieldOp {
-                case .Ring(.Algebra(.Var(_))): return tex
+                case .Ring(.Abelian( .Algebra(.Var(_)))): return tex
                 case .Power(_, _): return tex
                 default:
                     return "\\left(\(tex)\\right)"
                 }
             }.joined(separator: " ")
             return "\(signTex) \(headTex) \(tailTex)"
-        case let .Negate(x):
-            return "- \(wrappedLatex(x))"
+
         default:
             break
         }
@@ -138,14 +143,18 @@ private func wrappedLatex<A:Field>(_ x:A)-> String {
     switch x.fieldOp {
     case let .Ring(ring):
         switch ring {
-        case let .Algebra(.Number(n)):
-            if let n = n as? RealBasis {
-                if !n.less0 {
-                    return tex
+        case let .Abelian(abe):
+            switch abe {
+            case let .Algebra(.Number(n)):
+                if let n = n as? RealBasis {
+                    if !n.less0 {
+                        return tex
+                    }
                 }
-            }
-        case .Algebra(.Var(_)): return tex
+            case .Algebra(.Var(_)): return tex
 
+            default: break
+            }
         default: break
         }
     

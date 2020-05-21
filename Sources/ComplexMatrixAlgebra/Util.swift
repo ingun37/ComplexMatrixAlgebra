@@ -163,7 +163,7 @@ func flatAlgebra<A>(_ x:A, flatter:@escaping (A)->[A])->List<A> {
 
 func flatAdd<A:Field>(_ x:A)-> List<A> {
     return flatAlgebra(x) { (x) -> [A] in
-        if case let .Add(l,r) = x.ringOp {
+        if case let .Add(l,r) = x.abelianOp {
             return [l,r]
         } else {
             return []
@@ -207,7 +207,7 @@ func operateFieldAdd<A:Field>(_ x:A, _ y:A)-> A {
 
 func operateFieldMul<A:Field>(_ x:A, _ y:A)-> A {
     return operateCommutativeBinary({ (_ l: A, _ r: A) -> A? in
-        if case let .Add(x, y) = l.ringOp {
+        if case let .Add(x, y) = l.abelianOp {
             let xr = x * r
             let yr = y * r
             return (xr + yr).eval()

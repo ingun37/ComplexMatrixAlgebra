@@ -137,9 +137,9 @@ struct Matrix<N:NatRep>:Ring {
                 return O.Scale(s*s2, m).matrix.eval()
             case let .Ring(ro):
                 switch ro {
-                case let .Add(ml, mr):
+                case let .Abelian( .Add(ml, mr)):
                     return ((s * ml) + (s * mr)).eval()
-                case let .Algebra(.Number(m)):
+                case let .Abelian(.Algebra(.Number(m))):
                     return m.e.fmap { (row) in
                         row.fmap { (e) in
                             (s * e).eval()
