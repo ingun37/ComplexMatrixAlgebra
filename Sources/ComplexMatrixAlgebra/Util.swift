@@ -200,44 +200,4 @@ func operateCommutativeBinary<A>(_ trial:(A, A)->A?, _ xs:List<A> ) -> List<A> {
         }
     }
 }
-func operateFieldAdd<A:Field>(_ x:A, _ y:A)-> A {
-    return operateCommutativeBinary({ (_ l: A, _ r: A) -> A? in
-        if l == A.Zero {
-            return r
-        } else if case let (.Number(l), .Number(r)) = (l.basisOp,r.basisOp) {
-            return (l + r).asNumber(A.self)
-        } else if (-l).eval().same(r) {
-            return A.Zero
-        } else {
-            return nil
-        }
-    }, flatAdd(x) + flatAdd(y)).reduce(+)
-}
-
-
-func operateFieldMul<A:Field>(_ x:A, _ y:A)-> A {
-    return operateCommutativeBinary({ (_ l: A, _ r: A) -> A? in
-        if case let .Add(x, y) = l.abelianOp {
-            let xr = x * r
-            let yr = y * r
-            return (xr + yr).eval()
-        } else if l == A.Id {
-            return r
-        } else if l == A.Zero {
-            return A.Zero
-        } else if case let (.Number(ln), .Number(rn)) = (l.basisOp,r.basisOp) {
-            return (ln * rn).asNumber(A.self)
-        }
-        switch (l.fieldOp,r.fieldOp) {
-        case (.Power(base: let lbase, exponent: let lexp), .Power(base: let rbase, exponent: let rexp)):
-            if lbase.same(rbase) {
-                return A(fieldOp: .Power(base: lbase, exponent: lexp + rexp)).eval()
-            }
-        default:
-            return nil
-        }
-        return nil
-    }, flatMul(x) + flatMul(y)).reduce(*)
-}
-
 
