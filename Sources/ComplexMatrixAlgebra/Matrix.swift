@@ -15,70 +15,8 @@ struct Dimension:Hashable {
         self.cols = cols
     }
 }
-
-struct MatrixBasis<F:Field>:AbelianBasis {
-    static prefix func - (l: Self) -> Self {
-        let newE = l.e.fmap { (row) in
-            row.fmap { (e) in
-                -e
-            }
-        }
-        return MatrixBasis(e: newE)
-    }
-    
-    
-    static var Zero: Self {
-        let r = List(0)
-        let ee = r.fmap { (_) in
-            r.fmap { (_) in
-                F.Zero
-            }
-        }
-        return MatrixBasis(e: ee)
-    }
-    
+struct Mat<F:Field> {
     let e:List<List<F>>
-    
-//    static func * (l:MatrixBasis, r:MatrixBasis)->MatrixBasis {
-//        let newElems = l.rows.fmap { (lrow) in
-//            r.cols.fmap { (rcol) in
-//                lrow.fzip(rcol).fmap(*).reduce(+).eval()
-//            }
-//        }
-//        return MatrixBasis(e: newElems)
-//    }
-    
-    static func * (l:F, r:MatrixBasis)->MatrixBasis {
-        let newE = r.e.fmap { (row) in
-            row.fmap { (e) in
-                (l*e).eval()
-            }
-        }
-        return MatrixBasis(e: newE)
-    }
-    
-    static func + (l:MatrixBasis, r:MatrixBasis)->MatrixBasis {
-        let maxRow = max(l.rowLen, r.rowLen)
-        let maxCol = max(l.colLen, r.colLen)
-        let template = List(0, (1..<maxRow)).fmap { (r) in
-            List(0,(1..<maxCol)).fmap({c in (r,c)})
-        }
-        let newL = template.fmap { (row) in
-            row.fmap { (row,col) in
-                l.e.all.at(row, or: List(F.Zero)).all.at(col, or: F.Zero)
-            }
-        }
-        let newR = template.fmap { (row) in
-            row.fmap { (row,col) in
-                r.e.all.at(row, or: List(F.Zero)).all.at(col, or: F.Zero)
-            }
-        }
-        let newElements = newL.fzip(newR).fmap { (l,r) in
-            l.fzip(r).fmap(+).fmap({$0.eval()})
-        }
-        return MatrixBasis(e: newElements)
-    }
-    
     var rowLen:Int {
         return e.all.count
     }
@@ -104,6 +42,129 @@ struct MatrixBasis<F:Field>:AbelianBasis {
     }
     var cols:List<List<F>> {
         return List(0, (1..<colLen)).fmap({self.col($0)})
+    }
+    func fit(to:(Int,Int))-> Self {
+        let maxRow = to.0
+        let maxCol = to.1
+        let template = List(0, (1..<maxRow)).fmap { (r) in
+            List(0,(1..<maxCol)).fmap({c in (r,c)})
+        }
+        let newE = template.fmap { (row) in
+            row.fmap { (row,col) in
+                self.e.all.at(row, or: List(F.Zero)).all.at(col, or: F.Zero)
+            }
+        }
+        return .init(e: newE)
+    }
+    var id:Self {
+        let mx = max(rowLen, colLen)
+        let newE = List(0, (1..<mx)).fmap { (row) in
+            List(0, (1..<mx)).fmap { (col) in
+                row == col ? F.Id : F.Zero
+            }
+        }
+        return .init(e: newE)
+    }
+    static func * (l:F, r:Self)->Self {
+        let newE = r.e.fmap { (row) in
+            row.fmap { (e) in
+                (l*e).eval()
+            }
+        }
+        return .init(e: newE)
+    }
+    static func + (l:Self, r:Self)->Self {
+        let maxRow = max(l.rowLen, r.rowLen)
+        let maxCol = max(l.colLen, r.colLen)
+        let dim = (maxRow, maxCol)
+        let newL = l.fit(to: dim)
+        let newR = r.fit(to: dim)
+        
+        let newElements = newL.e.fzip(newR.e).fmap { (l,r) in
+            l.fzip(r).fmap(+).fmap({$0.eval()})
+        }
+        return (.init(e: newElements))
+    }
+    static func == (l:Self, r:Self)->Bool {
+        guard l.dim == r.dim else { return false }
+        return l.e.fzip(r.e).all.allSatisfy { (x,y) -> Bool in
+            x.fzip(y).all.allSatisfy { (x,y) -> Bool in
+                x == y
+            }
+        }
+    }
+}
+enum MatrixBasis<F:Field>:AbelianBasis {
+    static var Zero: MatrixBasis<F> {return .zero}
+    
+    static func == (lhs: MatrixBasis<F>, rhs: MatrixBasis<F>) -> Bool {
+        switch (lhs,rhs) {
+        case let (.zero,.zero): return true
+        case let (.zero,.id(x)): return x == .Zero
+        case let (.zero,.Matrix(m)): return m.e.all.allSatisfy({$0.all.allSatisfy({$0 == .Zero})})
+
+        case let (.id(x),.zero): return x == .Zero
+        case let (.id(x),.id(y)): return x == y
+        case let (.id(f),.Matrix(m)): return m.id.dim == m.dim && m == (f * m.id)
+
+        case let (.Matrix(m),.zero): return rhs == lhs
+        case let (.Matrix(m),.id(y)): return rhs == lhs
+        case let (.Matrix(x),.Matrix(y)): return x == y
+        }
+    }
+    
+    case zero
+    case id(F)
+    case Matrix(Mat<F>)
+    
+    static prefix func - (l: Self) -> Self {
+        switch l {
+        case .zero: return .zero
+        case let .id(f): return .id((-f).eval())
+        case let .Matrix(e):
+            let newE = e.e.fmap { (row) in
+                row.fmap { (e) in
+                    (-e).eval()
+                }
+            }
+            return .Matrix(.init(e: newE))
+        }
+    }
+    
+//    static func * (l:MatrixBasis, r:MatrixBasis)->MatrixBasis {
+//        let mx = max(l.colLen, r.rowLen)
+//        let newL = l.fit(to: (l.rowLen, mx))
+//        let newR = r.fit(to: (mx, r.colLen))
+//        let newElems = newL.rows.fmap { (lrow) in
+//            newR.cols.fmap { (rcol) in
+//                lrow.fzip(rcol).fmap(*).reduce(+).eval()
+//            }
+//        }
+//        return MatrixBasis(e: newElems)
+//    }
+    
+    static func * (l:F, r:MatrixBasis)->MatrixBasis {
+        switch r {
+        case .zero: return .zero
+        case let .id(f): return .id((l*f).eval())
+        case let .Matrix(e):
+            return .Matrix(l * e)
+        }
+
+    }
+    
+    static func + (l:MatrixBasis, r:MatrixBasis)->MatrixBasis {
+        switch (l,r) {
+        case let (.zero, x): return x
+        case let (x, .zero): return x
+        case let (.id(f),.id(ff)): return .id((f+ff).eval())
+        case let (.id(f),.Matrix(m)):
+            return .Matrix( (f * m.id) + m)
+        case let (.Matrix(m),.id(f)):
+            return .Matrix(m + (f * m.id))
+        case let (.Matrix(l),.Matrix(r)):
+            return .Matrix(l + r)
+        }
     }
 }
 
@@ -155,12 +216,7 @@ struct Matrix:Abelian {
                 case let .Add(ml, mr):
                     return ((s * ml) + (s * mr)).eval()
                 case let .Algebra(.Number(m)):
-                    let newElements = m.e.fmap { (row) in
-                        row.fmap { (e) in
-                            (s * e).eval()
-                        }
-                    }
-                    return MatrixBasis(e: newElements).matrix
+                    return (s * m).matrix
                 default:
                     return s * m
                 }
