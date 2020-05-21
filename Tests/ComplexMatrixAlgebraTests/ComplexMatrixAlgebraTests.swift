@@ -107,11 +107,17 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let zz = 3.complex(i: 4).f
         expect((zz * *zz).eval()).to(equal(25.complex(i: 0).f))
         
+        let m0 = [[(0,0)],].matrix()
+
         let m1 = [[(1,0),(0,-1)],
                   [(1,1),(4,-1)]].matrix()
+        
+        expect((m0 + m1).eval()).to(equal(m1))
+        
         let m2 = [[(0,1),(1,-1)],
                   [(2,-3),(4,0)]].matrix()
 
+        
         let expectedMul = [[(-3,-1),(1,-5)],
                            [(4,-13),(18,-4)]].matrix()
         let expectedAdd = [[(1,1),(1,-2)],
