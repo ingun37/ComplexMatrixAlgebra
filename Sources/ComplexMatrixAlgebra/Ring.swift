@@ -90,15 +90,16 @@ extension Ring {
     static var Zero:Self { return .init(basisOp: .Number(.Zero)) }
     static var Id:Self { return .init(basisOp: .Number(.Id)) }
     static var _Id:Self { return .init(basisOp: .Number(-.Id)) }
+    
     func same(_ to: Self) -> Bool {
-        return same(ring: to) || same(algebra: to)
+        return same(ring: to)
     }
     func same(ring:Self) -> Bool {
         switch (ringOp, ring.ringOp) {
         case (.Add(_,_), .Add(_,_)):
             return commuteSame(flatRingAdd(self).all, flatRingAdd(ring).all)
         default:
-            return self == ring
+            return same(algebra: ring)
         }
     }
     func eval() -> Self {

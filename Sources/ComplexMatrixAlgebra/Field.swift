@@ -44,16 +44,15 @@ prefix operator *
 
 extension Field {
     func same(_ to: Self) -> Bool {
-        return same(field: to) || same(ring: to) || same(algebra: to)
+        return same(field: to)
     }
     func same(field: Self) -> Bool {
         switch (ringOp, field.ringOp) {
         case let (.Mul(_, _),.Mul(_, _)): // because multiplication becomes commutative in field
             return commuteSame(flatMul(self).all, flatMul(field).all)
-        default: break
+        default:
+            return same(ring: field)
         }
-        
-        return self == field
     }
     static prefix func ~ (lhs: Self) -> Self {
         return .init(fieldOp: .Inverse(lhs))
