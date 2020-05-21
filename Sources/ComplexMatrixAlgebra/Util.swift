@@ -27,6 +27,13 @@ extension Collection {
         guard let x = first else { return nil }
         return List(x, dropFirst())
     }
+    func at(_ i:Index, or:Element)->Element {
+        if self.indices.contains(i) {
+            return self[i]
+        } else {
+            return or
+        }
+    }
 }
 struct List<T> {
     typealias Element = T
@@ -47,6 +54,9 @@ struct List<T> {
     }
     static func + (lhs: List, rhs: List) -> List {
         return List(lhs.head, lhs.tail + rhs.all)
+    }
+    static func + <C:Collection>(lhs: List, rhs: C) -> List where C.Element == T {
+        return List(lhs.head, lhs.tail + rhs)
     }
     func reduce(_ next:(T,T)->T) -> T  {
         return tail.reduce(head, next)
@@ -229,3 +239,5 @@ func operateFieldMul<A:Field>(_ x:A, _ y:A)-> A {
         return nil
     }, flatMul(x) + flatMul(y)).reduce(*)
 }
+
+

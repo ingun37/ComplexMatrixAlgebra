@@ -16,7 +16,7 @@ struct Dimension:Hashable {
     }
 }
 
-struct MatrixBasis<N:NatRep, F:Field>:RingBasis {
+struct MatrixBasis<F:Field>:AbelianBasis {
     static prefix func - (l: Self) -> Self {
         let newE = l.e.fmap { (row) in
             row.fmap { (e) in
@@ -28,7 +28,7 @@ struct MatrixBasis<N:NatRep, F:Field>:RingBasis {
     
     
     static var Zero: Self {
-        let r = (0..<N.n).decompose() ?? List(0)
+        let r = List(0)
         let ee = r.fmap { (_) in
             r.fmap { (_) in
                 F.Zero
@@ -37,25 +37,16 @@ struct MatrixBasis<N:NatRep, F:Field>:RingBasis {
         return MatrixBasis(e: ee)
     }
     
-    static var Id: Self {
-        let _2d = (0..<N.n).map { (r) in
-            (0..<N.n).map { (c) in
-                r == c ? F.Id : F.Zero
-            }.decompose()!
-        }.decompose()!
-        return MatrixBasis(e: _2d)
-    }
-    
     let e:List<List<F>>
     
-    static func * (l:MatrixBasis, r:MatrixBasis)->MatrixBasis {
-        let newElems = l.rows.fmap { (lrow) in
-            r.cols.fmap { (rcol) in
-                lrow.fzip(rcol).fmap(*).reduce(+).eval()
-            }
-        }
-        return MatrixBasis(e: newElems)
-    }
+//    static func * (l:MatrixBasis, r:MatrixBasis)->MatrixBasis {
+//        let newElems = l.rows.fmap { (lrow) in
+//            r.cols.fmap { (rcol) in
+//                lrow.fzip(rcol).fmap(*).reduce(+).eval()
+//            }
+//        }
+//        return MatrixBasis(e: newElems)
+//    }
     
     static func * (l:F, r:MatrixBasis)->MatrixBasis {
         let newE = r.e.fmap { (row) in
@@ -67,7 +58,22 @@ struct MatrixBasis<N:NatRep, F:Field>:RingBasis {
     }
     
     static func + (l:MatrixBasis, r:MatrixBasis)->MatrixBasis {
-        let newElements = l.rows.fzip(r.rows).fmap { (l,r) in
+        let maxRow = max(l.rowLen, r.rowLen)
+        let maxCol = max(l.colLen, r.colLen)
+        let template = List(0, (1..<maxRow)).fmap { (r) in
+            List(0,(1..<maxCol)).fmap({c in (r,c)})
+        }
+        let newL = template.fmap { (row) in
+            row.fmap { (row,col) in
+                l.e.all.at(row, or: List(F.Zero)).all.at(col, or: F.Zero)
+            }
+        }
+        let newR = template.fmap { (row) in
+            row.fmap { (row,col) in
+                r.e.all.at(row, or: List(F.Zero)).all.at(col, or: F.Zero)
+            }
+        }
+        let newElements = newL.fzip(newR).fmap { (l,r) in
             l.fzip(r).fmap(+).fmap({$0.eval()})
         }
         return MatrixBasis(e: newElements)
@@ -101,32 +107,41 @@ struct MatrixBasis<N:NatRep, F:Field>:RingBasis {
     }
 }
 
+extension MatrixBasis where F == Complex {
+    var matrix:Matrix {
+        return .init(basisOp: .Number(self))
+    }
+}
 
-indirect enum MatrixOp<N:NatRep>:Equatable {
-    typealias A = Matrix<N>
-    case Ring(A.RingOp)
+indirect enum MatrixOp:Equatable {
+    typealias A = Matrix
+    case Abelian(A.AbelianO)
     case Scale(Complex, A)
     var matrix:A {
         return A(op: self)
     }
 }
 
-struct Matrix<N:NatRep>:Ring {
-    init(ringOp: RingOp) {
-        op = .Ring(ringOp)
+struct Matrix:Abelian {
+    func same(_ to: Matrix) -> Bool {
+        fatalError()
+    }
+    init(abelianOp: AbelianO) {
+        op = .Abelian(abelianOp)
     }
     
-    var ringOp: RingOp? {
+    var abelianOp: AbelianO? {
         switch op {
-        case let .Ring(r):
-            return r
+        case let .Abelian(abe):
+            return abe
         default:
             return nil
         }
     }
     
-    typealias B = MatrixBasis<N,Complex>
-    typealias O = MatrixOp<N>
+    
+    typealias B = MatrixBasis<Complex>
+    typealias O = MatrixOp
     func eval() -> Matrix {
         switch op {
         case let .Scale(s, m):
@@ -135,49 +150,34 @@ struct Matrix<N:NatRep>:Ring {
             switch m.op {
             case let .Scale(s2, m):
                 return O.Scale(s*s2, m).matrix.eval()
-            case let .Ring(ro):
-                switch ro {
-                case let .Abelian( .Add(ml, mr)):
+            case let .Abelian(abe):
+                switch abe {
+                case let .Add(ml, mr):
                     return ((s * ml) + (s * mr)).eval()
-                case let .Abelian(.Algebra(.Number(m))):
-                    return m.e.fmap { (row) in
+                case let .Algebra(.Number(m)):
+                    let newElements = m.e.fmap { (row) in
                         row.fmap { (e) in
                             (s * e).eval()
                         }
-                    }.mat().asNumber(Self.self)
+                    }
+                    return MatrixBasis(e: newElements).matrix
                 default:
                     return s * m
                 }
             }
-        case .Ring(_):
-            return evalRing()
+        default: break
         }
+        return evalAbelian()
     }
     
     
     static func * (l:Complex, r:Self)-> Self {
         return .init(op: .Scale(l, r))
     }
-    let op: MatrixOp<N>
+    let op: MatrixOp
     init(op:O) {
         self.op = op
     }
 }
 
-extension List where T == List<Complex> {
-    func mat<N:NatRep>()-> MatrixBasis<N,Complex> {
-        return MatrixBasis(e: self)
-    }
-}
-protocol NatRep:Equatable {
-    static var n:Int {get}
-}
-struct N1:NatRep { static var n = 1 }
-struct N2:NatRep { static var n = 2 }
-struct N3:NatRep { static var n = 3 }
-struct N4:NatRep { static var n = 4 }
-struct N5:NatRep { static var n = 5 }
-struct N6:NatRep { static var n = 6 }
-struct N7:NatRep { static var n = 7 }
-struct N8:NatRep { static var n = 8 }
-struct N9:NatRep { static var n = 9 }
+
