@@ -26,106 +26,70 @@ extension FieldBasis {
     }
 }
 
-protocol Field:Ring where O:FieldOperable, B:FieldBasis {
+protocol Field:Ring where B:FieldBasis {
+    var fieldOp: FieldOperators<Self> { get }
+    init(fieldOp:FieldOperators<Self>)
 }
-protocol FieldOperable:RingOperable where A: Field {
-    var fieldOp: FieldOperators<A> { get }
-    init(fieldOp:FieldOperators<A>)
-}
-extension FieldOperable where A.O == Self {
-    var f:A {
-        return A(op: self)
-    }
-}
-indirect enum FieldOperators<A:Field>:FieldOperable, Equatable {
-    init(basisOp: BasisOperators<A>) {
-        self = .Ring(.Basis(basisOp))
-    }
-    
-    var basisOp: BasisOperators<A>? {
-        switch self {
-        case let .Ring(.Basis(b)):
-            return b
-        default:
-            return nil
-        }
-    }
-    
-    var fieldOp: Self {
-        return self
-    }
-    
-    init(fieldOp: Self) {
-        self = fieldOp
-    }
-    
-    init(ringOp: RingO) {
-        self = .Ring(ringOp)
-    }
-    
-    var ringOp: RingO? {
-        switch self {
-        case let .Ring(r):
-            return r
-        default:
-            return nil
-        }
-    }
-    
+
+indirect enum FieldOperators<A:Field>: Equatable {
     case Quotient(A, A)
     case Inverse(A)
     case Power(base:A, exponent:A)
     case Conjugate(A)
-    case Ring(RingOperators<A>)
+    case Ring(A.RingOp)
 }
 
 /** conjugate prefix */
 prefix operator *
 
 extension Field {
-    func sameField(_ to: Self) -> Bool {
-        switch (op.fieldOp, to.op.fieldOp) {
-        case let (.Ring(ringL), .Ring(ringR)):
-            switch (ringL,ringR) {
-            case let (.Add(_,_), .Add(_,_)):
-                return commuteSame(flatAdd(self).all, flatAdd(to).all)
-            case let (.Mul(xl,xr), .Mul(yl,yr)):
-                return commuteSame(flatMul(self).all, flatMul(to).all)
-            default: break
-            }
+    func same(_ to: Self) -> Bool {
+        return same(field: to) || same(ring: to) || same(algebra: to)
+    }
+    func same(field: Self) -> Bool {
+        switch (ringOp, field.ringOp) {
+        case let (.Mul(_, _),.Mul(_, _)): // because multiplication becomes commutative in field
+            return commuteSame(flatMul(self).all, flatMul(field).all)
         default: break
         }
-        return self == to
-
+        
+        return self == field
     }
     static prefix func ~ (lhs: Self) -> Self {
-        return Self(op: .init(fieldOp: .Inverse(lhs)))
-        
+        return .init(fieldOp: .Inverse(lhs))
     }
-    static prefix func * (lhs: Self) -> Self { return Self(op: .init(fieldOp: .Conjugate(lhs))) }
-
-    static func / (lhs: Self, rhs: Self) -> Self { return .init(op: .init(fieldOp: .Quotient(lhs, rhs))) }
-    static func ^ (lhs: Self, rhs: Self) -> Self { return .init(op: .init(fieldOp: .Power(base: lhs, exponent: rhs))) }
+    static prefix func * (lhs: Self) -> Self { return .init(fieldOp: .Conjugate(lhs)) }
+    static func / (lhs: Self, rhs: Self) -> Self { return .init(fieldOp: .Quotient(lhs, rhs)) }
+    static func ^ (lhs: Self, rhs: Self) -> Self { return .init(fieldOp: .Power(base: lhs, exponent: rhs)) }
+    func eval() -> Self {
+        return evalField()
+    }
     func evalField() -> Self {
-        switch op.fieldOp {
-        case let .Ring(.Mul(x, y)):
+        switch ringOp {
+        case let .Mul(x, y):
             return operateFieldMul(x.eval(), y.eval())
+        default: break
+        }
         
-        case let .Quotient(l, r):
-            return (l * ~r).eval()
+        switch fieldOp {
+        case let .Quotient(l, r): return (l * ~r).eval()
         
         case let .Inverse(x):
             let x = x.eval()
-            switch x.op.fieldOp {
-            case let .Ring(.Basis(.Number(number))):
-                return (~number).asNumber(Self.self)
+            switch x.basisOp {
+            case let .Number(number):
+                return .init(basisOp: .Number(~number))
+            default: break
+            }
+            
+            switch x.fieldOp {
             case let .Quotient(numer, denom):
-                return Self(op: .init(fieldOp: .Quotient(denom, numer))).eval()
+                return Self(fieldOp: .Quotient(denom, numer)).eval()
             case let .Inverse(x):
                 return x.eval()
             default: break
             }
-            return Self(op: .init(fieldOp: .Inverse(x)))
+            return .init(fieldOp: .Inverse(x))
         case .Power(base: let _base, exponent: let _exponent):
             let base = _base.eval()
             let exponent = _exponent.eval()
@@ -136,44 +100,37 @@ extension Field {
             } else if exponent == ._Id {
                 return ~base
             }
-            switch exponent.op.fieldOp {
-            case let .Ring(ring):
-                switch ring {
-                case let .Basis( .Number(numExp)):
-                    switch base.op.ringOp {
-                    case let .Basis( .Number(numBase)):
-                        if let evaled = numBase^numExp {
-                            return evaled.asNumber(Self.self)
-                        }
-                    default: break
-                    }
-                default: break
+            
+            switch (base.basisOp, exponent.basisOp) {
+            case let (.Number(numBase), .Number(numExp)):
+                if let evaled = numBase^numExp {
+                    return evaled.asNumber(Self.self)
                 }
             default: break
             }
-            return Self(op: .init(fieldOp: .Power(base: base, exponent: exponent)))
+            return .init(fieldOp: .Power(base: base, exponent: exponent))
         case let .Conjugate(xx):
             let x = xx.eval()
-            switch x.op.ringOp {
-            case let .Basis( .Number(n)):
-                return (*n).asNumber(Self.self)
-            default:
-                return Self(op: .init(fieldOp: .Conjugate(x)))
+            switch x.basisOp {
+            case let .Number(n):
+                return .init(basisOp: .Number(*n))
+            default: break
             }
+            return .init(fieldOp: .Conjugate(x))
         default:
             break
         }
         return evalRing()
     }
-}
-
-
-protocol ACBinary:Equatable {
-    associatedtype A:Field
-    var l: A {get}
-    var r: A {get}
-    static func match(_ a:A)->Self?
-    static func tryCollapse(_ l:A, _ r:A)-> A?
-    static func operation(lhs:A, rhs:A)-> A
-    init(_ l:A, _ r:A)
+    init(ringOp: RingOp) {
+        self.init(fieldOp: .Ring(ringOp))
+    }
+    var ringOp: RingOp? {
+        switch fieldOp {
+        case let .Ring(r):
+            return r
+        default:
+            return nil
+        }
+    }
 }

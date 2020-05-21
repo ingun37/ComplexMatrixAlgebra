@@ -12,7 +12,7 @@ private extension String {
     }
 }
 private func genLaTex(r:Real)-> String? {
-    switch r.op.basisOp {
+    switch r.basisOp {
     case let .Number(num):
         switch num {
         case let .N(n):
@@ -28,7 +28,7 @@ private func genLaTex(r:Real)-> String? {
     return nil
 }
 private func genLaTex(c:Complex)-> String? {
-    switch c.op.basisOp {
+    switch c.basisOp {
     case let .Number(num):
         return "\(wrappedLatex(num.r)) + \(wrappedLatex(num.i)) i"
     default:
@@ -37,10 +37,10 @@ private func genLaTex(c:Complex)-> String? {
     return nil
 }
 private func unNeg<A:Ring>(_ x:A)-> (Bool, A) {
-    if case let .Negate(nx) = x.op.ringOp {
+    if case let .Negate(nx) = x.ringOp {
         let aaa = unNeg(nx)
         return (!aaa.0, aaa.1)
-    } else if case let .Number(x) = x.op.basisOp, (x as? RealBasis)?.less0 ?? false {
+    } else if case let .Number(x) = x.basisOp, (x as? RealBasis)?.less0 ?? false {
         return (false, (-x).asNumber(A.self))
     } else {
         return (true, x)
@@ -62,18 +62,22 @@ func genLaTex<F:Field>(_ x:F) -> String {
     if let x = x as? Complex, let tex = genLaTex(c: x) {
         return tex
     }
-    switch x.op.fieldOp {
+    switch x.basisOp {
+    case let .Var(v):
+        return v
+    default: break
+    }
+    switch x.fieldOp {
     case let .Ring(ring):
         switch ring {
-        case let .Basis( .Var(v)):
-            return v
         case let .Subtract(l, r):
-            return genLaTex(F(op: .init(ringOp: .Add(l, -r))))
+            
+            return genLaTex(F(ringOp: .Add(l, -r)))
 
         case let .Add(l,r):
             let flat = flatAdd(x)
             let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
-                switch x.op.ringOp {
+                switch x.ringOp {
                 case let .Negate(v):
                     return str + " - \(wrappedLatex(v))"
                 case let .Mul(l,r):
@@ -89,17 +93,16 @@ func genLaTex<F:Field>(_ x:F) -> String {
             let signTex = sign ? "" : "-"
             let headTex:String
             
-            switch unNegated.head.op.fieldOp {
-            case .Ring(.Basis(.Var(_))): headTex = genLaTex(unNegated.head)
+            switch unNegated.head.fieldOp {
+            case .Ring( .Algebra(.Var(_))): headTex = genLaTex(unNegated.head)
             case .Power(_,_): headTex = genLaTex(unNegated.head)
-            default:
-                headTex = genLaTex(unNegated.head).paren
+            default: headTex = genLaTex(unNegated.head).paren
             }
             
             let tailTex = unNegated.tail.map { (f) -> String in
                 let tex = genLaTex(f)
-                switch f.op.fieldOp {
-                case .Ring(.Basis(.Var(_))): return tex
+                switch f.fieldOp {
+                case .Ring(.Algebra(.Var(_))): return tex
                 case .Power(_, _): return tex
                 default:
                     return "\\left(\(tex)\\right)"
@@ -132,16 +135,16 @@ func genLaTex<F:Field>(_ x:F) -> String {
 
 private func wrappedLatex<A:Field>(_ x:A)-> String {
     let tex = genLaTex(x)
-    switch x.op.fieldOp {
+    switch x.fieldOp {
     case let .Ring(ring):
         switch ring {
-        case let .Basis(.Number(n)):
+        case let .Algebra(.Number(n)):
             if let n = n as? RealBasis {
                 if !n.less0 {
                     return tex
                 }
             }
-        case .Basis(.Var(_)): return tex
+        case .Algebra(.Var(_)): return tex
 
         default: break
         }

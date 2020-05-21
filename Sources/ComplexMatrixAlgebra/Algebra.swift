@@ -7,34 +7,37 @@
 
 import Foundation
 import NumberKit
-indirect enum BasisOperators<A:Algebra>: Operable {
-    init(basisOp: BasisOperators<A>) {
-        self = basisOp
-    }
-    
-    var basisOp: BasisOperators<A>? {return self}
-    
+indirect enum BasisOperators<A:Algebra>:Equatable {
+    typealias B = A.B
     case Number(B)
     case Var(String)
-}
-protocol Operable:Equatable {
-    associatedtype A:Algebra
-    typealias B = A.B
-    init(basisOp:BasisOperators<A>)
-    var basisOp: BasisOperators<A>? {get}
 }
 
 //TODO: Change once accepted: https://forums.swift.org/t/accepted-se-0280-enum-cases-as-protocol-witnesses/34850
 protocol Algebra: Equatable {
-    associatedtype O:Operable where O.A == Self
+    typealias AlgebraOp = BasisOperators<Self>
     associatedtype B:Basis
-
+    
     func eval() -> Self
     func same(_ to:Self)-> Bool
-    init(op:O)
-    var op: O { get }
+    
+    init(basisOp:BasisOperators<Self>)
+    var basisOp: BasisOperators<Self>? {get}
 }
-
+extension Algebra {
+    func same(algebra:Self)-> Bool {
+        switch (basisOp, algebra.basisOp) {
+        case let (.Number(x), .Number(y)):
+            return x == y
+        case let (.Var(x),.Var(y)):
+            return x == y
+        default: return self == algebra
+        }
+    }
+    func evalAlgebra() -> Self {
+        return self
+    }
+}
 protocol Basis:Equatable {}
 
 func commuteSame<C:Collection, T:Algebra>(_ xs:C, _ ys:C) -> Bool where C.Element == T, C.Index == Int{

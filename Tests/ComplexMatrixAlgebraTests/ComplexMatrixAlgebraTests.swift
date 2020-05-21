@@ -138,7 +138,7 @@ extension Collection where Element == (Int, Int){
 extension Collection where Element == List<Complex>{
     func matrix<N:NatRep>()-> Matrix<N> {
         let e = decompose()!
-        return MatrixBasis<N, Complex>(e: e).asNumber(Matrix<N>.self).op.ring
+        return .init(basisOp: .Number(MatrixBasis<N, Complex>(e: e)))
 //        return Matrix(op: Ring.Number(MatrixNumber<N, Complex>(e: e)))
     }
 }

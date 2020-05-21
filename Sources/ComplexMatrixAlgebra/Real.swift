@@ -117,16 +117,10 @@ enum RealBasis: Equatable, FieldBasis {
 }
 //typealias Real = Field<RealNumber>
 struct Real:Field {
+    let fieldOp: FieldOperators<Real>
+    
     typealias B = RealBasis
 
-    func same(_ to: Real) -> Bool {
-        return sameField(to)
-    }
     
-    func eval() -> Real {
-        return evalField()
-    }
-    
-    let op: FieldOperators<Self>
     
 }
