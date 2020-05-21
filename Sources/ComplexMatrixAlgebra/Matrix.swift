@@ -15,7 +15,7 @@ struct Dimension:Hashable {
         self.cols = cols
     }
 }
-struct Mat<F:Field> {
+struct Mat<F:Field>:Equatable {
     let e:List<List<F>>
     var rowLen:Int {
         return e.all.count
@@ -93,25 +93,22 @@ struct Mat<F:Field> {
             }
         }
     }
-}
-enum MatrixBasis<F:Field>:AbelianBasis {
-    static var Zero: MatrixBasis<F> {return .zero}
-    
-    static func == (lhs: MatrixBasis<F>, rhs: MatrixBasis<F>) -> Bool {
-        switch (lhs,rhs) {
-        case let (.zero,.zero): return true
-        case let (.zero,.id(x)): return x == .Zero
-        case let (.zero,.Matrix(m)): return m.e.all.allSatisfy({$0.all.allSatisfy({$0 == .Zero})})
-
-        case let (.id(x),.zero): return x == .Zero
-        case let (.id(x),.id(y)): return x == y
-        case let (.id(f),.Matrix(m)): return m.id.dim == m.dim && m == (f * m.id)
-
-        case let (.Matrix(m),.zero): return rhs == lhs
-        case let (.Matrix(m),.id(y)): return rhs == lhs
-        case let (.Matrix(x),.Matrix(y)): return x == y
+    static func * (l:Self, r:Self)->Self {
+        let mx = max(l.colLen, r.rowLen)
+        let newL = l.fit(to: (l.rowLen, mx))
+        let newR = r.fit(to: (mx, r.colLen))
+        let newElems = newL.rows.fmap { (lrow) in
+            newR.cols.fmap { (rcol) in
+                lrow.fzip(rcol).fmap(*).reduce(+).eval()
+            }
         }
+        return .init(e: newElems)
     }
+}
+enum MatrixBasis<F:Field>:RingBasis {
+    static var Id: MatrixBasis<F> {return .id(.Id)}
+    
+    static var Zero: MatrixBasis<F> {return .zero}
     
     case zero
     case id(F)
@@ -131,17 +128,19 @@ enum MatrixBasis<F:Field>:AbelianBasis {
         }
     }
     
-//    static func * (l:MatrixBasis, r:MatrixBasis)->MatrixBasis {
-//        let mx = max(l.colLen, r.rowLen)
-//        let newL = l.fit(to: (l.rowLen, mx))
-//        let newR = r.fit(to: (mx, r.colLen))
-//        let newElems = newL.rows.fmap { (lrow) in
-//            newR.cols.fmap { (rcol) in
-//                lrow.fzip(rcol).fmap(*).reduce(+).eval()
-//            }
-//        }
-//        return MatrixBasis(e: newElems)
-//    }
+    static func * (l:Self, r:Self)->Self {
+        switch (l,r) {
+        case let (.zero,_): return .zero
+        case let (_,.zero): return .zero
+
+        case let (.id(x),.id(y)): return .id((x * y).eval())
+        case let (.id(f),.Matrix(_)): return f * r
+
+        case let (.Matrix(_),.id(f)):   return f * l
+        case let (.Matrix(x),.Matrix(y)): return .Matrix(x * y)
+        }
+
+    }
     
     static func * (l:F, r:MatrixBasis)->MatrixBasis {
         switch r {
@@ -176,28 +175,44 @@ extension MatrixBasis where F == Complex {
 
 indirect enum MatrixOp:Equatable {
     typealias A = Matrix
-    case Abelian(A.AbelianO)
+    case Ring(A.RingOp)
     case Scale(Complex, A)
     var matrix:A {
         return A(op: self)
     }
 }
 
-struct Matrix:Abelian {
-    func same(_ to: Matrix) -> Bool {
-        fatalError()
-    }
-    init(abelianOp: AbelianO) {
-        op = .Abelian(abelianOp)
+struct Matrix:Ring {
+    init(ringOp: RingOp) {
+        op = .Ring(ringOp)
     }
     
-    var abelianOp: AbelianO? {
+    var ringOp: RingOp? {
         switch op {
-        case let .Abelian(abe):
-            return abe
-        default:
-            return nil
+        case let .Ring(r): return r
+        default: return nil
         }
+    }
+    
+    func same(_ to: Matrix) -> Bool {
+        switch (basisOp, to.basisOp) {
+        case let (.Number(lhs),.Number(rhs)):
+            switch (lhs,rhs) {
+            case let (.zero,.zero): return true
+            case let (.zero,.id(x)): return x == .Zero
+            case let (.zero,.Matrix(m)): return m.e.all.allSatisfy({$0.all.allSatisfy({$0 == .Zero})})
+
+            case let (.id(x),.zero): return x == .Zero
+            case let (.id(x),.id(y)): return x == y
+            case let (.id(f),.Matrix(m)): return m.id.dim == m.dim && m == (f * m.id)
+
+            case let (.Matrix(m),.zero): return rhs == lhs
+            case let (.Matrix(m),.id(y)): return rhs == lhs
+            case let (.Matrix(x),.Matrix(y)): return x == y
+            }
+        default: break
+        }
+        return same(ring: to)
     }
     
     
@@ -208,22 +223,26 @@ struct Matrix:Abelian {
         case let .Scale(s, m):
             let s = s.eval()
             let m = m.eval()
+            
             switch m.op {
-            case let .Scale(s2, m):
-                return O.Scale(s*s2, m).matrix.eval()
-            case let .Abelian(abe):
-                switch abe {
-                case let .Add(ml, mr):
-                    return ((s * ml) + (s * mr)).eval()
-                case let .Algebra(.Number(m)):
-                    return (s * m).matrix
-                default:
-                    return s * m
-                }
+            case let .Scale(s2, m): return O.Scale(s*s2, m).matrix.eval()
+            default: break
             }
+            
+            switch m.abelianOp {
+            case let .Add(ml, mr): return ((s * ml) + (s * mr)).eval()
+            default: break
+            }
+            
+            switch m.basisOp {
+            case let .Number(m): return .init(basisOp: .Number(s * m))
+            default: break
+            }
+            
+            return s * m
         default: break
         }
-        return evalAbelian()
+        return evalRing()
     }
     
     

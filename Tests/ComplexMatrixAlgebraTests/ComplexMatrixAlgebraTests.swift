@@ -124,7 +124,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
                            [(3,-2),(8,-1)]].matrix()
         let expectedScaleBy2 = [[(0,2),(2,-2)],
                                 [(4,-6),(8,0)]].matrix()
-//        expect((m1 * m2).eval()).to(equal(expectedMul))
+        expect((m1 * m2).eval()).to(equal(expectedMul))
         expect((m1 + m2).eval()).to(equal(expectedAdd))
         expect(((2.complex(i: 0).f * m2)).eval()).to(equal(expectedScaleBy2))
         
