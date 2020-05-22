@@ -75,9 +75,9 @@ extension Field {
         
         case let .Inverse(x):
             let x = x.eval()
-            switch x.basis {
-            case let .Number(number):
-                return .init(basis: .Number(~number))
+            switch x.element {
+            case let .Basis(number):
+                return .init(element: .Basis(~number))
             default: break
             }
             
@@ -100,8 +100,8 @@ extension Field {
                 return ~base
             }
             
-            switch (base.basis, exponent.basis) {
-            case let (.Number(numBase), .Number(numExp)):
+            switch (base.element, exponent.element) {
+            case let (.Basis(numBase), .Basis(numExp)):
                 if let evaled = numBase^numExp {
                     return evaled.asNumber(Self.self)
                 }
@@ -110,9 +110,9 @@ extension Field {
             return .init(fieldOp: .Power(base: base, exponent: exponent))
         case let .Conjugate(xx):
             let x = xx.eval()
-            switch x.basis {
-            case let .Number(n):
-                return .init(basis: .Number(*n))
+            switch x.element {
+            case let .Basis(n):
+                return .init(element: .Basis(*n))
             default: break
             }
             return .init(fieldOp: .Conjugate(x))
@@ -145,7 +145,7 @@ func operateFieldMul<A:Field>(_ x:A, _ y:A)-> A {
             return r
         } else if l == A.Zero {
             return A.Zero
-        } else if case let (.Number(ln), .Number(rn)) = (l.basis,r.basis) {
+        } else if case let (.Basis(ln), .Basis(rn)) = (l.element,r.element) {
             return (ln * rn).asNumber(A.self)
         }
         switch (l.fieldOp,r.fieldOp) {

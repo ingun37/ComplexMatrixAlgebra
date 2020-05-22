@@ -12,8 +12,8 @@ private extension String {
     }
 }
 private func genLaTex(r:Real)-> String? {
-    switch r.basis {
-    case let .Number(num):
+    switch r.element {
+    case let .Basis(num):
         switch num {
         case let .N(n):
             return n.description
@@ -28,8 +28,8 @@ private func genLaTex(r:Real)-> String? {
     return nil
 }
 private func genLaTex(c:Complex)-> String? {
-    switch c.basis {
-    case let .Number(num):
+    switch c.element {
+    case let .Basis(num):
         return "\(wrappedLatex(num.r)) + \(wrappedLatex(num.i)) i"
     default:
         return nil
@@ -40,7 +40,7 @@ private func unNeg<A:Ring>(_ x:A)-> (Bool, A) {
     if case let .Negate(nx) = x.abelianOp {
         let aaa = unNeg(nx)
         return (!aaa.0, aaa.1)
-    } else if case let .Number(x) = x.basis, (x as? RealBasis)?.less0 ?? false {
+    } else if case let .Basis(x) = x.element, (x as? RealBasis)?.less0 ?? false {
         return (false, (-x).asNumber(A.self))
     } else {
         return (true, x)
@@ -62,7 +62,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
     if let x = x as? Complex, let tex = genLaTex(c: x) {
         return tex
     }
-    switch x.basis {
+    switch x.element {
     case let .Var(v):
         return v
     default: break
@@ -98,7 +98,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
             let (sign, unNegated) = unNegateMul(l, r)
             let signTex = sign ? "" : "-"
             let headTex:String
-            if case let .Var(_) = unNegated.head.basis  {
+            if case let .Var(_) = unNegated.head.element  {
                 headTex = genLaTex(unNegated.head)
             } else {
                 switch unNegated.head.fieldOp {
@@ -110,7 +110,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
             
             let tailTex = unNegated.tail.map { (f) -> String in
                 let tex = genLaTex(f)
-                if case let .Var(_) = f.basis {
+                if case let .Var(_) = f.element {
                     return tex
                 }
                 switch f.fieldOp {
@@ -145,8 +145,8 @@ func genLaTex<F:Field>(_ x:F) -> String {
 
 private func wrappedLatex<A:Field>(_ x:A)-> String {
     let tex = genLaTex(x)
-    switch x.basis {
-    case let .Number(n):
+    switch x.element {
+    case let .Basis(n):
         if let n = n as? RealBasis {
             if !n.less0 {
                 return tex

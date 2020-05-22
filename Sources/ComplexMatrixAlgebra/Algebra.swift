@@ -7,8 +7,8 @@
 
 import Foundation
 import NumberKit
-indirect enum BasisNullary<B:Basis>:Equatable {
-    case Number(B)
+indirect enum Element<B:Basis>:Equatable {
+    case Basis(B)
     case Var(String)
 }
 
@@ -19,13 +19,13 @@ protocol Algebra: Equatable {
     func eval() -> Self
     func same(_ to:Self)-> Bool
     
-    init(basis:BasisNullary<B>)
-    var basis: BasisNullary<B>? {get}
+    init(element:Element<B>)
+    var element: Element<B>? {get}
 }
 extension Algebra {
     func same(algebra:Self)-> Bool {
-        switch (basis, algebra.basis) {
-        case let (.Number(x), .Number(y)):
+        switch (element, algebra.element) {
+        case let (.Basis(x), .Basis(y)):
             return x == y
         case let (.Var(x),.Var(y)):
             return x == y

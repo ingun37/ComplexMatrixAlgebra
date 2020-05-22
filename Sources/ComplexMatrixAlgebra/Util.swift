@@ -118,14 +118,14 @@ extension Int {
 }
 extension RealBasis {
     var f: Real {
-        return Real(basis: .Number(self))
+        return Real(element: .Basis(self))
         
 //        return Real(op: RealOperable(ringOp: .Number(self)))// Real(op: .Number(self))
     }
 }
 extension ComplexBasis {
     var f: Complex {
-        return Complex(basis: .Number(self))
+        return Complex(element: .Basis(self))
 //        return Complex(op: .init(basisOp: .Number(self)))
 //        return Complex(op: .Number(self))
     }
@@ -150,7 +150,7 @@ extension Rational where T == Int {
 }
 extension String {
     func f<F:Field>() -> F {
-        return F(basis: .Var(self))
+        return F(element: .Var(self))
         
 //        return F(op: .Var(self))
     }

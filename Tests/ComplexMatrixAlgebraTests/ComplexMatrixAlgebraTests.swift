@@ -143,7 +143,7 @@ extension Collection where Element == (Int, Int){
 extension Collection where Element == List<Complex>{
     func matrix()-> Matrix {
         let e = decompose()!
-        return .init(basis: .Number(.Matrix(.init(e: e))))
+        return .init(element: .Basis(.Matrix(.init(e: e))))
 //        return Matrix(op: Ring.Number(MatrixNumber<N, Complex>(e: e)))
     }
 }

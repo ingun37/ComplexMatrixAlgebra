@@ -32,7 +32,7 @@ extension Abelian {
         return .init(abelianOp: .Negate(l))
     }
     static var Zero:Self {
-        return .init(basis: (.Number(B.Zero)))
+        return .init(element: (.Basis(B.Zero)))
     }
     func same(abelian: Self) -> Bool {
         switch (abelianOp, abelian.abelianOp) {
@@ -50,9 +50,9 @@ extension Abelian {
             return (l + -r).eval()
         case let .Negate(x):
             let x = x.eval()
-            switch x.basis {
-            case let .Number(x):
-                return .init(basis: .Number(-x))
+            switch x.element {
+            case let .Basis(x):
+                return .init(element: .Basis(-x))
             default:
                 break
             }
@@ -84,8 +84,8 @@ func operateAbelianAdd<A:Abelian>(_ x:A, _ y:A)-> A {
     return operateCommutativeBinary({ (_ l: A, _ r: A) -> A? in
         if l == A.Zero  {
             return r
-        } else if case let (.Number(l), .Number(r)) = (l.basis,r.basis) {
-            return A(basis: .Number(l + r))
+        } else if case let (.Basis(l), .Basis(r)) = (l.element,r.element) {
+            return A(element: .Basis(l + r))
         } else if (-l).eval().same(r) {
             return A.Zero
         } else {
