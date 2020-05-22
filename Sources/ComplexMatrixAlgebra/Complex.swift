@@ -15,7 +15,7 @@ struct ComplexBasis: FieldBasis {
     
     static func ^ (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis? {
         if rhs.i == .Zero {
-            if case let .Number(.N(intExp)) = rhs.r.basisOp {
+            if case let .Number(.N(intExp)) = rhs.r.algebraOp {
                 return lhs^intExp
             }
         }

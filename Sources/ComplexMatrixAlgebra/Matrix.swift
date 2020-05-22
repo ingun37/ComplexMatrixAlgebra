@@ -169,7 +169,7 @@ enum MatrixBasis<F:Field>:RingBasis {
 
 extension MatrixBasis where F == Complex {
     var matrix:Matrix {
-        return .init(basisOp: .Number(self))
+        return .init(algebraOp: .Number(self))
     }
 }
 
@@ -195,7 +195,7 @@ struct Matrix:Ring {
     }
     
     func same(_ to: Matrix) -> Bool {
-        switch (basisOp, to.basisOp) {
+        switch (algebraOp, to.algebraOp) {
         case let (.Number(lhs),.Number(rhs)):
             switch (lhs,rhs) {
             case let (.zero,.zero): return true
@@ -234,8 +234,8 @@ struct Matrix:Ring {
             default: break
             }
             
-            switch m.basisOp {
-            case let .Number(m): return .init(basisOp: .Number(s * m))
+            switch m.algebraOp {
+            case let .Number(m): return .init(algebraOp: .Number(s * m))
             default: break
             }
             

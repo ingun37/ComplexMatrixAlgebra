@@ -7,7 +7,7 @@
 
 import Foundation
 import NumberKit
-indirect enum BasisOperators<A:Algebra>:Equatable {
+indirect enum AlgebraOperators<A:Algebra>:Equatable {
     typealias B = A.B
     case Number(B)
     case Var(String)
@@ -15,18 +15,18 @@ indirect enum BasisOperators<A:Algebra>:Equatable {
 
 //TODO: Change once accepted: https://forums.swift.org/t/accepted-se-0280-enum-cases-as-protocol-witnesses/34850
 protocol Algebra: Equatable {
-    typealias AlgebraOp = BasisOperators<Self>
+    typealias AlgebraOp = AlgebraOperators<Self>
     associatedtype B:Basis
     
     func eval() -> Self
     func same(_ to:Self)-> Bool
     
-    init(basisOp:BasisOperators<Self>)
-    var basisOp: BasisOperators<Self>? {get}
+    init(algebraOp:AlgebraOperators<Self>)
+    var algebraOp: AlgebraOperators<Self>? {get}
 }
 extension Algebra {
     func same(algebra:Self)-> Bool {
-        switch (basisOp, algebra.basisOp) {
+        switch (algebraOp, algebra.algebraOp) {
         case let (.Number(x), .Number(y)):
             return x == y
         case let (.Var(x),.Var(y)):

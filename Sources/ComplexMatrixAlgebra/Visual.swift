@@ -12,7 +12,7 @@ private extension String {
     }
 }
 private func genLaTex(r:Real)-> String? {
-    switch r.basisOp {
+    switch r.algebraOp {
     case let .Number(num):
         switch num {
         case let .N(n):
@@ -28,7 +28,7 @@ private func genLaTex(r:Real)-> String? {
     return nil
 }
 private func genLaTex(c:Complex)-> String? {
-    switch c.basisOp {
+    switch c.algebraOp {
     case let .Number(num):
         return "\(wrappedLatex(num.r)) + \(wrappedLatex(num.i)) i"
     default:
@@ -40,7 +40,7 @@ private func unNeg<A:Ring>(_ x:A)-> (Bool, A) {
     if case let .Negate(nx) = x.abelianOp {
         let aaa = unNeg(nx)
         return (!aaa.0, aaa.1)
-    } else if case let .Number(x) = x.basisOp, (x as? RealBasis)?.less0 ?? false {
+    } else if case let .Number(x) = x.algebraOp, (x as? RealBasis)?.less0 ?? false {
         return (false, (-x).asNumber(A.self))
     } else {
         return (true, x)
@@ -62,7 +62,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
     if let x = x as? Complex, let tex = genLaTex(c: x) {
         return tex
     }
-    switch x.basisOp {
+    switch x.algebraOp {
     case let .Var(v):
         return v
     default: break

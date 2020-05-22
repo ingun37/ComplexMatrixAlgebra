@@ -51,9 +51,9 @@ extension Abelian {
             return (l + -r).eval()
         case let .Negate(x):
             let x = x.eval()
-            switch x.basisOp {
+            switch x.algebraOp {
             case let .Number(x):
-                return .init(basisOp: .Number(-x))
+                return .init(algebraOp: .Number(-x))
             default:
                 break
             }
@@ -70,10 +70,10 @@ extension Abelian {
         }
         return evalAlgebra()
     }
-    init(basisOp: BasisOperators<Self>) {
-        self.init(abelianOp: .Algebra(basisOp))
+    init(algebraOp: AlgebraOperators<Self>) {
+        self.init(abelianOp: .Algebra(algebraOp))
     }
-    var basisOp: BasisOperators<Self>? {
+    var algebraOp: AlgebraOperators<Self>? {
         switch abelianOp {
         case let .Algebra(b):
             return b
@@ -96,8 +96,8 @@ func operateAbelianAdd<A:Abelian>(_ x:A, _ y:A)-> A {
     return operateCommutativeBinary({ (_ l: A, _ r: A) -> A? in
         if l == A.Zero  {
             return r
-        } else if case let (.Number(l), .Number(r)) = (l.basisOp,r.basisOp) {
-            return A(basisOp: .Number(l + r))
+        } else if case let (.Number(l), .Number(r)) = (l.algebraOp,r.algebraOp) {
+            return A(algebraOp: .Number(l + r))
         } else if (-l).eval().same(r) {
             return A.Zero
         } else {
