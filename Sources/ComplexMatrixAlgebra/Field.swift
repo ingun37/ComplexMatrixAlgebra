@@ -27,7 +27,7 @@ extension FieldBasis {
 }
 
 protocol Field:Ring where B:FieldBasis {
-    var fieldOp: FieldOperators<Self> { get }
+    var fieldOp: FieldOperators<Self>? { get }
     init(fieldOp:FieldOperators<Self>)
 }
 
@@ -75,9 +75,9 @@ extension Field {
         
         case let .Inverse(x):
             let x = x.eval()
-            switch x.algebraOp {
+            switch x.basis {
             case let .Number(number):
-                return .init(algebraOp: .Number(~number))
+                return .init(basis: .Number(~number))
             default: break
             }
             
@@ -100,7 +100,7 @@ extension Field {
                 return ~base
             }
             
-            switch (base.algebraOp, exponent.algebraOp) {
+            switch (base.basis, exponent.basis) {
             case let (.Number(numBase), .Number(numExp)):
                 if let evaled = numBase^numExp {
                     return evaled.asNumber(Self.self)
@@ -110,9 +110,9 @@ extension Field {
             return .init(fieldOp: .Power(base: base, exponent: exponent))
         case let .Conjugate(xx):
             let x = xx.eval()
-            switch x.algebraOp {
+            switch x.basis {
             case let .Number(n):
-                return .init(algebraOp: .Number(*n))
+                return .init(basis: .Number(*n))
             default: break
             }
             return .init(fieldOp: .Conjugate(x))
@@ -145,7 +145,7 @@ func operateFieldMul<A:Field>(_ x:A, _ y:A)-> A {
             return r
         } else if l == A.Zero {
             return A.Zero
-        } else if case let (.Number(ln), .Number(rn)) = (l.algebraOp,r.algebraOp) {
+        } else if case let (.Number(ln), .Number(rn)) = (l.basis,r.basis) {
             return (ln * rn).asNumber(A.self)
         }
         switch (l.fieldOp,r.fieldOp) {

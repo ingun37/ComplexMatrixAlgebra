@@ -12,7 +12,7 @@ protocol RingBasis:AbelianBasis {
 }
 extension RingBasis {
     func asNumber<R:Ring>(_ a:R.Type) -> R where R.B == Self{
-        return R(algebraOp: .Number(self))
+        return R(basis: .Number(self))
 //        return R(op: .init(basisOp: .Number(self)))
     }
 }
@@ -48,7 +48,7 @@ func operateRingMul<A:Ring>(_ x:A, _ y:A)-> A {
             return r
         } else if l == A.Zero {
             return A.Zero
-        } else if case let (.Number(ln), .Number(rn)) = (l.algebraOp,r.algebraOp) {
+        } else if case let (.Number(ln), .Number(rn)) = (l.basis,r.basis) {
             return (ln * rn).asNumber(A.self)
         }
         return nil
@@ -56,8 +56,8 @@ func operateRingMul<A:Ring>(_ x:A, _ y:A)-> A {
 }
 extension Ring {
     static func * (l:Self, r:Self)-> Self { return .init(ringOp: .Mul(l, r)) }
-    static var Id:Self { return .init(algebraOp: .Number(.Id)) }
-    static var _Id:Self { return .init(algebraOp: .Number(-.Id)) }
+    static var Id:Self { return .init(basis: .Number(.Id)) }
+    static var _Id:Self { return .init(basis: .Number(-.Id)) }
     
     func same(_ to: Self) -> Bool {
         return same(ring: to)

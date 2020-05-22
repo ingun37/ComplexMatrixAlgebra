@@ -15,7 +15,6 @@ indirect enum AbelianOperator<A:Abelian>:Equatable {
     case Add(A,A)
     case Subtract(A,A)
     case Negate(A)
-    case Algebra(A.AlgebraOp)
 }
 protocol Abelian:Algebra where B:AbelianBasis {
     typealias AbelianO = AbelianOperator<Self>
@@ -33,7 +32,7 @@ extension Abelian {
         return .init(abelianOp: .Negate(l))
     }
     static var Zero:Self {
-        return .init(abelianOp: .Algebra(.Number(B.Zero)))
+        return .init(basis: (.Number(B.Zero)))
     }
     func same(abelian: Self) -> Bool {
         switch (abelianOp, abelian.abelianOp) {
@@ -51,9 +50,9 @@ extension Abelian {
             return (l + -r).eval()
         case let .Negate(x):
             let x = x.eval()
-            switch x.algebraOp {
+            switch x.basis {
             case let .Number(x):
-                return .init(algebraOp: .Number(-x))
+                return .init(basis: .Number(-x))
             default:
                 break
             }
@@ -70,17 +69,6 @@ extension Abelian {
         }
         return evalAlgebra()
     }
-    init(algebraOp: AlgebraOperators<Self>) {
-        self.init(abelianOp: .Algebra(algebraOp))
-    }
-    var algebraOp: AlgebraOperators<Self>? {
-        switch abelianOp {
-        case let .Algebra(b):
-            return b
-        default:
-            return nil
-        }
-    }
 }
 func flatAbelianAdd<A:Abelian>(_ x:A)-> List<A> {
     return flatAlgebra(x) { (x) -> [A] in
@@ -96,8 +84,8 @@ func operateAbelianAdd<A:Abelian>(_ x:A, _ y:A)-> A {
     return operateCommutativeBinary({ (_ l: A, _ r: A) -> A? in
         if l == A.Zero  {
             return r
-        } else if case let (.Number(l), .Number(r)) = (l.algebraOp,r.algebraOp) {
-            return A(algebraOp: .Number(l + r))
+        } else if case let (.Number(l), .Number(r)) = (l.basis,r.basis) {
+            return A(basis: .Number(l + r))
         } else if (-l).eval().same(r) {
             return A.Zero
         } else {

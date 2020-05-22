@@ -7,26 +7,24 @@
 
 import Foundation
 import NumberKit
-indirect enum AlgebraOperators<A:Algebra>:Equatable {
-    typealias B = A.B
+indirect enum BasisNullary<B:Basis>:Equatable {
     case Number(B)
     case Var(String)
 }
 
 //TODO: Change once accepted: https://forums.swift.org/t/accepted-se-0280-enum-cases-as-protocol-witnesses/34850
 protocol Algebra: Equatable {
-    typealias AlgebraOp = AlgebraOperators<Self>
     associatedtype B:Basis
     
     func eval() -> Self
     func same(_ to:Self)-> Bool
     
-    init(algebraOp:AlgebraOperators<Self>)
-    var algebraOp: AlgebraOperators<Self>? {get}
+    init(basis:BasisNullary<B>)
+    var basis: BasisNullary<B>? {get}
 }
 extension Algebra {
     func same(algebra:Self)-> Bool {
-        switch (algebraOp, algebra.algebraOp) {
+        switch (basis, algebra.basis) {
         case let (.Number(x), .Number(y)):
             return x == y
         case let (.Var(x),.Var(y)):

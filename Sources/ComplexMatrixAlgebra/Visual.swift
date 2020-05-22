@@ -12,7 +12,7 @@ private extension String {
     }
 }
 private func genLaTex(r:Real)-> String? {
-    switch r.algebraOp {
+    switch r.basis {
     case let .Number(num):
         switch num {
         case let .N(n):
@@ -28,7 +28,7 @@ private func genLaTex(r:Real)-> String? {
     return nil
 }
 private func genLaTex(c:Complex)-> String? {
-    switch c.algebraOp {
+    switch c.basis {
     case let .Number(num):
         return "\(wrappedLatex(num.r)) + \(wrappedLatex(num.i)) i"
     default:
@@ -40,7 +40,7 @@ private func unNeg<A:Ring>(_ x:A)-> (Bool, A) {
     if case let .Negate(nx) = x.abelianOp {
         let aaa = unNeg(nx)
         return (!aaa.0, aaa.1)
-    } else if case let .Number(x) = x.algebraOp, (x as? RealBasis)?.less0 ?? false {
+    } else if case let .Number(x) = x.basis, (x as? RealBasis)?.less0 ?? false {
         return (false, (-x).asNumber(A.self))
     } else {
         return (true, x)
@@ -62,7 +62,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
     if let x = x as? Complex, let tex = genLaTex(c: x) {
         return tex
     }
-    switch x.algebraOp {
+    switch x.basis {
     case let .Var(v):
         return v
     default: break
@@ -98,17 +98,22 @@ func genLaTex<F:Field>(_ x:F) -> String {
             let (sign, unNegated) = unNegateMul(l, r)
             let signTex = sign ? "" : "-"
             let headTex:String
-            
-            switch unNegated.head.fieldOp {
-            case .Ring( .Abelian( .Algebra(.Var(_)))): headTex = genLaTex(unNegated.head)
-            case .Power(_,_): headTex = genLaTex(unNegated.head)
-            default: headTex = genLaTex(unNegated.head).paren
+            if case let .Var(_) = unNegated.head.basis  {
+                headTex = genLaTex(unNegated.head)
+            } else {
+                switch unNegated.head.fieldOp {
+                case .Power(_,_): headTex = genLaTex(unNegated.head)
+                default: headTex = genLaTex(unNegated.head).paren
+                }
             }
+            
             
             let tailTex = unNegated.tail.map { (f) -> String in
                 let tex = genLaTex(f)
+                if case let .Var(_) = f.basis {
+                    return tex
+                }
                 switch f.fieldOp {
-                case .Ring(.Abelian( .Algebra(.Var(_)))): return tex
                 case .Power(_, _): return tex
                 default:
                     return "\\left(\(tex)\\right)"
@@ -140,24 +145,17 @@ func genLaTex<F:Field>(_ x:F) -> String {
 
 private func wrappedLatex<A:Field>(_ x:A)-> String {
     let tex = genLaTex(x)
-    switch x.fieldOp {
-    case let .Ring(ring):
-        switch ring {
-        case let .Abelian(abe):
-            switch abe {
-            case let .Algebra(.Number(n)):
-                if let n = n as? RealBasis {
-                    if !n.less0 {
-                        return tex
-                    }
-                }
-            case .Algebra(.Var(_)): return tex
-
-            default: break
+    switch x.basis {
+    case let .Number(n):
+        if let n = n as? RealBasis {
+            if !n.less0 {
+                return tex
             }
-        default: break
         }
-    
+    case .Var(_): return tex
+    default: break
+    }
+    switch x.fieldOp {
     case .Power(base: _, exponent: _):        return tex
     default: break
     }

@@ -117,7 +117,18 @@ enum RealBasis: Equatable, FieldBasis {
 }
 //typealias Real = Field<RealNumber>
 struct Real:Field {
-    let fieldOp: FieldOperators<Real>
+    
+    init(basis: BasisNullary<RealBasis>) {
+        self.basis = basis
+        self.fieldOp = nil
+    }
+    init(fieldOp: FieldOperators<Real>) {
+        self.basis = nil
+        self.fieldOp = fieldOp
+    }
+    let basis: BasisNullary<RealBasis>?
+    
+    let fieldOp: FieldOperators<Real>?
     
     typealias B = RealBasis
 
