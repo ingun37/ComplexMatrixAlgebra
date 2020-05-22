@@ -33,6 +33,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let ggg = (ComplexBasis(r: "a_1".rvar, i: "b_1".rvar)).f
         let hch = (ComplexBasis(r: "a_2".rvar, i: "b_2".rvar)).f
         let z = (ComplexBasis(r: x, i: y)).f
+        
         let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)),
                              .C(~auhs), .C(ggg*hch), .C(z * *z)]
         
@@ -94,13 +95,17 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         
         expect((2.complex(i: 3).f * 3.complex(i: 4).f).eval()).to(equal((-6).complex(i: 17).f))
         
-        expect(RealBasis.N(2)^2).to(equal(RealBasis.N(4)))
-        expect(RealBasis.N(2)^(-2)).to(equal(RealBasis.Q(1.on(4))))
+        
+        expect(Real(fieldOp: .Power(base: 2.real.f, exponent: 2.real.f)).eval()).to(equal(4.real.f))
+        expect(Real(fieldOp: .Power(base: 2.real.f, exponent: (-2).real.f)).eval()).to(equal(1.on(4).real.f))
+        
+//        expect(RealBasis.N(2)^2).to(equal(RealBasis.N(4)))
+//        expect(RealBasis.N(2)^(-2)).to(equal(RealBasis.Q(1.on(4))))
         
         let uc = "x".rvar + 1.real.f
         let cu = 1.real.f + "x".rvar
         let aoeu = (uc^2.real.f) * (cu^2.real.f)
-        expect(aoeu.eval()).to(equal(uc^(4.real.f)))
+//        expect(aoeu.eval()).to(equal(cu^(4.real.f)))
         let auhs = 3.complex(i: 4).f
         expect((~auhs).eval()).to(equal(3.on(25).complex(i: (-4).on(25)).f))
         

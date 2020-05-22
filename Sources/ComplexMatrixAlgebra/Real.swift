@@ -13,13 +13,6 @@ enum RealBasis: Equatable, FieldBasis {
         return lhs
     }
     
-    static func ^ (lhs: RealBasis, rhs: RealBasis) -> RealBasis? {
-        if case let .N(intExp) = rhs {
-            return lhs^intExp
-        }
-        return nil
-    }
-    
     static func / (lhs: RealBasis, rhs: RealBasis) -> RealBasis {
         return lhs * (~rhs)
     }
@@ -115,11 +108,40 @@ enum RealBasis: Equatable, FieldBasis {
     case Q(Rational<Int>)
     case R(Double)
 }
+indirect enum RealOperator:Operator {
+    func eval() -> Real {
+        
+        if case let .f(.Power(base: base, exponent: exponent)) = self {
+            let exponent = exponent.eval()
+            if case let .Basis(.N(intExp)) = exponent.element {
+                let base = base.eval()
+                if let mul = (0..<abs(intExp)).decompose()?.fmap({_ in base}).reduce(*) {
+                    if intExp < 0 {
+                        return Real(fieldOp: .Inverse(mul)).eval()
+                    } else {
+                        return mul.eval()
+                    }
+                } else { // exponent is 0
+                    return Real.Id
+                }
+            }
+        }
+        
+        switch self {
+        case let .f(f): return f.eval()
+        }
+    }
+    
+    typealias A = Real
+    
+    case f(FieldOperators<Real>)
+    
+}
 //typealias Real = Field<RealNumber>
 struct Real:Field {
     var fieldOp: FieldOperators<Real>? {
         switch c {
-        case let .o(f): return f
+        case let .o(.f(f)): return f
         default: return nil
         }
     }
@@ -130,13 +152,10 @@ struct Real:Field {
     
     let c: Construction<Real>
     
-    typealias O = FieldOperators<Real>
+    typealias O = RealOperator
     
     init(fieldOp: FieldOperators<Real>) {
-        c = .o(fieldOp)
+        c = .o(.f(fieldOp))
     }
     typealias B = RealBasis
-
-    
-    
 }

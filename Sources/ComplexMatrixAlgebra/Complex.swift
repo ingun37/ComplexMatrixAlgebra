@@ -8,20 +8,9 @@
 import Foundation
 
 struct ComplexBasis: FieldBasis {
-    
     static prefix func * (lhs: ComplexBasis) -> ComplexBasis {
         return ComplexBasis(r: lhs.r, i: -lhs.i).eval()
     }
-    
-    static func ^ (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis? {
-        if rhs.i == .Zero {
-            if case let .Basis(.N(intExp)) = rhs.r.element {
-                return lhs^intExp
-            }
-        }
-        return nil
-    }
-    
     
     static func / (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis {
         //compiling never ends

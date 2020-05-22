@@ -11,19 +11,6 @@ protocol FieldBasis: RingBasis {
     static func / (lhs: Self, rhs: Self) -> Self
     static prefix func ~ (lhs: Self) -> Self
     static prefix func * (lhs: Self) -> Self
-    static func ^ (lhs: Self, rhs: Self) -> Self?
-}
-extension FieldBasis {
-    static func ^ (lhs: Self, rhs: Int) -> Self {
-        if rhs == 0 {
-            return Id
-        } else if rhs < 0 {
-            let inv = ~lhs
-            return (rhs+1..<0).map({_ in inv}).reduce(inv, *)
-        } else {
-            return (1..<rhs).map({_ in lhs}).reduce(lhs, *)
-        }
-    }
 }
 
 protocol Field:Ring where B:FieldBasis {
@@ -68,14 +55,6 @@ indirect enum FieldOperators<A:Field>: Operator {
                 return base
             } else if exponent == ._Id {
                 return ~base
-            }
-            
-            switch (base.element, exponent.element) {
-            case let (.Basis(numBase), .Basis(numExp)):
-                if let evaled = numBase^numExp {
-                    return A(element: .Basis(evaled))
-                }
-            default: break
             }
             return .init(fieldOp: .Power(base: base, exponent: exponent))
         case let .Conjugate(xx):
