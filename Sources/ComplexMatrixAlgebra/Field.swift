@@ -31,7 +31,66 @@ protocol Field:Ring where B:FieldBasis {
     init(fieldOp:FieldOperators<Self>)
 }
 
-indirect enum FieldOperators<A:Field>: Equatable {
+indirect enum FieldOperators<A:Field>: Operator {
+    func eval() -> A {
+        
+        switch self {
+        case let .Ring(ring):
+            if case let .Mul(x, y) = ring {
+                return operateFieldMul(x.eval(), y.eval()) // because multiplication becomes commutative in field
+            } else {
+                return ring.eval()
+            }
+        case let .Quotient(l, r): return (l * ~r).eval()
+        
+        case let .Inverse(x):
+            let x = x.eval()
+            switch x.element {
+            case let .Basis(number):
+                return .init(element: .Basis(~number))
+            default: break
+            }
+            
+            switch x.fieldOp {
+            case let .Quotient(numer, denom):
+                return A(fieldOp: .Quotient(denom, numer)).eval()
+            case let .Inverse(x):
+                return x.eval()
+            default: break
+            }
+            return .init(fieldOp: .Inverse(x))
+        case .Power(base: let _base, exponent: let _exponent):
+            let base = _base.eval()
+            let exponent = _exponent.eval()
+            if exponent == .Zero {
+                return .Id
+            } else if exponent == .Id {
+                return base
+            } else if exponent == ._Id {
+                return ~base
+            }
+            
+            switch (base.element, exponent.element) {
+            case let (.Basis(numBase), .Basis(numExp)):
+                if let evaled = numBase^numExp {
+                    return A(element: .Basis(evaled))
+                }
+            default: break
+            }
+            return .init(fieldOp: .Power(base: base, exponent: exponent))
+        case let .Conjugate(xx):
+            let x = xx.eval()
+            switch x.element {
+            case let .Basis(n):
+                return .init(element: .Basis(*n))
+            default: break
+            }
+            return .init(fieldOp: .Conjugate(x))
+        default:
+            break
+        }
+    }
+    
     case Quotient(A, A)
     case Inverse(A)
     case Power(base:A, exponent:A)
@@ -60,67 +119,7 @@ extension Field {
     static prefix func * (lhs: Self) -> Self { return .init(fieldOp: .Conjugate(lhs)) }
     static func / (lhs: Self, rhs: Self) -> Self { return .init(fieldOp: .Quotient(lhs, rhs)) }
     static func ^ (lhs: Self, rhs: Self) -> Self { return .init(fieldOp: .Power(base: lhs, exponent: rhs)) }
-    func eval() -> Self {
-        return evalField()
-    }
-    func evalField() -> Self {
-        switch ringOp {
-        case let .Mul(x, y):
-            return operateFieldMul(x.eval(), y.eval()) // because multiplication becomes commutative in field
-        default: break
-        }
-        
-        switch fieldOp {
-        case let .Quotient(l, r): return (l * ~r).eval()
-        
-        case let .Inverse(x):
-            let x = x.eval()
-            switch x.element {
-            case let .Basis(number):
-                return .init(element: .Basis(~number))
-            default: break
-            }
-            
-            switch x.fieldOp {
-            case let .Quotient(numer, denom):
-                return Self(fieldOp: .Quotient(denom, numer)).eval()
-            case let .Inverse(x):
-                return x.eval()
-            default: break
-            }
-            return .init(fieldOp: .Inverse(x))
-        case .Power(base: let _base, exponent: let _exponent):
-            let base = _base.eval()
-            let exponent = _exponent.eval()
-            if exponent == .Zero {
-                return .Id
-            } else if exponent == .Id {
-                return base
-            } else if exponent == ._Id {
-                return ~base
-            }
-            
-            switch (base.element, exponent.element) {
-            case let (.Basis(numBase), .Basis(numExp)):
-                if let evaled = numBase^numExp {
-                    return evaled.asNumber(Self.self)
-                }
-            default: break
-            }
-            return .init(fieldOp: .Power(base: base, exponent: exponent))
-        case let .Conjugate(xx):
-            let x = xx.eval()
-            switch x.element {
-            case let .Basis(n):
-                return .init(element: .Basis(*n))
-            default: break
-            }
-            return .init(fieldOp: .Conjugate(x))
-        default:
-            break
-        }
-        return evalRing()
-    }
+
     init(ringOp: RingOp) {
         self.init(fieldOp: .Ring(ringOp))
     }

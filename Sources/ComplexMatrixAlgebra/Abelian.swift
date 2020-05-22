@@ -11,10 +11,38 @@ protocol AbelianBasis:Basis {
     static prefix func - (l:Self)->Self
     static var Zero:Self {get}
 }
-indirect enum AbelianOperator<A:Abelian>:Equatable {
+indirect enum AbelianOperator<A:Abelian>:Operator {
     case Add(A,A)
     case Subtract(A,A)
     case Negate(A)
+    
+    func eval() -> A {
+        switch self {
+        case let .Add(x, y):
+            return operateAbelianAdd(x.eval(), y.eval())
+        case let .Subtract(l, r):
+            return (l + -r).eval()
+        case let .Negate(x):
+            let x = x.eval()
+            switch x.element {
+            case let .Basis(x):
+                return .init(element: .Basis(-x))
+            default:
+                break
+            }
+            switch x.abelianOp {
+            case let .Add(l, r):
+                return ((-l) + (-r)).eval()
+            case let .Negate(x):
+                return x.eval()
+            case let .Subtract(l, r):
+                return (r - l).eval()
+            default: break
+            }
+        default: break
+        }
+        return .init(abelianOp: self)
+    }
 }
 protocol Abelian:Algebra where B:AbelianBasis {
     typealias AbelianO = AbelianOperator<Self>
@@ -41,33 +69,6 @@ extension Abelian {
         default:
             return same(algebra: abelian)
         }
-    }
-    func evalAbelian()->Self {
-        switch abelianOp {
-        case let .Add(x, y):
-            return operateAbelianAdd(x.eval(), y.eval())
-        case let .Subtract(l, r):
-            return (l + -r).eval()
-        case let .Negate(x):
-            let x = x.eval()
-            switch x.element {
-            case let .Basis(x):
-                return .init(element: .Basis(-x))
-            default:
-                break
-            }
-            switch x.abelianOp {
-            case let .Add(l, r):
-                return ((-l) + (-r)).eval()
-            case let .Negate(x):
-                return x.eval()
-            case let .Subtract(l, r):
-                return (r - l).eval()
-            default: break
-            }
-        default: break
-        }
-        return evalAlgebra()
     }
 }
 func flatAbelianAdd<A:Abelian>(_ x:A)-> List<A> {

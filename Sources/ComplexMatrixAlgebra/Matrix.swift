@@ -173,35 +173,66 @@ extension MatrixBasis where F == Complex {
     }
 }
 
-indirect enum MatrixOp:Equatable {
+indirect enum MatrixOp:Operator {
+    func eval() -> Matrix {
+        switch self {
+        case let .Scale(s, m):
+            let s = s.eval()
+            let m = m.eval()
+            
+            switch m.o {
+            case let .Scale(s2, m): return Self.Scale(s*s2, m).matrix.eval()
+            default: break
+            }
+            
+            switch m.abelianOp {
+            case let .Add(ml, mr): return ((s * ml) + (s * mr)).eval()
+            default: break
+            }
+            
+            switch m.element {
+            case let .Basis(m): return .init(element: .Basis(s * m))
+            default: break
+            }
+            
+            return s * m
+        case let .Ring(ring):
+            return ring.eval()
+        }
+    }
+    
     typealias A = Matrix
     case Ring(A.RingOp)
     case Scale(Complex, A)
-    case Basis(Element<A.B>)
     var matrix:A {
-        return A(op: self)
+        return A(o: self)
     }
 }
 
 struct Matrix:Ring {
-    var element: Element<MatrixBasis<Complex>>? {
-        switch op {
-        case let .Basis(b): return b
-        default: return nil
-        }
+    typealias B = MatrixBasis<Complex>
+    typealias O = MatrixOp
+    
+    let o: O?
+    init(o: O) {
+        element = nil
+        self.o = o
     }
+    let element: Element<MatrixBasis<Complex>>?
     
     init(element: Element<MatrixBasis<Complex>>) {
-        op = .Basis(element)
+        self.o = nil
+        self.element = element
     }
     
     
     init(ringOp: RingOp) {
-        op = .Ring(ringOp)
+        o = .Ring(ringOp)
+        element = nil
     }
     
     var ringOp: RingOp? {
-        switch op {
+        switch o {
         case let .Ring(r): return r
         default: return nil
         }
@@ -228,44 +259,11 @@ struct Matrix:Ring {
         return same(ring: to)
     }
     
-    
-    typealias B = MatrixBasis<Complex>
-    typealias O = MatrixOp
-    func eval() -> Matrix {
-        switch op {
-        case let .Scale(s, m):
-            let s = s.eval()
-            let m = m.eval()
-            
-            switch m.op {
-            case let .Scale(s2, m): return O.Scale(s*s2, m).matrix.eval()
-            default: break
-            }
-            
-            switch m.abelianOp {
-            case let .Add(ml, mr): return ((s * ml) + (s * mr)).eval()
-            default: break
-            }
-            
-            switch m.element {
-            case let .Basis(m): return .init(element: .Basis(s * m))
-            default: break
-            }
-            
-            return s * m
-        default: break
-        }
-        return evalRing()
-    }
-    
-    
+
     static func * (l:Complex, r:Self)-> Self {
-        return .init(op: .Scale(l, r))
+        return .init(o: .Scale(l, r))
     }
-    let op: MatrixOp
-    init(op:O) {
-        self.op = op
-    }
+
 }
 
 

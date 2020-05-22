@@ -22,9 +22,23 @@ protocol Ring:Abelian where B:RingBasis{
     var ringOp: RingOp? { get }
 }
 
-indirect enum RingOperators<A:Ring>:Equatable {
+indirect enum RingOperators<A:Ring>:Operator {
     case Mul(A,A)
     case Abelian(A.AbelianO)
+    
+    func eval() -> A {
+        switch self {
+        case let .Mul(x, y):
+            return operateRingMul(x.eval(), y.eval())
+        case let .Abelian(abe):
+            
+            if case let .Negate(x) = abe, case let .Mul(l, r) = x.ringOp {
+                return ((-l) * r).eval()
+            } else {
+                return abe.eval()
+            }
+        }
+    }
 }
 extension RingOperators {
     var sum:A { return A(ringOp: self) }
@@ -67,26 +81,6 @@ extension Ring {
         default:
             return same(abelian: ring)
         }
-    }
-    func eval() -> Self {
-        return evalRing()
-    }
-    func evalRing() -> Self {
-        switch abelianOp {
-        case let .Negate(x):
-            switch x.ringOp {
-            case let .Mul(l, r):
-                return ((-l) * r).eval()
-            default: break
-            }
-        default: break
-        }
-        switch ringOp {
-        case let .Mul(x, y):
-            return operateRingMul(x.eval(), y.eval())
-        default: break
-        }
-        return evalAbelian()
     }
     init(abelianOp: AbelianO) {
         self.init(ringOp: .Abelian(abelianOp))

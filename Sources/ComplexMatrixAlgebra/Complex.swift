@@ -83,6 +83,7 @@ struct ComplexBasis: FieldBasis {
 
 
 struct Complex:Field {
+    var o: FieldOperators<Complex>? { return fieldOp }
     let fieldOp: FieldOperators<Complex>?
     
     init(fieldOp: FieldOperators<Complex>) {

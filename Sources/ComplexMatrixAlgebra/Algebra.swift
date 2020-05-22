@@ -11,12 +11,17 @@ indirect enum Element<B:Basis>:Equatable {
     case Basis(B)
     case Var(String)
 }
-
+protocol Operator:Equatable {
+    associatedtype A:Algebra
+    func eval() -> A
+}
 //TODO: Change once accepted: https://forums.swift.org/t/accepted-se-0280-enum-cases-as-protocol-witnesses/34850
 protocol Algebra: Equatable {
     associatedtype B:Basis
-    
-    func eval() -> Self
+    associatedtype O:Operator where O.A == Self
+    var o: O? {
+        get
+    }
     func same(_ to:Self)-> Bool
     
     init(element:Element<B>)
@@ -32,8 +37,8 @@ extension Algebra {
         default: return self == algebra
         }
     }
-    func evalAlgebra() -> Self {
-        return self
+    func eval() -> Self {
+        return o?.eval() ?? self
     }
 }
 protocol Basis:Equatable {}
