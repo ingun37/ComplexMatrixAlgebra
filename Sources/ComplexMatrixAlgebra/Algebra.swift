@@ -15,17 +15,21 @@ protocol Operator:Equatable {
     associatedtype A:Algebra
     func eval() -> A
 }
+indirect enum Construction<A:Algebra>: Equatable {
+    case e(A.E)
+    case o(A.O)
+}
 //TODO: Change once accepted: https://forums.swift.org/t/accepted-se-0280-enum-cases-as-protocol-witnesses/34850
 protocol Algebra: Equatable {
     associatedtype B:Basis
     associatedtype O:Operator where O.A == Self
-    var o: O? {
+    typealias E = Element<B>
+
+    func same(_ to:Self)-> Bool
+    init(_ c:Construction<Self>)
+    var c: Construction<Self> {
         get
     }
-    func same(_ to:Self)-> Bool
-    
-    init(element:Element<B>)
-    var element: Element<B>? {get}
 }
 extension Algebra {
     func same(algebra:Self)-> Bool {
@@ -37,8 +41,23 @@ extension Algebra {
         default: return self == algebra
         }
     }
+    var element:E? {
+        switch c {
+        case let .o(o): return nil
+        case let .e(e): return e
+        }
+    }
+    var o:O? {
+        switch c {
+        case let .o(o): return o
+        case let .e(e): return nil
+        }
+    }
     func eval() -> Self {
         return o?.eval() ?? self
+    }
+    init(element:E) {
+        self.init(.e(element))
     }
 }
 protocol Basis:Equatable {}

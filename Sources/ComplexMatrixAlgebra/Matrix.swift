@@ -205,30 +205,23 @@ indirect enum MatrixOp:Operator {
     case Ring(A.RingOp)
     case Scale(Complex, A)
     var matrix:A {
-        return A(o: self)
+        return A(.o(self))
     }
 }
 
 struct Matrix:Ring {
+    init(_ c: Construction<Matrix>) {
+        self.c = c
+    }
+    
+    let c: Construction<Matrix>
+    
     typealias B = MatrixBasis<Complex>
     typealias O = MatrixOp
     
-    let o: O?
-    init(o: O) {
-        element = nil
-        self.o = o
-    }
-    let element: Element<MatrixBasis<Complex>>?
-    
-    init(element: Element<MatrixBasis<Complex>>) {
-        self.o = nil
-        self.element = element
-    }
-    
     
     init(ringOp: RingOp) {
-        o = .Ring(ringOp)
-        element = nil
+        c = .o(.Ring(ringOp))
     }
     
     var ringOp: RingOp? {
@@ -261,7 +254,7 @@ struct Matrix:Ring {
     
 
     static func * (l:Complex, r:Self)-> Self {
-        return .init(o: .Scale(l, r))
+        return .init(.o(.Scale(l, r)))
     }
 
 }

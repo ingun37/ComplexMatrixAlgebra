@@ -83,20 +83,25 @@ struct ComplexBasis: FieldBasis {
 
 
 struct Complex:Field {
-    var o: FieldOperators<Complex>? { return fieldOp }
-    let fieldOp: FieldOperators<Complex>?
+    init(_ c: Construction<Complex>) {
+        self.c = c
+    }
+    
+    let c: Construction<Complex>
+    
+    var fieldOp: FieldOperators<Complex>? {
+        switch c {
+        case let .o(f): return f
+        default: return nil
+        }
+    }
+    
+    typealias O = FieldOperators<Complex>
+    
     
     init(fieldOp: FieldOperators<Complex>) {
-        self.fieldOp = fieldOp
-        self.element = nil
+        c = .o(fieldOp)
     }
-    init(element: Element<ComplexBasis>) {
-        self.fieldOp = nil
-        self.element = element
-    }
-    
-    let element: Element<ComplexBasis>?
-    
     typealias B = ComplexBasis
 
     
