@@ -68,32 +68,33 @@ func genLaTex<F:Field>(_ x:F) -> String {
     default: break
     }
     switch x.fieldOp {
+    case let .Ring(.Abelian(.Add(l, r))):
+        let flat = flatAdd(x)
+//        let flat = _flat.grouped().fmap { (g) in
+//            (g.all.count, g.head)
+//        }.fmap { (size, term) in
+//            size == 1 ? term : (F.B.whole(n: size).asNumber(F.self) * term).eval()
+//        }
+
+        let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
+            switch x.ringOp {
+            case let .Abelian( .Negate(v)):
+                return str + " - \(wrappedLatex(v))"
+            case let .Mul(l,r):
+                let (sign, unNeg) = unNegateMul(l, r)
+                return str + (sign ? " + " : " - ") + genLaTex(unNeg.reduce(*))
+            default:
+                return str + " + " + genLaTex(x)
+            }
+        }
+        return tex
     case let .Ring(ring):
         switch ring {
         case let .Abelian(abe):
             switch abe {
             case let .Subtract(l, r):
                 return genLaTex(F(abelianOp: .Add(l, -r)))
-            case let .Add(l,r):
-                let _flat = flatAdd(x)
-                let flat = _flat.grouped().fmap { (g) in
-                    (g.all.count, g.head)
-                }.fmap { (size, term) in
-                    size == 1 ? term : (F.B.whole(n: size).asNumber(F.self) * term).eval()
-                }
-//                let flat = _flat
-                let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
-                    switch x.ringOp {
-                    case let .Abelian( .Negate(v)):
-                        return str + " - \(wrappedLatex(v))"
-                    case let .Mul(l,r):
-                        let (sign, unNeg) = unNegateMul(l, r)
-                        return str + (sign ? " + " : " - ") + genLaTex(unNeg.reduce(*))
-                    default:
-                        return str + " + " + genLaTex(x)
-                    }
-                }
-                return tex
+                
             case let .Negate(x):
                 return "- \(wrappedLatex(x))"
             default:
