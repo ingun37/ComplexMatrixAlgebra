@@ -70,12 +70,15 @@ func genLaTex<F:Field>(_ x:F) -> String {
     switch x.fieldOp {
     case let .Ring(.Abelian(.Add(l, r))):
         let flat = flatAdd(x)
-
-
         let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
             switch x.ringOp {
             case let .Abelian( .Negate(v)):
-                return str + " - \(wrappedLatex(v))"
+                let (sign, xx) = unNeg(v)
+                if sign {
+                    return str + " - \(genLaTex(xx))"
+                } else {
+                    return str + " + \(genLaTex(xx))"
+                }
             case let .Mul(l,r):
                 let (sign, unNeg) = unNegateMul(l, r)
                 return str + (sign ? " + " : " - ") + genLaTex(unNeg.reduce(*))
@@ -167,26 +170,53 @@ private func wrappedLatex<A:Field>(_ x:A)-> String {
 
 extension Field {
     func prettify() -> Self {
+        if let com = self as? Complex {
+            if case let .e(.Basis(com)) = com.c {
+                return ComplexBasis(r: com.r.prettify(), i: com.i.prettify()).f as! Self
+            }
+        }
+        switch ringOp {
+        case let .Mul(l, r):
+            let (sign, _flat) = unNegateMul(l, r)
+            let (numbers, terms) = _flat.all.seperate({
+                if case .e(.Basis(_)) = $0.c { return true }
+                else {return false}
+            })
+            let prettyTerms = terms.decompose()?.grouped().fmap { (g) in
+                (g.all.count, g.head.prettify())
+            }.fmap { (size,term) in
+                size == 1 ? term : Self.init(fieldOp: .Power(base: term, exponent: B.whole(n: size).asNumber(Self.self)))
+            }.reduce(*)
+            
+            let prettyNumbers = numbers.decompose()?.reduce(*).eval()
+            
+            let aa:Self?
+            
+            if let pn = prettyNumbers, let pt = prettyTerms {
+                aa = pn * pt
+            } else if let pn = prettyNumbers {
+                aa = pn
+            } else if let pt = prettyTerms {
+                aa = pt
+            } else {
+                aa = nil
+            }
+            
+            if let aa = aa {
+                return sign ? aa : Self.init(abelianOp: .Negate(aa))
+            }
+        default: break
+        }
         switch abelianOp {
         case let .Add(l, r):
-            let _flat = flatAdd(self)
+            let _flat = flatAbelianAdd(self)
             let flat = _flat.grouped().fmap { (g) in
-                (g.all.count, g.head)
+                (g.all.count, g.head.prettify())
             }.fmap { (size, term) in
-                size == 1 ? term : (B.whole(n: size).asNumber(Self.self) * term).eval()
+                size == 1 ? term : (B.whole(n: size).asNumber(Self.self) * term).prettify()
             }
             return flat.reduce(+)
         default: break
-        }
-        return self
-    }
-}
-extension Algebra {
-    func prettify()->Self {
-        if let r = self as? Real {
-            return r.prettify() as! Self
-        } else if let c = self as? Complex {
-            return c.prettify() as! Self
         }
         return self
     }
