@@ -133,7 +133,11 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         expect((m1 + m2).eval()).to(equal(expectedAdd))
         expect(((2.complex(i: 0).f * m2)).eval()).to(equal(expectedScaleBy2))
         
-        
+        let mxx = [[1, 5, 0],
+                   [2, 4,-1],
+                   [0,-2, 0]].matrix()
+        expect(Complex.init(fieldOp: .Determinant(mxx)).eval()).to(equal((-2).complex(i: 0).f))
+
     }
     static var allTests = [
         ("testExample", testExample),
@@ -146,14 +150,25 @@ extension Collection where Element == (Int, Int){
     }
 }
 extension Collection where Element == List<Complex>{
-    func matrix()-> Matrix {
+    func matrix()-> Matrix<Complex> {
         let e = decompose()!
         return .init(element: .Basis(.Matrix(.init(e: e))))
 //        return Matrix(op: Ring.Number(MatrixNumber<N, Complex>(e: e)))
     }
 }
 extension Collection where Element: Collection, Element.Element == (Int,Int) {
-    func matrix()->Matrix {
+    func matrix()->Matrix<Complex> {
         return map({$0.complexes}).matrix()
+    }
+}
+
+extension Collection where Element: Collection, Element.Element == Int {
+    func matrix()->Matrix<Complex> {
+        let rows = map { (row) in
+            row.map { (i) in
+                i.complex(i: 0).f
+            }.decompose()!
+        }.decompose()!
+        return Matrix(element: .Basis(.Matrix(.init(e: rows))))
     }
 }

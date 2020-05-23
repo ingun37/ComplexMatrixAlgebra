@@ -66,8 +66,14 @@ indirect enum FieldOperators<A:Field>: Operator {
             default: break
             }
             return .init(fieldOp: .Conjugate(x))
-        default:
-            break
+        case let .Determinant(m):
+            let m = m.eval()
+            if case let .e(.Basis(m)) = m.c {
+                if let d = m.determinant {
+                    return d
+                }
+            }
+            return .init(fieldOp: .Determinant(m))
         }
     }
     
@@ -76,6 +82,7 @@ indirect enum FieldOperators<A:Field>: Operator {
     case Power(base:A, exponent:A)
     case Conjugate(A)
     case Ring(A.RingOp)
+    case Determinant(Matrix<A>)
 }
 
 /** conjugate prefix */

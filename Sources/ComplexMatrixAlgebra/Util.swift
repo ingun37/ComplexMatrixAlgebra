@@ -36,6 +36,9 @@ extension Collection {
     }
 }
 struct List<T> {
+    static func rng(_ limit:Int)-> List<Int> {
+        return List<Int>(0, (1..<limit))
+    }
     typealias Element = T
     let head:T
     let tail:[T]
@@ -47,7 +50,6 @@ struct List<T> {
         head = h
         tail = []
     }
-
     var pair:(T,[T]) { return (head, tail)}
     var all:[T] {return [head] + tail}
     func fmap<Q>(_ f:@escaping (T)->Q) -> List<Q> {

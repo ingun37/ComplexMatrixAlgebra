@@ -104,7 +104,82 @@ struct Mat<F:Field>:Equatable {
         }
         return .init(e: newElems)
     }
+    var transposed:Self {
+        return Mat(e: cols)
+    }
+    func without(row:Int, col:Int) -> Self?  {
+        if let remainRows = rows.all.without(at: row).decompose() {
+            if let remainCols = Mat(e: remainRows).cols.all.without(at: col).decompose() {
+                return Mat(e: remainCols).transposed
+            }
+        }
+        return nil
+    }
+    var determinant:F {
+        return List<Int>.rng(colLen).fmap { (c)->F in
+            if let subMatrix = self.without(row: 0, col: c) {
+                return (F._Id^F.B.whole(n: c).asNumber(F.self)) * self.col(c).head * subMatrix.determinant
+            } else {
+                return self.row(0).all[c]
+            }
+        }.reduce(+).eval()
+    }
 }
+
+
+struct Matrix<F:Field>:Ring {
+    init(_ c: Construction<Matrix>) {
+        self.c = c
+    }
+    
+    let c: Construction<Matrix>
+    
+    typealias B = MatrixBasis<F>
+    typealias O = MatrixOp<F>
+    
+    
+    init(ringOp: RingOp) {
+        c = .o(.Ring(ringOp))
+    }
+    
+    var ringOp: RingOp? {
+        switch o {
+        case let .Ring(r): return r
+        default: return nil
+        }
+    }
+    
+    func same(_ to: Matrix) -> Bool {
+        switch (element, to.element) {
+        case let (.Basis(lhs),.Basis(rhs)):
+            switch (lhs,rhs) {
+            case let (.zero,.zero): return true
+            case let (.zero,.id(x)): return x == .Zero
+            case let (.zero,.Matrix(m)): return m.e.all.allSatisfy({$0.all.allSatisfy({$0 == .Zero})})
+
+            case let (.id(x),.zero): return x == .Zero
+            case let (.id(x),.id(y)): return x == y
+            case let (.id(f),.Matrix(m)): return m.id.dim == m.dim && m == (f * m.id)
+
+            case let (.Matrix(m),.zero): return rhs == lhs
+            case let (.Matrix(m),.id(y)): return rhs == lhs
+            case let (.Matrix(x),.Matrix(y)): return x == y
+            }
+        default: break
+        }
+        return same(ring: to)
+    }
+    
+
+    static func * (l:F, r:Self)-> Self {
+        return .init(.o(.Scale(l, r)))
+    }
+
+}
+
+
+
+
 enum MatrixBasis<F:Field>:RingBasis {
     static var Id: MatrixBasis<F> {return .id(.Id)}
     
@@ -165,16 +240,25 @@ enum MatrixBasis<F:Field>:RingBasis {
             return .Matrix(l + r)
         }
     }
+    
+    var determinant:F? {
+        switch self {
+        case .zero: return .Zero
+        case let .id(f): return nil
+        case let .Matrix(m): return m.determinant
+        }
+    }
 }
 
-extension MatrixBasis where F == Complex {
-    var matrix:Matrix {
+extension MatrixBasis {
+    var matrix:Matrix<F> {
         return .init(element: .Basis(self))
     }
 }
 
-indirect enum MatrixOp:Operator {
-    func eval() -> Matrix {
+indirect enum MatrixOp<F:Field>:Operator {
+    typealias A = Matrix<F>
+    func eval() -> A {
         switch self {
         case let .Scale(s, m):
             let s = s.eval()
@@ -201,62 +285,9 @@ indirect enum MatrixOp:Operator {
         }
     }
     
-    typealias A = Matrix
     case Ring(A.RingOp)
-    case Scale(Complex, A)
+    case Scale(F, A)
     var matrix:A {
         return A(.o(self))
     }
 }
-
-struct Matrix:Ring {
-    init(_ c: Construction<Matrix>) {
-        self.c = c
-    }
-    
-    let c: Construction<Matrix>
-    
-    typealias B = MatrixBasis<Complex>
-    typealias O = MatrixOp
-    
-    
-    init(ringOp: RingOp) {
-        c = .o(.Ring(ringOp))
-    }
-    
-    var ringOp: RingOp? {
-        switch o {
-        case let .Ring(r): return r
-        default: return nil
-        }
-    }
-    
-    func same(_ to: Matrix) -> Bool {
-        switch (element, to.element) {
-        case let (.Basis(lhs),.Basis(rhs)):
-            switch (lhs,rhs) {
-            case let (.zero,.zero): return true
-            case let (.zero,.id(x)): return x == .Zero
-            case let (.zero,.Matrix(m)): return m.e.all.allSatisfy({$0.all.allSatisfy({$0 == .Zero})})
-
-            case let (.id(x),.zero): return x == .Zero
-            case let (.id(x),.id(y)): return x == y
-            case let (.id(f),.Matrix(m)): return m.id.dim == m.dim && m == (f * m.id)
-
-            case let (.Matrix(m),.zero): return rhs == lhs
-            case let (.Matrix(m),.id(y)): return rhs == lhs
-            case let (.Matrix(x),.Matrix(y)): return x == y
-            }
-        default: break
-        }
-        return same(ring: to)
-    }
-    
-
-    static func * (l:Complex, r:Self)-> Self {
-        return .init(.o(.Scale(l, r)))
-    }
-
-}
-
-
