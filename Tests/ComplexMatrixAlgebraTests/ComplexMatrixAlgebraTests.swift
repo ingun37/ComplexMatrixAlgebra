@@ -15,7 +15,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         case R(Real)
     }
     func genLine<T:Field>(_ x:T)-> String {
-        return "$$\n" + genLaTex(x) + "=" + genLaTex(x.eval()) + "\n$$"
+        return "$$\n" + genLaTex(x) + "=" + genLaTex(x.eval().prettify()) + "\n$$"
     }
     func testOutput() {
         

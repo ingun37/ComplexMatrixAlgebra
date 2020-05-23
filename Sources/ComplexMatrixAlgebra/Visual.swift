@@ -70,11 +70,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
     switch x.fieldOp {
     case let .Ring(.Abelian(.Add(l, r))):
         let flat = flatAdd(x)
-//        let flat = _flat.grouped().fmap { (g) in
-//            (g.all.count, g.head)
-//        }.fmap { (size, term) in
-//            size == 1 ? term : (F.B.whole(n: size).asNumber(F.self) * term).eval()
-//        }
+
 
         let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
             switch x.ringOp {
@@ -167,4 +163,31 @@ private func wrappedLatex<A:Field>(_ x:A)-> String {
     default: break
     }
     return tex.paren
+}
+
+extension Field {
+    func prettify() -> Self {
+        switch abelianOp {
+        case let .Add(l, r):
+            let _flat = flatAdd(self)
+            let flat = _flat.grouped().fmap { (g) in
+                (g.all.count, g.head)
+            }.fmap { (size, term) in
+                size == 1 ? term : (B.whole(n: size).asNumber(Self.self) * term).eval()
+            }
+            return flat.reduce(+)
+        default: break
+        }
+        return self
+    }
+}
+extension Algebra {
+    func prettify()->Self {
+        if let r = self as? Real {
+            return r.prettify() as! Self
+        } else if let c = self as? Complex {
+            return c.prettify() as! Self
+        }
+        return self
+    }
 }
