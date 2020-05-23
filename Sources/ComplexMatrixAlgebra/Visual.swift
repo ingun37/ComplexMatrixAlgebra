@@ -75,7 +75,13 @@ func genLaTex<F:Field>(_ x:F) -> String {
             case let .Subtract(l, r):
                 return genLaTex(F(abelianOp: .Add(l, -r)))
             case let .Add(l,r):
-                let flat = flatAdd(x)
+                let _flat = flatAdd(x)
+                let flat = _flat.grouped().fmap { (g) in
+                    (g.all.count, g.head)
+                }.fmap { (size, term) in
+                    size == 1 ? term : (F.B.whole(n: size).asNumber(F.self) * term).eval()
+                }
+//                let flat = _flat
                 let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
                     switch x.ringOp {
                     case let .Abelian( .Negate(v)):
@@ -98,7 +104,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
             let (sign, unNegated) = unNegateMul(l, r)
             let signTex = sign ? "" : "-"
             let headTex:String
-            if case let .Var(_) = unNegated.head.element  {
+            if case .e(_) = unNegated.head.c  {
                 headTex = genLaTex(unNegated.head)
             } else {
                 switch unNegated.head.fieldOp {

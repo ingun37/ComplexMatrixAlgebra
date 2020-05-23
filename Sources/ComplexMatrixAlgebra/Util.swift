@@ -47,6 +47,7 @@ struct List<T> {
         head = h
         tail = []
     }
+
     var pair:(T,[T]) { return (head, tail)}
     var all:[T] {return [head] + tail}
     func fmap<Q>(_ f:@escaping (T)->Q) -> List<Q> {
@@ -72,9 +73,19 @@ struct List<T> {
         return List<(T,T)>(newHead, newTail)
     }
 }
-extension List: Equatable where T:Equatable {
-    
+extension List: Equatable where T:Equatable {}
+extension List where T:Algebra {
+    func grouped()-> List<List<T>> {
+        let (us, others) = tail.seperate { (x) in head.same(x) }
+        let we = List(head, us)
+        if let otherGroup = others.decompose() {
+            return List<List<T>>(we) + otherGroup.grouped()
+        } else {
+            return List<List<T>>(we)
+        }
+    }
 }
+
 extension Collection where Index == Int {
     
     func permutations() -> [[Element]] {

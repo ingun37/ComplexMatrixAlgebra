@@ -9,6 +9,10 @@ import Foundation
 import NumberKit
 
 enum RealBasis: Equatable, FieldBasis {
+    static func whole(n: Int) -> RealBasis {
+        return .N(n)
+    }
+    
     static prefix func * (lhs: RealBasis) -> RealBasis {
         return lhs
     }

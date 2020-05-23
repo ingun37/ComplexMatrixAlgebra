@@ -11,6 +11,7 @@ protocol FieldBasis: RingBasis {
     static func / (lhs: Self, rhs: Self) -> Self
     static prefix func ~ (lhs: Self) -> Self
     static prefix func * (lhs: Self) -> Self
+    static func whole(n:Int)->Self
 }
 
 protocol Field:Ring where B:FieldBasis {

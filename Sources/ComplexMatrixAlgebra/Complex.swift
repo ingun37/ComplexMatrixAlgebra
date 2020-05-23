@@ -8,6 +8,10 @@
 import Foundation
 
 struct ComplexBasis: FieldBasis {
+    static func whole(n: Int) -> ComplexBasis {
+        return .init(r: .init(element: .Basis(.N(n))), i: .Zero)
+    }
+    
     static prefix func * (lhs: ComplexBasis) -> ComplexBasis {
         return ComplexBasis(r: lhs.r, i: -lhs.i).eval()
     }
