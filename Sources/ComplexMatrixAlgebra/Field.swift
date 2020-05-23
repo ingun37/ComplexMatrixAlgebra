@@ -95,7 +95,7 @@ extension Field {
     func same(field: Self) -> Bool {
         switch (ringOp, field.ringOp) {
         case let (.Mul(_, _),.Mul(_, _)): // because multiplication becomes commutative in field
-            return commuteSame(flatMul(self).all, flatMul(field).all)
+            return commuteSame(flatRingMul(self).all, flatRingMul(field).all)
         default:
             return same(ring: field)
         }
@@ -143,7 +143,7 @@ func operateFieldMul<A:Field>(_ x:A, _ y:A)-> A {
             return nil
         }
         return nil
-    }, flatMul(x) + flatMul(y)).reduce(*)
+    }, flatRingMul(x) + flatRingMul(y)).reduce(*)
 }
 
 

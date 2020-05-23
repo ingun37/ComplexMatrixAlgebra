@@ -11,6 +11,7 @@ private extension String {
         return "\\left( \(self) \\right)"
     }
 }
+
 private func genLaTex(r:Real)-> String? {
     switch r.element {
     case let .Basis(num):
@@ -47,7 +48,7 @@ private func unNeg<A:Ring>(_ x:A)-> (Bool, A) {
     }
 }
 private func unNegateMul<A:Field>(_ l:A, _ r:A) -> (Bool, List<A>) {
-    let flat = flatMul(l) + flatMul(r)
+    let flat = flatRingMul(l) + flatRingMul(r)
     let unNegs = flat.fmap(unNeg)
     return unNegs.reduce(head: { (sign, term) in
         (sign, List(term))
@@ -55,6 +56,7 @@ private func unNegateMul<A:Field>(_ l:A, _ r:A) -> (Bool, List<A>) {
         (l.0 == r.0 , l.1 + List(r.1) )
     }
 }
+
 func genLaTex<F:Field>(_ x:F) -> String {
     if let x = x as? Real, let tex = genLaTex(r: x) {
         return tex
@@ -69,7 +71,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
     }
     switch x.fieldOp {
     case let .Ring(.Abelian(.Add(l, r))):
-        let flat = flatAdd(x)
+        let flat = flatAbelianAdd(x)
         let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
             switch x.ringOp {
             case let .Abelian( .Negate(v)):

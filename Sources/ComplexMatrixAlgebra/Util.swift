@@ -184,24 +184,6 @@ func flatAlgebra<A>(_ x:A, flatter:@escaping (A)->[A])->List<A> {
     }
 }
 
-func flatAdd<A:Field>(_ x:A)-> List<A> {
-    return flatAlgebra(x) { (x) -> [A] in
-        if case let .Add(l,r) = x.abelianOp {
-            return [l,r]
-        } else {
-            return []
-        }
-    }
-}
-func flatMul<A:Field>(_ x:A)-> List<A> {
-    return flatAlgebra(x) { (x) -> [A] in
-        if case let .Mul(l,r) = x.ringOp {
-            return [l,r]
-        } else {
-            return []
-        }
-    }
-}
 func operateCommutativeBinary<A>(_ trial:(A, A)->A?, _ xs:List<A> ) -> List<A> {
     return edgeMerge(_objs: xs) { (l, r) in
         if let symmetric = trial(l, r) {
