@@ -141,8 +141,23 @@ indirect enum RealOperator:Operator {
     case f(FieldOperators<Real>)
     
 }
+struct RealMultiplication:FieldMulitplication {
+    let l: Real
+    
+    let r: Real
+    
+    func match(_ a: Real) -> RealMultiplication? {
+        if case let .Mul(b) = a.ringOp {
+            return b
+        }
+        return nil
+    }
+    
+    typealias A = Real
+}
 //typealias Real = Field<RealNumber>
 struct Real:Field {
+    typealias MUL = RealMultiplication
     var fieldOp: FieldOperators<Real>? {
         switch c {
         case let .o(.f(f)): return f

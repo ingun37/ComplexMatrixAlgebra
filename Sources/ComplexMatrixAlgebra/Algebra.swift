@@ -25,22 +25,12 @@ protocol Algebra: Equatable {
     associatedtype O:Operator where O.A == Self
     typealias E = Element<B>
 
-    func same(_ to:Self)-> Bool
     init(_ c:Construction<Self>)
     var c: Construction<Self> {
         get
     }
 }
 extension Algebra {
-    func same(algebra:Self)-> Bool {
-        switch (element, algebra.element) {
-        case let (.Basis(x), .Basis(y)):
-            return x == y
-        case let (.Var(x),.Var(y)):
-            return x == y
-        default: return self == algebra
-        }
-    }
     var element:E? {
         switch c {
         case let .o(o): return nil
@@ -67,10 +57,50 @@ func commuteSame<C:Collection, T:Algebra>(_ xs:C, _ ys:C) -> Bool where C.Elemen
     let len = xs.count
     if len == 0 { return true }
     let aa = (0..<len).flatMap({i in (0..<len).map({(i,$0)})})
-    if let match = aa.first(where: { xs[$0].same(ys[$1]) }) {
+    if let match = aa.first(where: { xs[$0] == (ys[$1]) }) {
         return commuteSame(xs.without(at:match.0), ys.without(at: match.1))
     } else {
         return false
     }
     
+}
+func commuteEqual<C:Collection, T:Algebra>(_ xs:C, _ ys:C) -> Bool where C.Element == T, C.Index == Int{
+    guard xs.count == ys.count else { return false }
+    let len = xs.count
+    if len == 0 { return true }
+    let aa = (0..<len).flatMap({i in (0..<len).map({(i,$0)})})
+    if let match = aa.first(where: { xs[$0] == ys[$1] }) {
+        return commuteEqual(xs.without(at:match.0), ys.without(at: match.1))
+    } else {
+        return false
+    }
+    
+}
+protocol AssociativeBinary:Equatable {
+    associatedtype A:Algebra
+    var l: A { get }
+    var r: A { get }
+    func match(_ a:A)-> Self?
+    init(l:A, r:A)
+}
+extension AssociativeBinary {
+    var x: A { return l }
+    var y: A { return r }
+    func flat()->[A] {
+        return (match(l)?.flat() ?? [l]) + (match(r)?.flat() ?? [r])
+    }
+    static func == (x:Self, y:Self)-> Bool {
+        let xs = x.flat()
+        let ys = y.flat()
+        guard xs.count == ys.count else { return false }
+        return zip(xs, ys).map(==).reduce(true, {$0 && $1})
+    }
+}
+protocol CommutativeBinary:AssociativeBinary {}
+extension CommutativeBinary {
+    static func == (x:Self, y:Self)-> Bool {
+        let xs = x.flat()
+        let ys = y.flat()
+        return commuteEqual(xs, ys)
+    }
 }

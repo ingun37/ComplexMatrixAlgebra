@@ -73,9 +73,24 @@ struct ComplexBasis: FieldBasis {
     }
     
 }
-
-
+struct ComplexMultiplication:FieldMulitplication {
+    let l: Complex
+    
+    let r: Complex
+    
+    func match(_ a: Complex) -> ComplexMultiplication? {
+        if case let .Mul(b) = a.ringOp {
+            return b
+        }
+        return nil
+    }
+    
+    typealias A = Complex
+    
+    
+}
 struct Complex:Field {
+    typealias MUL = ComplexMultiplication
     init(_ c: Construction<Complex>) {
         self.c = c
     }

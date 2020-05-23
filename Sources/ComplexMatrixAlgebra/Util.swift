@@ -78,7 +78,7 @@ struct List<T> {
 extension List: Equatable where T:Equatable {}
 extension List where T:Algebra {
     func grouped()-> List<List<T>> {
-        let (us, others) = tail.seperate { (x) in head.same(x) }
+        let (us, others) = tail.seperate { (x) in head == (x) }
         let we = List(head, us)
         if let otherGroup = others.decompose() {
             return List<List<T>>(we) + otherGroup.grouped()

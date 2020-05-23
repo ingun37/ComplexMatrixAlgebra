@@ -70,7 +70,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
     default: break
     }
     switch x.fieldOp {
-    case let .Ring(.Abelian(.Add(l, r))):
+    case let .Ring(.Abelian(.Add(b))):
         let flat = flatAbelianAdd(x)
         let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
             switch x.ringOp {
@@ -81,8 +81,8 @@ func genLaTex<F:Field>(_ x:F) -> String {
                 } else {
                     return str + " + \(genLaTex(xx))"
                 }
-            case let .Mul(l,r):
-                let (sign, unNeg) = unNegateMul(l, r)
+            case let .Mul(b):
+                let (sign, unNeg) = unNegateMul(b.l, b.r)
                 return str + (sign ? " + " : " - ") + genLaTex(unNeg.reduce(*))
             default:
                 return str + " + " + genLaTex(x)
@@ -94,7 +94,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
         case let .Abelian(abe):
             switch abe {
             case let .Subtract(l, r):
-                return genLaTex(F(abelianOp: .Add(l, -r)))
+                return genLaTex(F(abelianOp: .Add(.init(l:l, r:-r))))
                 
             case let .Negate(x):
                 return "- \(wrappedLatex(x))"
@@ -102,8 +102,8 @@ func genLaTex<F:Field>(_ x:F) -> String {
                 break
             }
 
-        case let .Mul(l,r):
-            let (sign, unNegated) = unNegateMul(l, r)
+        case let .Mul(b):
+            let (sign, unNegated) = unNegateMul(b.l, b.r)
             let signTex = sign ? "" : "-"
             let headTex:String
             if case .e(_) = unNegated.head.c  {
@@ -178,8 +178,8 @@ extension Field {
             }
         }
         switch ringOp {
-        case let .Mul(l, r):
-            let (sign, _flat) = unNegateMul(l, r)
+        case let .Mul(b):
+            let (sign, _flat) = unNegateMul(b.l, b.r)
             let (numbers, terms) = _flat.all.seperate({
                 if case .e(.Basis(_)) = $0.c { return true }
                 else {return false}
@@ -210,7 +210,7 @@ extension Field {
         default: break
         }
         switch abelianOp {
-        case let .Add(l, r):
+        case let .Add(b):
             let _flat = flatAbelianAdd(self)
             let flat = _flat.grouped().fmap { (g) in
                 (g.all.count, g.head.prettify())

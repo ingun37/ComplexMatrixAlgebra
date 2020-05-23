@@ -14,7 +14,9 @@ protocol FieldBasis: RingBasis {
     static func whole(n:Int)->Self
 }
 
-protocol Field:Ring where B:FieldBasis {
+
+protocol FieldMulitplication:CommutativeBinary where A:Field {}
+protocol Field:Ring where B:FieldBasis, MUL: FieldMulitplication {
     var fieldOp: FieldOperators<Self>? { get }
     init(fieldOp:FieldOperators<Self>)
 }
@@ -24,8 +26,8 @@ indirect enum FieldOperators<A:Field>: Operator {
         
         switch self {
         case let .Ring(ring):
-            if case let .Mul(x, y) = ring {
-                return operateFieldMul(x.eval(), y.eval()) // because multiplication becomes commutative in field
+            if case let .Mul(b) = ring {
+                return operateFieldMul(b.x.eval(), b.y.eval()) // because multiplication becomes commutative in field
             } else {
                 return ring.eval()
             }
@@ -89,17 +91,6 @@ indirect enum FieldOperators<A:Field>: Operator {
 prefix operator *
 
 extension Field {
-    func same(_ to: Self) -> Bool {
-        return same(field: to)
-    }
-    func same(field: Self) -> Bool {
-        switch (ringOp, field.ringOp) {
-        case let (.Mul(_, _),.Mul(_, _)): // because multiplication becomes commutative in field
-            return commuteSame(flatRingMul(self).all, flatRingMul(field).all)
-        default:
-            return same(ring: field)
-        }
-    }
     static prefix func ~ (lhs: Self) -> Self {
         return .init(fieldOp: .Inverse(lhs))
     }
@@ -123,9 +114,9 @@ extension Field {
 
 func operateFieldMul<A:Field>(_ x:A, _ y:A)-> A {
     return operateCommutativeBinary({ (_ l: A, _ r: A) -> A? in
-        if case let .Add(x, y) = l.abelianOp {
-            let xr = x * r
-            let yr = y * r
+        if case let .Add(b) = l.abelianOp {
+            let xr = b.l * r
+            let yr = b.r * r
             return (xr + yr).eval()
         } else if l == A.Id {
             return r
@@ -136,7 +127,7 @@ func operateFieldMul<A:Field>(_ x:A, _ y:A)-> A {
         }
         switch (l.fieldOp,r.fieldOp) {
         case (.Power(base: let lbase, exponent: let lexp), .Power(base: let rbase, exponent: let rexp)):
-            if lbase.same(rbase) {
+            if lbase == (rbase) {
                 return A(fieldOp: .Power(base: lbase, exponent: lexp + rexp)).eval()
             }
         default:

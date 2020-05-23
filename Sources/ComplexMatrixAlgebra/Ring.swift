@@ -17,36 +17,35 @@ extension RingBasis {
     }
 }
 protocol Ring:Abelian where B:RingBasis{
-    typealias RingOp = RingOperators<Self>
+    associatedtype MUL:AssociativeBinary where MUL.A == Self
+    typealias RingOp = RingOperators<MUL>
     init(ringOp:RingOp)
     var ringOp: RingOp? { get }
 }
 
-indirect enum RingOperators<A:Ring>:Operator {
-    case Mul(A,A)
+indirect enum RingOperators<MUL:AssociativeBinary>:Operator where MUL.A:Ring {
+    typealias A = MUL.A
+    case Mul(MUL)
     case Abelian(A.AbelianO)
     
     func eval() -> A {
         switch self {
-        case let .Mul(x, y):
-            return operateRingMul(x.eval(), y.eval())
+        case let .Mul(b):
+            return operateRingMul(b.x.eval(), b.y.eval())
         case let .Abelian(abe):
             
-            if case let .Negate(x) = abe, case let .Mul(l, r) = x.ringOp {
-                return ((-l) * r).eval()
+            if case let .Negate(x) = abe, case let .Mul(b) = x.ringOp {
+                return ((-b.l) * b.r).eval()
             } else {
                 return abe.eval()
             }
         }
     }
 }
-extension RingOperators {
-    var sum:A { return A(ringOp: self) }
-}
 func flatRingMul<A:Ring>(_ x:A)-> List<A> {
     return flatAlgebra(x) { (x) -> [A] in
-        if case let .Mul(l,r) = x.ringOp {
-            return [l,r]
+        if case let .Mul(b) = x.ringOp {
+            return [b.l,b.r]
         } else {
             return []
         }
@@ -54,9 +53,9 @@ func flatRingMul<A:Ring>(_ x:A)-> List<A> {
 }
 func operateRingMul<A:Ring>(_ x:A, _ y:A)-> A {
     return associativeMerge(_objs: flatRingMul(x) + flatRingMul(y)) { (l, r) -> A? in
-        if case let .Add(x, y) = l.abelianOp {
-            let xr = x * r
-            let yr = (y * r)
+        if case let .Add(b) = l.abelianOp {
+            let xr = b.l * r
+            let yr = (b.r * r)
             return (xr + yr).eval()
         } else if l == A.Id {
             return r
@@ -69,19 +68,10 @@ func operateRingMul<A:Ring>(_ x:A, _ y:A)-> A {
     }.reduce(*)
 }
 extension Ring {
-    static func * (l:Self, r:Self)-> Self { return .init(ringOp: .Mul(l, r)) }
+    static func * (l:Self, r:Self)-> Self { return .init(ringOp: .Mul(.init(l:l, r:r))) }
     static var Id:Self { return .init(element: .Basis(.Id)) }
     static var _Id:Self { return .init(element: .Basis(-.Id)) }
     
-    func same(_ to: Self) -> Bool {
-        return same(ring: to)
-    }
-    func same(ring:Self) -> Bool {
-        switch (ringOp, ring.ringOp) {
-        default:
-            return same(abelian: ring)
-        }
-    }
     init(abelianOp: AbelianO) {
         self.init(ringOp: .Abelian(abelianOp))
     }

@@ -128,6 +128,8 @@ struct Mat<F:Field>:Equatable {
 
 
 struct Matrix<F:Field>:Ring {
+    typealias MUL = MatrixMultiplication<F>
+    
     init(_ c: Construction<Matrix>) {
         self.c = c
     }
@@ -148,28 +150,6 @@ struct Matrix<F:Field>:Ring {
         default: return nil
         }
     }
-    
-    func same(_ to: Matrix) -> Bool {
-        switch (element, to.element) {
-        case let (.Basis(lhs),.Basis(rhs)):
-            switch (lhs,rhs) {
-            case let (.zero,.zero): return true
-            case let (.zero,.id(x)): return x == .Zero
-            case let (.zero,.Matrix(m)): return m.e.all.allSatisfy({$0.all.allSatisfy({$0 == .Zero})})
-
-            case let (.id(x),.zero): return x == .Zero
-            case let (.id(x),.id(y)): return x == y
-            case let (.id(f),.Matrix(m)): return m.id.dim == m.dim && m == (f * m.id)
-
-            case let (.Matrix(m),.zero): return rhs == lhs
-            case let (.Matrix(m),.id(y)): return rhs == lhs
-            case let (.Matrix(x),.Matrix(y)): return x == y
-            }
-        default: break
-        }
-        return same(ring: to)
-    }
-    
 
     static func * (l:F, r:Self)-> Self {
         return .init(.o(.Scale(l, r)))
@@ -248,6 +228,22 @@ enum MatrixBasis<F:Field>:RingBasis {
         case let .Matrix(m): return m.determinant
         }
     }
+    
+    static func == (lhs:Self, rhs:Self)-> Bool {
+        switch (lhs,rhs) {
+        case let (.zero,.zero): return true
+        case let (.zero,.id(x)): return x == .Zero
+        case let (.zero,.Matrix(m)): return m.e.all.allSatisfy({$0.all.allSatisfy({$0 == .Zero})})
+
+        case let (.id(x),.zero): return x == .Zero
+        case let (.id(x),.id(y)): return x == y
+        case let (.id(f),.Matrix(m)): return m.id.dim == m.dim && m == (f * m.id)
+
+        case let (.Matrix(m),.zero): return rhs == lhs
+        case let (.Matrix(m),.id(y)): return rhs == lhs
+        case let (.Matrix(x),.Matrix(y)): return x == y
+        }
+    }
 }
 
 extension MatrixBasis {
@@ -255,7 +251,21 @@ extension MatrixBasis {
         return .init(element: .Basis(self))
     }
 }
-
+struct MatrixMultiplication<F:Field>:AssociativeBinary {
+    func match(_ a: Matrix<F>) -> MatrixMultiplication<F>? {
+        if case let .o(.Ring(.Mul(b))) = a.c {
+            return b
+        }
+        return nil
+    }
+    
+    let l: Matrix<F>
+    let r: Matrix<F>
+    
+    typealias A = Matrix<F>
+    
+    
+}
 indirect enum MatrixOp<F:Field>:Operator {
     typealias A = Matrix<F>
     func eval() -> A {
@@ -270,7 +280,7 @@ indirect enum MatrixOp<F:Field>:Operator {
             }
             
             switch m.abelianOp {
-            case let .Add(ml, mr): return ((s * ml) + (s * mr)).eval()
+            case let .Add(b): return ((s * b.l) + (s * b.r)).eval()
             default: break
             }
             

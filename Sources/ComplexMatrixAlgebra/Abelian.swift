@@ -11,15 +11,27 @@ protocol AbelianBasis:Basis {
     static prefix func - (l:Self)->Self
     static var Zero:Self {get}
 }
+
+struct AbelianAddition<A:Abelian>:CommutativeBinary {
+    func match(_ a: A) -> Self? {
+        if case let .Add(bin) = a.abelianOp {
+            return bin
+        }
+        return nil
+    }
+    
+    let l: A
+    let r: A
+}
 indirect enum AbelianOperator<A:Abelian>:Operator {
-    case Add(A,A)
+    case Add(AbelianAddition<A>)
     case Subtract(A,A)
     case Negate(A)
     
     func eval() -> A {
         switch self {
-        case let .Add(x, y):
-            return operateAbelianAdd(x.eval(), y.eval())
+        case let .Add(bin):
+            return operateAbelianAdd(bin.l.eval(), bin.r.eval())
         case let .Subtract(l, r):
             return (l + -r).eval()
         case let .Negate(x):
@@ -31,8 +43,8 @@ indirect enum AbelianOperator<A:Abelian>:Operator {
                 break
             }
             switch x.abelianOp {
-            case let .Add(l, r):
-                return ((-l) + (-r)).eval()
+            case let .Add(bin):
+                return ((-bin.l) + (-bin.r)).eval()
             case let .Negate(x):
                 return x.eval()
             case let .Subtract(l, r):
@@ -51,7 +63,7 @@ protocol Abelian:Algebra where B:AbelianBasis {
 }
 extension Abelian {
     static func + (l:Self, r:Self)-> Self {
-        return .init(abelianOp: .Add(l, r))
+        return .init(abelianOp: .Add(.init(l:l, r:r)))
     }
     static func - (lhs: Self, rhs: Self) -> Self {
         return .init(abelianOp: .Subtract(lhs, rhs))
@@ -62,19 +74,11 @@ extension Abelian {
     static var Zero:Self {
         return .init(element: (.Basis(B.Zero)))
     }
-    func same(abelian: Self) -> Bool {
-        switch (abelianOp, abelian.abelianOp) {
-        case (.Add(_,_), .Add(_,_)):
-            return commuteSame(flatAbelianAdd(self).all, flatAbelianAdd(abelian).all)
-        default:
-            return same(algebra: abelian)
-        }
-    }
 }
 func flatAbelianAdd<A:Abelian>(_ x:A)-> List<A> {
     return flatAlgebra(x) { (x) -> [A] in
-        if case let .Add(l,r) = x.abelianOp {
-            return [l,r]
+        if case let .Add(bin) = x.abelianOp {
+            return [bin.l,bin.r]
         } else {
             return []
         }
@@ -87,10 +91,10 @@ func operateAbelianAdd<A:Abelian>(_ x:A, _ y:A)-> A {
             return r
         } else if case let (.Basis(l), .Basis(r)) = (l.element,r.element) {
             return A(element: .Basis(l + r))
-        } else if (-l).eval().same(r) {
+        } else if (-l).eval() == (r) {
             return A.Zero
         } else {
             return nil
         }
-    }, flatAbelianAdd(x) + flatAbelianAdd(y)).reduce { (l, r) -> A in A(abelianOp: .Add(l, r)) }
+    }, flatAbelianAdd(x) + flatAbelianAdd(y)).reduce { (l, r) -> A in A(abelianOp: .Add(.init(l:l, r:r))) }
 }
