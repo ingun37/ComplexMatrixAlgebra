@@ -11,26 +11,34 @@ indirect enum MonoidMulOperators<A:MonoidMul>:Operator {
     func eval() -> A {
         switch self {
         case let .Mul(b):
-            fatalError()
+            return associativeMerge(_objs: b.flat()) { (l, r) -> A? in
+                if l == .Id {
+                    return r
+                }
+                if case let (.Basis(ln), .Basis(rn)) = (l.element,r.element) {
+                    return A(element: .Basis(ln * rn))
+                }
+                return nil
+            }.reduce(*)
         }
     }
-    
-    
-    
 }
+
 protocol MonoidMulBasis:Basis {
     static func * (l:Self, r:Self)->Self
     static var Id:Self {get}
 }
-protocol MonoidMul:Algebra {
+protocol MonoidMul:Algebra where B:MonoidMulBasis {
     associatedtype MUL:AssociativeBinary where MUL.A == Self
+    typealias MonMulOp = MonoidMulOperators<Self>
+    init(monoidMulOp:MonMulOp)
+    var monoidMulOp: MonMulOp? { get }
 }
-
-//func multiplyMonoid<A:MonoidMul>(_ x:A, _ y:A)-> A {
-//    return associativeMerge(_objs: flatRingMul(x) + flatRingMul(y)) { (l, r) -> A? in
-//        if case let (.Basis(ln), .Basis(rn)) = (l.element,r.element) {
-//            return (ln * rn).asNumber(A.self)
-//        }
-//        return nil
-//    }.reduce(*)
-//}
+extension MonoidMul {
+    static var Id:Self {
+        return .init(element: .Basis(.Id))
+    }
+    static func * (l:Self, r:Self)->Self {
+        return .init(monoidMulOp: .Mul(.init(l: l, r: r)))
+    }
+}
