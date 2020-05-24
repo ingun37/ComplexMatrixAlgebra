@@ -79,7 +79,7 @@ struct ComplexMultiplication:FieldMulitplication {
     let r: Complex
     
     func match(_ a: Complex) -> ComplexMultiplication? {
-        if case let .Mul(b) = a.monoidMulOp {
+        if case let .Mul(b) = a.mmonoidOp {
             return b
         }
         return nil

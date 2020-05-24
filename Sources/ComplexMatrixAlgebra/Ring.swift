@@ -6,7 +6,7 @@
 //
 
 import Foundation
-protocol RingBasis:AbelianBasis, MonoidMulBasis {
+protocol RingBasis:AbelianBasis, MMonoidBasis {
 }
 extension RingBasis {
     func asNumber<R:Ring>(_ a:R.Type) -> R where R.B == Self{
@@ -14,7 +14,7 @@ extension RingBasis {
 //        return R(op: .init(basisOp: .Number(self)))
     }
 }
-protocol Ring:Abelian & MonoidMul where B:RingBasis{
+protocol Ring:Abelian & MMonoid where B:RingBasis{
     typealias RingOp = RingOperators<MUL>
     init(ringOp:RingOp)
     var ringOp: RingOp? { get }
@@ -22,14 +22,14 @@ protocol Ring:Abelian & MonoidMul where B:RingBasis{
 
 indirect enum RingOperators<MUL:AssociativeBinary>:Operator where MUL.A:Ring {
     typealias A = MUL.A
-    case MonoidMul(A.MonMulOp)
+    case MMonoid(A.MMonO)
     case Abelian(A.AbelianO)
     
     func eval() -> A {
         switch self {
-        case let .MonoidMul(mon):
+        case let .MMonoid(mon):
             let x = mon.eval()
-            if case let .Mul(b) = x.monoidMulOp {
+            if case let .Mul(b) = x.mmonoidOp {
                 return associativeMerge(_objs: b.flat()) { (l, r) -> A? in
                     if case let .Add(b) = l.abelianOp {
                         let xr = b.l * r
@@ -43,7 +43,7 @@ indirect enum RingOperators<MUL:AssociativeBinary>:Operator where MUL.A:Ring {
             }
             return x
         case let .Abelian(abe):
-            if case let .Negate(x) = abe, case let .Mul(b) = x.monoidMulOp {
+            if case let .Negate(x) = abe, case let .Mul(b) = x.mmonoidOp {
                 return ((-b.l) * b.r).eval()
             } else {
                 return abe.eval()
@@ -53,7 +53,7 @@ indirect enum RingOperators<MUL:AssociativeBinary>:Operator where MUL.A:Ring {
 }
 func flatRingMul<A:Ring>(_ x:A)-> List<A> {
     return flatAlgebra(x) { (x) -> [A] in
-        if case let .Mul(b) = x.monoidMulOp {
+        if case let .Mul(b) = x.mmonoidOp {
             return [b.l,b.r]
         } else {
             return []
@@ -61,7 +61,7 @@ func flatRingMul<A:Ring>(_ x:A)-> List<A> {
     }
 }
 extension Ring {
-    static func * (l:Self, r:Self)-> Self { return .init(monoidMulOp: .Mul(.init(l:l, r:r))) }
+    static func * (l:Self, r:Self)-> Self { return .init(mmonoidOp: .Mul(.init(l:l, r:r))) }
     static var Id:Self { return .init(element: .Basis(.Id)) }
     static var _Id:Self { return .init(element: .Basis(-.Id)) }
     
@@ -76,15 +76,15 @@ extension Ring {
             return nil
         }
     }
-    var monoidMulOp: MonMulOp? {
+    var mmonoidOp: MMonO? {
         switch ringOp {
-        case let .MonoidMul(m):
+        case let .MMonoid(m):
             return m
         default:
             return nil
         }
     }
-    init(monoidMulOp: MonMulOp) {
-        self.init(ringOp: .MonoidMul(monoidMulOp))
+    init(mmonoidOp: MMonO) {
+        self.init(ringOp: .MMonoid(mmonoidOp))
     }
 }

@@ -147,7 +147,7 @@ struct RealMultiplication:FieldMulitplication {
     let r: Real
     
     func match(_ a: Real) -> RealMultiplication? {
-        if case let .Mul(b) = a.monoidMulOp {
+        if case let .Mul(b) = a.mmonoidOp {
             return b
         }
         return nil

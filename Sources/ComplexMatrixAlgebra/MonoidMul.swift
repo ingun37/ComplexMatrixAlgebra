@@ -6,7 +6,7 @@
 //
 
 import Foundation
-indirect enum MonoidMulOperators<A:MonoidMul>:Operator {
+indirect enum MMonoidOperators<A:MMonoid>:Operator {
     case Mul(A.MUL)
     func eval() -> A {
         switch self {
@@ -24,21 +24,21 @@ indirect enum MonoidMulOperators<A:MonoidMul>:Operator {
     }
 }
 
-protocol MonoidMulBasis:Basis {
+protocol MMonoidBasis:Basis {
     static func * (l:Self, r:Self)->Self
     static var Id:Self {get}
 }
-protocol MonoidMul:Algebra where B:MonoidMulBasis {
+protocol MMonoid:Algebra where B:MMonoidBasis {
     associatedtype MUL:AssociativeBinary where MUL.A == Self
-    typealias MonMulOp = MonoidMulOperators<Self>
-    init(monoidMulOp:MonMulOp)
-    var monoidMulOp: MonMulOp? { get }
+    typealias MMonO = MMonoidOperators<Self>
+    init(mmonoidOp:MMonO)
+    var mmonoidOp: MMonO? { get }
 }
-extension MonoidMul {
+extension MMonoid {
     static var Id:Self {
         return .init(element: .Basis(.Id))
     }
     static func * (l:Self, r:Self)->Self {
-        return .init(monoidMulOp: .Mul(.init(l: l, r: r)))
+        return .init(mmonoidOp: .Mul(.init(l: l, r: r)))
     }
 }

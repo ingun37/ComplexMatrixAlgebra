@@ -253,7 +253,7 @@ extension MatrixBasis {
 }
 struct MatrixMultiplication<F:Field>:AssociativeBinary {
     func match(_ a: Matrix<F>) -> MatrixMultiplication<F>? {
-        if case let .o(.Ring(.MonoidMul( .Mul(b)))) = a.c {
+        if case let .o(.Ring(.MMonoid( .Mul(b)))) = a.c {
             return b
         }
         return nil

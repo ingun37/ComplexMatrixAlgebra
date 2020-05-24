@@ -26,7 +26,7 @@ indirect enum FieldOperators<A:Field>: Operator {
         
         switch self {
         case let .Ring(ring):
-            if case let .MonoidMul(.Mul(b)) = ring {
+            if case let .MMonoid(.Mul(b)) = ring {
                 return operateFieldMul(b.x.eval(), b.y.eval()) // because multiplication becomes commutative in field
             } else {
                 return ring.eval()

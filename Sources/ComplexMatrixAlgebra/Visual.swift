@@ -81,7 +81,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
                 } else {
                     return str + " + \(genLaTex(xx))"
                 }
-            case let .MonoidMul( .Mul(b)):
+            case let .MMonoid( .Mul(b)):
                 let (sign, unNeg) = unNegateMul(b.l, b.r)
                 return str + (sign ? " + " : " - ") + genLaTex(unNeg.reduce(*))
             default:
@@ -102,7 +102,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
                 break
             }
 
-        case let .MonoidMul( .Mul(b)):
+        case let .MMonoid( .Mul(b)):
             let (sign, unNegated) = unNegateMul(b.l, b.r)
             let signTex = sign ? "" : "-"
             let headTex:String
@@ -178,7 +178,7 @@ extension Field {
             }
         }
         switch ringOp {
-        case let .MonoidMul( .Mul(b)):
+        case let .MMonoid( .Mul(b)):
             let (sign, _flat) = unNegateMul(b.l, b.r)
             let (numbers, terms) = _flat.all.seperate({
                 if case .e(.Basis(_)) = $0.c { return true }
