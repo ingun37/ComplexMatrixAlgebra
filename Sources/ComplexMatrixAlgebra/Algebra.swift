@@ -86,14 +86,15 @@ protocol AssociativeBinary:Equatable {
 extension AssociativeBinary {
     var x: A { return l }
     var y: A { return r }
-    func flat()->[A] {
-        return (match(l)?.flat() ?? [l]) + (match(r)?.flat() ?? [r])
+    func flat()->List<A> {
+        return (match(l)?.flat() ?? List(l)) + (match(r)?.flat() ?? List(r))
     }
     static func == (x:Self, y:Self)-> Bool {
         let xs = x.flat()
         let ys = y.flat()
-        guard xs.count == ys.count else { return false }
-        return zip(xs, ys).map(==).reduce(true, {$0 && $1})
+        guard xs.all.count == ys.all.count else { return false }
+        return xs.fzip(ys).fmap(==).reduce({$0 && $1})
+//        return zip(xs, ys).map(==).reduce(true, {$0 && $1})
     }
 }
 protocol CommutativeBinary:AssociativeBinary {}
@@ -101,6 +102,6 @@ extension CommutativeBinary {
     static func == (x:Self, y:Self)-> Bool {
         let xs = x.flat()
         let ys = y.flat()
-        return commuteEqual(xs, ys)
+        return commuteEqual(xs.all, ys.all)
     }
 }
