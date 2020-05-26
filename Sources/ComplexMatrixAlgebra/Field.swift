@@ -30,13 +30,13 @@ indirect enum FieldOperators<A:Field>: Operator {
                 let l = b.l.eval()
                 let r = b.r.eval()
                 if case let .Mul(lm) = l.mmonoidOp {
-                    if (true) {//(x*y)*r = (r*y)*x
-                        let alter = (r * lm.y)
-                        let aeval = alter.eval()
-                        if alter != aeval {
-                            return (aeval * lm.x).eval()
-                        }
-                    }
+//                    if (true) {//(x*y)*r = (r*y)*x
+//                        let alter = (r * lm.y)
+//                        let aeval = alter.eval()
+//                        if alter != aeval {
+//                            return (aeval * lm.x).eval()
+//                        }
+//                    }
                     if (true) {//(x*y)*r = (x*r)*y
                         let alter = (lm.x * r)
                         let aeval = alter.eval()
@@ -53,13 +53,13 @@ indirect enum FieldOperators<A:Field>: Operator {
                             return (rm.x * aeval).eval()
                         }
                     }
-                    if (true) {//l(xy) = y(xl)
-                        let alter = (rm.x * l)
-                        let aeval = alter.eval()
-                        if alter != aeval {
-                            return (rm.y * aeval).eval()
-                        }
-                    }
+//                    if (true) {//l(xy) = y(xl)
+//                        let alter = (rm.x * l)
+//                        let aeval = alter.eval()
+//                        if alter != aeval {
+//                            return (rm.y * aeval).eval()
+//                        }
+//                    }
                 }
             }
             return ring.eval()

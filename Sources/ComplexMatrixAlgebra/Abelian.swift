@@ -31,7 +31,79 @@ indirect enum AbelianOperator<A:Abelian>:Operator {
     func eval() -> A {
         switch self {
         case let .Add(bin):
-            return operateAbelianAdd(bin.l.eval(), bin.r.eval())
+            let l = bin.l.eval()
+            let r = bin.r.eval()
+            if l == .Zero {
+                return r
+            }
+            if r == .Zero {
+                return l
+            }
+            if case let .Negate(l) = l.abelianOp {
+                if l == r {
+                    return .Zero
+                }
+            }
+            if case let .Negate(r) = r.abelianOp {
+                if l == r {
+                    return .Zero
+                }
+            }
+            if case let .Basis(lb) = l.element {
+                if case let .Basis(rb) = r.element {
+                    return A(element: .Basis(lb + rb))
+                }
+            }
+            if case let .Add(ladd) = l.abelianOp {
+                let (x,y) = (ladd.x, ladd.y)
+                // commutativity (x+y)+r = (r+y)+x
+//                let alter1 = r + y
+//                let aeval1 = alter1.eval()
+//                if alter1 != aeval1 {
+//                    return (aeval1 + x).eval()
+//                }
+                // commutativity (x+y)+r = (x+r)+y
+                let alter2 = x + r
+                let aeval2 = alter2.eval()
+                if alter2 != aeval2 {
+                    return (aeval2 + y).eval()
+                }
+            }
+            if case let .Add(radd) = r.abelianOp {
+                let (x,y) = (radd.x, radd.y)
+                // commutativity l+(x+y) = x+(l+y)
+                let alter1 = l+y
+                let aeval1 = alter1.eval()
+                if alter1 != aeval1 {
+                    return (x+aeval1).eval()
+                }
+                // commutativity l+(x+y) = y+(x+l)
+//                let alter2 = x+l
+//                let aeval2 = alter2.eval()
+//                if alter2 != aeval2 {
+//                    return (y+aeval2).eval()
+//                }
+            }
+            
+            if case let .Add(ladd) = l.abelianOp {
+                //associativity (x+y)+r = x+(y+r)
+                let (x,y) = (ladd.x, ladd.y)
+                let alter = y+r
+                let aeval = alter.eval()
+                if alter != aeval {
+                    return (x+aeval).eval()
+                }
+            }
+            if case let .Add(radd) = r.abelianOp {
+                //associativity l+(x+y) = (l+x)+y
+                let (x,y) = (radd.x, radd.y)
+                let alter = l+x
+                let aeval = alter.eval()
+                if alter != aeval {
+                    return (aeval+y).eval()
+                }
+            }
+            return A(abelianOp: .Add(.init(l: l, r: r)))
         case let .Subtract(l, r):
             return (l + -r).eval()
         case let .Negate(x):
