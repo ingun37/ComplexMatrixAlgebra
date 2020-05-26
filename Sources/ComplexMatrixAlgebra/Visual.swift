@@ -70,7 +70,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
     default: break
     }
     switch x.fieldOp {
-    case let .Ring(.Abelian(.Add(b))):
+    case let .Ring(.Abelian(.Monoid(.Add(b)))):
         let flat = flatAbelianAdd(x)
         let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
             switch x.ringOp {
@@ -94,7 +94,7 @@ func genLaTex<F:Field>(_ x:F) -> String {
         case let .Abelian(abe):
             switch abe {
             case let .Subtract(l, r):
-                return genLaTex(F(abelianOp: .Add(.init(l:l, r:-r))))
+                return genLaTex(F(amonoidOp: .Add(.init(l:l, r:-r))))
                 
             case let .Negate(x):
                 return "- \(wrappedLatex(x))"
@@ -209,7 +209,7 @@ extension Field {
             }
         default: break
         }
-        switch abelianOp {
+        switch amonoidOp {
         case let .Add(b):
             let _flat = flatAbelianAdd(self)
             let flat = _flat.grouped().fmap { (g) in

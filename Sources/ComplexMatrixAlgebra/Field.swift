@@ -142,31 +142,3 @@ extension Field {
         }
     }
 }
-
-
-func operateFieldMul<A:Field>(_ x:A, _ y:A)-> A {
-    return operateCommutativeBinary({ (_ l: A, _ r: A) -> A? in
-        if case let .Add(b) = l.abelianOp {
-            let xr = b.l * r
-            let yr = b.r * r
-            return (xr + yr).eval()
-        } else if l == A.Id {
-            return r
-        } else if l == A.Zero {
-            return A.Zero
-        } else if case let (.Basis(ln), .Basis(rn)) = (l.element,r.element) {
-            return (ln * rn).asNumber(A.self)
-        }
-        switch (l.fieldOp,r.fieldOp) {
-        case (.Power(base: let lbase, exponent: let lexp), .Power(base: let rbase, exponent: let rexp)):
-            if lbase == (rbase) {
-                return A(fieldOp: .Power(base: lbase, exponent: lexp + rexp)).eval()
-            }
-        default:
-            return nil
-        }
-        return nil
-    }, flatRingMul(x) + flatRingMul(y)).reduce(*)
-}
-
-

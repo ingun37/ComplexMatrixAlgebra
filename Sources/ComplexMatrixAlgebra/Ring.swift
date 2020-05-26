@@ -34,10 +34,10 @@ indirect enum RingOperators<MUL:AssociativeBinary>:Operator where MUL.A:Ring {
                 if l == .Zero || r == .Zero {
                     return .Zero
                 }
-                if case let .Add(ladd) = l.abelianOp {
+                if case let .Add(ladd) = l.amonoidOp {
                     return ((ladd.l * r) + (ladd.r * r)).eval()
                 }
-                if case let .Add(radd) = r.abelianOp {
+                if case let .Add(radd) = r.amonoidOp {
                     return ((l * radd.l) + (l * radd.r)).eval()
                 }
             }

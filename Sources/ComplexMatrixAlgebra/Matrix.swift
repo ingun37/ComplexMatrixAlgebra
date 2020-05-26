@@ -128,6 +128,7 @@ struct Mat<F:Field>:Equatable {
 
 
 struct Matrix<F:Field>:Ring {
+    typealias ADD = MatrixAddition<F>
     typealias MUL = MatrixMultiplication<F>
     
     init(_ c: Construction<Matrix>) {
@@ -258,13 +259,20 @@ struct MatrixMultiplication<F:Field>:AssociativeBinary {
         }
         return nil
     }
-    
     let l: Matrix<F>
     let r: Matrix<F>
-    
     typealias A = Matrix<F>
-    
-    
+}
+struct MatrixAddition<F:Field>:CommutativeBinary {
+    func match(_ a: Matrix<F>) -> MatrixAddition<F>? {
+        if case let .Add(b) = a.amonoidOp {
+            return b
+        }
+        return nil
+    }
+    let l: Matrix<F>
+    let r: Matrix<F>
+    typealias A = Matrix<F>
 }
 indirect enum MatrixOp<F:Field>:Operator {
     typealias A = Matrix<F>
@@ -279,7 +287,7 @@ indirect enum MatrixOp<F:Field>:Operator {
             default: break
             }
             
-            switch m.abelianOp {
+            switch m.amonoidOp {
             case let .Add(b): return ((s * b.l) + (s * b.r)).eval()
             default: break
             }

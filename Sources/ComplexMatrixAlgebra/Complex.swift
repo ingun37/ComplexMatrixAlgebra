@@ -75,9 +75,7 @@ struct ComplexBasis: FieldBasis {
 }
 struct ComplexMultiplication:FieldMulitplication {
     let l: Complex
-    
     let r: Complex
-    
     func match(_ a: Complex) -> ComplexMultiplication? {
         if case let .Mul(b) = a.mmonoidOp {
             return b
@@ -86,10 +84,21 @@ struct ComplexMultiplication:FieldMulitplication {
     }
     
     typealias A = Complex
+}
+struct ComplexAddition:CommutativeBinary {
+    let l: Complex
+    let r: Complex
+    func match(_ a: Complex) -> ComplexAddition? {
+        if case let .Add(b) = a.amonoidOp {
+            return b
+        }
+        return nil
+    }
     
-    
+    typealias A = Complex
 }
 struct Complex:Field {
+    typealias ADD = ComplexAddition
     typealias MUL = ComplexMultiplication
     init(_ c: Construction<Complex>) {
         self.c = c
