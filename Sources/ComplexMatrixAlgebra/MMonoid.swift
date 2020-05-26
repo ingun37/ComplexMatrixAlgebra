@@ -11,15 +11,37 @@ indirect enum MMonoidOperators<A:MMonoid>:Operator {
     func eval() -> A {
         switch self {
         case let .Mul(b):
-            return associativeMerge(_objs: b.flat()) { (l, r) -> A? in
-                if l == .Id {
-                    return r
+            let l = b.l.eval()
+            let r = b.r.eval()
+            
+            if l == .Id { return r }
+            if r == .Id { return l }
+            
+            if case let .Basis(lb) = l.element {
+                if case let .Basis(rb) = r.element {
+                    return A(element: .Basis(lb * rb))
                 }
-                if case let (.Basis(ln), .Basis(rn)) = (l.element,r.element) {
-                    return A(element: .Basis(ln * rn))
+            }
+            
+            if case let .Mul(lm) = l.mmonoidOp {
+                //(xy)r = x(yr)
+                let alter = (lm.r * r)
+                let aeval = alter.eval()
+                if alter != aeval {
+                    return (lm.l * aeval).eval()
                 }
-                return nil
-            }.reduce(*)
+            }
+            
+            if case let .Mul(rm) = r.mmonoidOp {
+                //l(xy) = (lx)y
+                let alter = (l * rm.l)
+                let aeval = alter.eval()
+                if alter != aeval {
+                    return (aeval * rm.r).eval()
+                }
+            }
+            
+            return l * r
         }
     }
 }

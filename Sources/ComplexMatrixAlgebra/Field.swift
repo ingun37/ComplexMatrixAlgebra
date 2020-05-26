@@ -27,10 +27,42 @@ indirect enum FieldOperators<A:Field>: Operator {
         switch self {
         case let .Ring(ring):
             if case let .MMonoid(.Mul(b)) = ring {
-                return operateFieldMul(b.x.eval(), b.y.eval()) // because multiplication becomes commutative in field
-            } else {
-                return ring.eval()
+                let l = b.l.eval()
+                let r = b.r.eval()
+                if case let .Mul(lm) = l.mmonoidOp {
+                    if (true) {//(x*y)*r = (r*y)*x
+                        let alter = (r * lm.y)
+                        let aeval = alter.eval()
+                        if alter != aeval {
+                            return (aeval * lm.x).eval()
+                        }
+                    }
+                    if (true) {//(x*y)*r = (x*r)*y
+                        let alter = (lm.x * r)
+                        let aeval = alter.eval()
+                        if alter != aeval {
+                            return (aeval * lm.y).eval()
+                        }
+                    }
+                }
+                if case let .Mul(rm) = r.mmonoidOp {
+                    if (true) {//l(xy) = x(ly)
+                        let alter = (l * rm.y)
+                        let aeval = alter.eval()
+                        if alter != aeval {
+                            return (rm.x * aeval).eval()
+                        }
+                    }
+                    if (true) {//l(xy) = y(xl)
+                        let alter = (rm.x * l)
+                        let aeval = alter.eval()
+                        if alter != aeval {
+                            return (rm.y * aeval).eval()
+                        }
+                    }
+                }
             }
+            return ring.eval()
         case let .Quotient(l, r): return (l * ~r).eval()
         
         case let .Inverse(x):

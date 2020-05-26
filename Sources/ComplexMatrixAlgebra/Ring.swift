@@ -28,20 +28,20 @@ indirect enum RingOperators<MUL:AssociativeBinary>:Operator where MUL.A:Ring {
     func eval() -> A {
         switch self {
         case let .MMonoid(mon):
-            let x = mon.eval()
-            if case let .Mul(b) = x.mmonoidOp {
-                return associativeMerge(_objs: b.flat()) { (l, r) -> A? in
-                    if case let .Add(b) = l.abelianOp {
-                        let xr = b.l * r
-                        let yr = (b.r * r)
-                        return (xr + yr).eval()
-                    } else if l == A.Zero {
-                        return A.Zero
-                    }
-                    return nil
-                }.reduce(*)
+            if case let .Mul(b) = mon {
+                let l = b.l.eval()
+                let r = b.r.eval()
+                if l == .Zero || r == .Zero {
+                    return .Zero
+                }
+                if case let .Add(ladd) = l.abelianOp {
+                    return ((ladd.l * r) + (ladd.r * r)).eval()
+                }
+                if case let .Add(radd) = r.abelianOp {
+                    return ((l * radd.l) + (l * radd.r)).eval()
+                }
             }
-            return x
+            return mon.eval()
         case let .Abelian(abe):
             if case let .Negate(x) = abe, case let .Mul(b) = x.mmonoidOp {
                 return ((-b.l) * b.r).eval()
