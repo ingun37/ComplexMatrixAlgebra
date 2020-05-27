@@ -105,3 +105,23 @@ extension CommutativeBinary {
         return commuteEqual(xs.all, ys.all)
     }
 }
+protocol AssociativeMultiplication:AssociativeBinary where A:MMonoid {}
+extension AssociativeMultiplication {
+    func match(_ a: A) -> Self? {
+        if case let .Mul(b) = a.mmonoidOp {
+            return .init(l: b.l, r: b.r)
+        }
+        return nil
+    }
+}
+protocol CommutativeMultiplication:AssociativeMultiplication, CommutativeBinary where A:Field {}
+
+protocol CommutativeAddition:CommutativeBinary where A:Abelian {}
+extension CommutativeAddition {
+    func match(_ a: A) -> Self? {
+        if case let .Add(b) = a.amonoidOp {
+            return .init(l: b.l, r: b.r)
+        }
+        return nil
+    }
+}

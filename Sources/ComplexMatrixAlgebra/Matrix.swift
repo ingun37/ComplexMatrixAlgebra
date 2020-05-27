@@ -252,24 +252,12 @@ extension MatrixBasis {
         return .init(element: .Basis(self))
     }
 }
-struct MatrixMultiplication<F:Field>:AssociativeBinary {
-    func match(_ a: Matrix<F>) -> MatrixMultiplication<F>? {
-        if case let .o(.Ring(.MMonoid( .Mul(b)))) = a.c {
-            return b
-        }
-        return nil
-    }
+struct MatrixMultiplication<F:Field>:AssociativeMultiplication {
     let l: Matrix<F>
     let r: Matrix<F>
     typealias A = Matrix<F>
 }
-struct MatrixAddition<F:Field>:CommutativeBinary {
-    func match(_ a: Matrix<F>) -> MatrixAddition<F>? {
-        if case let .Add(b) = a.amonoidOp {
-            return b
-        }
-        return nil
-    }
+struct MatrixAddition<F:Field>:CommutativeAddition {
     let l: Matrix<F>
     let r: Matrix<F>
     typealias A = Matrix<F>

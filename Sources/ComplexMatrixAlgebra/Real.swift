@@ -141,26 +141,14 @@ indirect enum RealOperator:Operator {
     case f(FieldOperators<Real>)
     
 }
-struct RealMultiplication:FieldMulitplication {
+struct RealMultiplication:CommutativeMultiplication {
     let l: Real
     let r: Real
-    func match(_ a: Real) -> RealMultiplication? {
-        if case let .Mul(b) = a.mmonoidOp {
-            return b
-        }
-        return nil
-    }
     typealias A = Real
 }
-struct RealAddition:CommutativeBinary {
+struct RealAddition:CommutativeAddition {
     let l: Real
     let r: Real
-    func match(_ a: Real) -> RealAddition? {
-        if case let .Add(b) = a.amonoidOp {
-            return b
-        }
-        return nil
-    }
     typealias A = Real
 }
 //typealias Real = Field<RealNumber>

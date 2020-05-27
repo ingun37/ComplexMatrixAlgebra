@@ -15,8 +15,7 @@ protocol FieldBasis: RingBasis {
 }
 
 
-protocol FieldMulitplication:CommutativeBinary where A:Field {}
-protocol Field:Ring where B:FieldBasis, MUL: FieldMulitplication {
+protocol Field:Ring where B:FieldBasis, MUL: CommutativeMultiplication {
     var fieldOp: FieldOperators<Self>? { get }
     init(fieldOp:FieldOperators<Self>)
 }
