@@ -52,6 +52,7 @@ indirect enum AbelianOperator<A:Abelian>:Operator {
                         return (x+aeval1).eval()
                     }
                 }
+                return mon.evalAdd(evaledL: l, evaledR: r)
             }
             return mon.eval()
         case let .Subtract(l, r):

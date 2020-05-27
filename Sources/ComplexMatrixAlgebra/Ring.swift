@@ -40,6 +40,7 @@ indirect enum RingOperators<MUL:AssociativeBinary>:Operator where MUL.A:Ring {
                 if case let .Add(radd) = r.amonoidOp {
                     return ((l * radd.l) + (l * radd.r)).eval()
                 }
+                return mon.evalMul(evaledL: l, evaledR: r)
             }
             return mon.eval()
         case let .Abelian(abe):

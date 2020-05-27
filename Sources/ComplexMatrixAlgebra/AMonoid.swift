@@ -15,35 +15,40 @@ indirect enum AMonoidOperators<A:AMonoid>:Operator {
             let l = b.l.eval()
             let r = b.r.eval()
             
-            if l == .Zero { return r }
-            if r == .Zero { return l }
-            
-            if case let .Basis(lb) = l.element {
-                if case let .Basis(rb) = r.element {
-                    return A(element: .Basis(lb + rb))
-                }
-            }
-            
-            if case let .Add(lm) = l.amonoidOp {
-                //(xy)r = x(yr)
-                let alter = (lm.r + r)
-                let aeval = alter.eval()
-                if alter != aeval {
-                    return (lm.l + aeval).eval()
-                }
-            }
-            
-            if case let .Add(rm) = r.amonoidOp {
-                //l(xy) = (lx)y
-                let alter = (l + rm.l)
-                let aeval = alter.eval()
-                if alter != aeval {
-                    return (aeval + rm.r).eval()
-                }
-            }
-            
-            return l + r
+            return evalAdd(evaledL: l, evaledR: r)
         }
+    }
+    func evalAdd(evaledL:A, evaledR:A) -> A {
+        let l = evaledL
+        let r = evaledR
+        if l == .Zero { return r }
+        if r == .Zero { return l }
+        
+        if case let .Basis(lb) = l.element {
+            if case let .Basis(rb) = r.element {
+                return A(element: .Basis(lb + rb))
+            }
+        }
+        
+        if case let .Add(lm) = l.amonoidOp {
+            //(xy)r = x(yr)
+            let alter = (lm.r + r)
+            let aeval = alter.eval()
+            if alter != aeval {
+                return (lm.l + aeval).eval()
+            }
+        }
+        
+        if case let .Add(rm) = r.amonoidOp {
+            //l(xy) = (lx)y
+            let alter = (l + rm.l)
+            let aeval = alter.eval()
+            if alter != aeval {
+                return (aeval + rm.r).eval()
+            }
+        }
+        
+        return l + r
     }
 }
 
