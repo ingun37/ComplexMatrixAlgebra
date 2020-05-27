@@ -96,6 +96,9 @@ extension AssociativeBinary {
         return xs.fzip(ys).fmap(==).reduce({$0 && $1})
 //        return zip(xs, ys).map(==).reduce(true, {$0 && $1})
     }
+    var eachEvaled: Self {
+        return .init(l: l.eval(), r: r.eval())
+    }
 }
 protocol CommutativeBinary:AssociativeBinary {}
 extension CommutativeBinary {
@@ -113,9 +116,81 @@ extension AssociativeMultiplication {
         }
         return nil
     }
+    func caseMultiplicationWithId() -> A? {
+        if l == .Id { return r }
+        if r == .Id { return l }
+        return nil
+    }
+    func caseBothBasis()-> A? {
+        if case let .Basis(lb) = l.element {
+            if case let .Basis(rb) = r.element {
+                return A(element: .Basis(lb * rb))
+            }
+        }
+        return nil
+    }
+    func caseAssociative() -> A? {
+        if case let .Mul(lm) = l.mmonoidOp {
+            //(xy)r = x(yr)
+            let alter = (lm.r * r)
+            let aeval = alter.eval()
+            if alter != aeval {
+                return (lm.l * aeval).eval()
+            }
+        }
+        
+        if case let .Mul(rm) = r.mmonoidOp {
+            //l(xy) = (lx)y
+            let alter = (l * rm.l)
+            let aeval = alter.eval()
+            if alter != aeval {
+                return (aeval * rm.r).eval()
+            }
+        }
+        return nil
+    }
+}
+extension AssociativeMultiplication where A:Ring {
+    func caseMultiplicationWithZero()-> A? {
+        if l == .Zero || r == .Zero {
+            return .Zero
+        }
+        return nil
+    }
+    func caseDistributive()-> A? {
+        if case let .Add(ladd) = l.amonoidOp {
+            return ((ladd.l * r) + (ladd.r * r)).eval()
+        }
+        if case let .Add(radd) = r.amonoidOp {
+            return ((l * radd.l) + (l * radd.r)).eval()
+        }
+        return nil
+    }
 }
 protocol CommutativeMultiplication:AssociativeMultiplication, CommutativeBinary where A:Field {}
-
+extension CommutativeMultiplication {
+    func caseCommutative() -> A? {
+        if case let .Mul(lm) = l.mmonoidOp {
+            if (true) {//(x*y)*r = (x*r)*y
+                let alter = (lm.x * r)
+                let aeval = alter.eval()
+                if alter != aeval {
+                    return (aeval * lm.y).eval()
+                }
+            }
+        }
+        if case let .Mul(rm) = r.mmonoidOp {
+            if (true) {//l(xy) = x(ly)
+                let alter = (l * rm.y)
+                let aeval = alter.eval()
+                if alter != aeval {
+                    return (rm.x * aeval).eval()
+                }
+            }
+        }
+        return nil
+    }
+}
 protocol CommutativeAddition:CommutativeBinary where A:Abelian {}
 extension CommutativeAddition {
     func match(_ a: A) -> Self? {
