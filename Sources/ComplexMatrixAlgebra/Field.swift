@@ -7,51 +7,33 @@
 
 import Foundation
 
-protocol FieldBasis: RingBasis {
-    static func / (lhs: Self, rhs: Self) -> Self
-    static prefix func ~ (lhs: Self) -> Self
+protocol FieldBasis: RingBasis & MAbelianBasis {
     static prefix func * (lhs: Self) -> Self
     static func whole(n:Int)->Self
 }
 
 
-protocol Field:Ring where B:FieldBasis, MUL: CommutativeMultiplication {
+protocol Field:Ring & MAbelian where B:FieldBasis {
     var fieldOp: FieldOperators<Self>? { get }
     init(fieldOp:FieldOperators<Self>)
 }
 
 indirect enum FieldOperators<A:Field>: Operator {
     func eval() -> A {
-        
         switch self {
-        case let .Ring(ring):
-            if case let .MMonoid(.Mul(_b)) = ring {
+        case let .Mabelian(mab):
+            if case let .Monoid(.Mul(_b)) = mab {
                 let b = _b.eachEvaled
-                let cases1 = b.caseMultiplicationWithZero() ?? b.caseMultiplicationWithId() ?? b.caseBothBasis()
+                let cases1 = b.caseMultiplicationWithZero() ?? b.caseMultiplicationWithId() ?? b.caseBothBasis() ?? b.caseMultiplicationWithInverse()
                 let cases2 = cases1 ?? b.caseDistributive()
                 let cases3 = cases2 ?? b.caseAssociative()
                 let cases4 = cases3 ?? b.caseCommutative()
                 return cases4 ?? b.l * b.r
             }
-            return ring.eval()
-        case let .Quotient(l, r): return (l * ~r).eval()
-        
-        case let .Inverse(x):
-            let x = x.eval()
-            switch x.element {
-            case let .Basis(number):
-                return .init(element: .Basis(~number))
-            default: break
-            }
-            
-            switch x.fieldOp {
-            case let .Quotient(numer, denom):
-                return A(fieldOp: .Quotient(denom, numer)).eval()
-            case let .Inverse(x):
-                return x.eval()
-            default: break
-            }
-            return .init(fieldOp: .Inverse(x))
+            return mab.eval()
+        case let .Abelian(abe):
+            return abe.eval()
+
         case .Power(base: let _base, exponent: let _exponent):
             let base = _base.eval()
             let exponent = _exponent.eval()
@@ -82,11 +64,10 @@ indirect enum FieldOperators<A:Field>: Operator {
         }
     }
     
-    case Quotient(A, A)
-    case Inverse(A)
+    case Mabelian(A.MAbelianO)
+    case Abelian(A.AbelianO)
     case Power(base:A, exponent:A)
     case Conjugate(A)
-    case Ring(A.RingOp)
     case Determinant(Matrix<A>)
 }
 
@@ -94,22 +75,46 @@ indirect enum FieldOperators<A:Field>: Operator {
 prefix operator *
 
 extension Field {
-    static prefix func ~ (lhs: Self) -> Self {
-        return .init(fieldOp: .Inverse(lhs))
-    }
     static prefix func * (lhs: Self) -> Self { return .init(fieldOp: .Conjugate(lhs)) }
-    static func / (lhs: Self, rhs: Self) -> Self { return .init(fieldOp: .Quotient(lhs, rhs)) }
     static func ^ (lhs: Self, rhs: Self) -> Self { return .init(fieldOp: .Power(base: lhs, exponent: rhs)) }
 
-    init(ringOp: RingOp) {
-        self.init(fieldOp: .Ring(ringOp))
-    }
-    var ringOp: RingOp? {
+    var ringOp: RingOperators<MUL>? {
         switch fieldOp {
-        case let .Ring(r):
-            return r
+        case let .Abelian(abe):
+            return .Abelian(abe)
+        case let .Mabelian(.Monoid(mon)):
+            return .MMonoid(mon)
+        default: return nil
+        }
+    }
+    init(ringOp: RingOperators<MUL>) {
+        switch ringOp {
+        case let .Abelian(abe):
+            self.init(fieldOp: .Abelian(abe))
+        case let .MMonoid(mmon):
+            self.init(fieldOp: .Mabelian(.Monoid(mmon)))
+        }
+    }
+    var mabelianOp: MAbelianO? {
+        switch fieldOp {
+        case let .Mabelian(mab):
+            return mab
         default:
             return nil
         }
+    }
+    init(mabelianOp: MAbelianO) {
+        self.init(fieldOp: .Mabelian(mabelianOp))
+    }
+    var mmonoidOp: MMonO? {
+        switch fieldOp {
+        case let .Mabelian(.Monoid(mon)):
+            return mon
+        default:
+            return nil
+        }
+    }
+    init(mmonoidOp: MMonO) {
+        self.init(fieldOp: .Mabelian(.Monoid(mmonoidOp)))
     }
 }

@@ -121,7 +121,7 @@ indirect enum RealOperator:Operator {
                 let base = base.eval()
                 if let mul = (0..<abs(intExp)).decompose()?.fmap({_ in base}).reduce(*) {
                     if intExp < 0 {
-                        return Real(fieldOp: .Inverse(mul)).eval()
+                        return Real(mabelianOp: .Inverse(mul)).eval()
                     } else {
                         return mul.eval()
                     }

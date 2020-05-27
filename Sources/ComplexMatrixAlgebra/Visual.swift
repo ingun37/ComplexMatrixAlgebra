@@ -69,8 +69,50 @@ func genLaTex<F:Field>(_ x:F) -> String {
         return v
     default: break
     }
+    switch x.ringOp {
+    case let .Abelian(abe):
+        switch abe {
+        case let .Subtract(l, r):
+            return genLaTex(F(amonoidOp: .Add(.init(l:l, r:-r))))
+            
+        case let .Negate(x):
+            return "- \(wrappedLatex(x))"
+        default:
+            break
+        }
+
+    case let .MMonoid( .Mul(b)):
+        let (sign, unNegated) = unNegateMul(b.l, b.r)
+        let signTex = sign ? "" : "-"
+        let headTex:String
+        if case .e(_) = unNegated.head.c  {
+            headTex = genLaTex(unNegated.head)
+        } else {
+            switch unNegated.head.fieldOp {
+            case .Power(_,_): headTex = genLaTex(unNegated.head)
+            default: headTex = genLaTex(unNegated.head).paren
+            }
+        }
+        
+        
+        let tailTex = unNegated.tail.map { (f) -> String in
+            let tex = genLaTex(f)
+            if case let .Var(_) = f.element {
+                return tex
+            }
+            switch f.fieldOp {
+            case .Power(_, _): return tex
+            default:
+                return "\\left(\(tex)\\right)"
+            }
+        }.joined(separator: " ")
+        return "\(signTex) \(headTex) \(tailTex)"
+
+    default: break
+    }
+    
     switch x.fieldOp {
-    case let .Ring(.Abelian(.Monoid(.Add(b)))):
+    case let (.Abelian(.Monoid(.Add(b)))):
         let flat = flatAbelianAdd(x)
         let tex = flat.tail.reduce(genLaTex(flat.head)) { (str, x) -> String in
             switch x.ringOp {
@@ -89,55 +131,11 @@ func genLaTex<F:Field>(_ x:F) -> String {
             }
         }
         return tex
-    case let .Ring(ring):
-        switch ring {
-        case let .Abelian(abe):
-            switch abe {
-            case let .Subtract(l, r):
-                return genLaTex(F(amonoidOp: .Add(.init(l:l, r:-r))))
-                
-            case let .Negate(x):
-                return "- \(wrappedLatex(x))"
-            default:
-                break
-            }
-
-        case let .MMonoid( .Mul(b)):
-            let (sign, unNegated) = unNegateMul(b.l, b.r)
-            let signTex = sign ? "" : "-"
-            let headTex:String
-            if case .e(_) = unNegated.head.c  {
-                headTex = genLaTex(unNegated.head)
-            } else {
-                switch unNegated.head.fieldOp {
-                case .Power(_,_): headTex = genLaTex(unNegated.head)
-                default: headTex = genLaTex(unNegated.head).paren
-                }
-            }
-            
-            
-            let tailTex = unNegated.tail.map { (f) -> String in
-                let tex = genLaTex(f)
-                if case let .Var(_) = f.element {
-                    return tex
-                }
-                switch f.fieldOp {
-                case .Power(_, _): return tex
-                default:
-                    return "\\left(\(tex)\\right)"
-                }
-            }.joined(separator: " ")
-            return "\(signTex) \(headTex) \(tailTex)"
-
-        default:
-            break
-        }
-    
-    case let .Quotient(l, r):
+    case let .Mabelian( .Quotient(l, r)):
         return "\\frac{\(genLaTex(l))}{\(genLaTex(r))}"
 
     
-    case let .Inverse(x):
+    case let .Mabelian( .Inverse(x)):
         return "{\(wrappedLatex(x))}^{-1}"
     case .Power(base: let base, exponent: let exponent):
         let expTex = genLaTex(exponent)

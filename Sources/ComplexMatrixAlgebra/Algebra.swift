@@ -167,8 +167,21 @@ extension AssociativeMultiplication where A:Ring {
         return nil
     }
 }
-protocol CommutativeMultiplication:AssociativeMultiplication, CommutativeBinary where A:Field {}
+protocol CommutativeMultiplication:AssociativeMultiplication, CommutativeBinary where A:MAbelian {}
 extension CommutativeMultiplication {
+    func caseMultiplicationWithInverse() -> A? {
+        if case let .Inverse(l) = l.mabelianOp {
+            if l == r {
+                return .Id
+            }
+        }
+        if case let .Inverse(r) = r.mabelianOp {
+            if l == r {
+                return .Id
+            }
+        }
+        return nil
+    }
     func caseCommutative() -> A? {
         if case let .Mul(lm) = l.mmonoidOp {
             if (true) {//(x*y)*r = (x*r)*y
