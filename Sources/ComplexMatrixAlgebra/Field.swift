@@ -61,6 +61,7 @@ indirect enum FieldOperators<A:Field>: Operator {
 //                        }
 //                    }
                 }
+                return A.RingOp.evalMul(evaledL: l, evaledR: r)
             }
             return ring.eval()
         case let .Quotient(l, r): return (l * ~r).eval()

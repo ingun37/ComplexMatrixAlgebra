@@ -15,10 +15,10 @@ indirect enum AMonoidOperators<A:AMonoid>:Operator {
             let l = b.l.eval()
             let r = b.r.eval()
             
-            return evalAdd(evaledL: l, evaledR: r)
+            return Self.evalAdd(evaledL: l, evaledR: r)
         }
     }
-    func evalAdd(evaledL:A, evaledR:A) -> A {
+    static func evalAdd(evaledL:A, evaledR:A) -> A {
         let l = evaledL
         let r = evaledR
         if l == .Zero { return r }

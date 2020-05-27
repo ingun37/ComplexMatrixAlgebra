@@ -31,16 +31,7 @@ indirect enum RingOperators<MUL:AssociativeBinary>:Operator where MUL.A:Ring {
             if case let .Mul(b) = mon {
                 let l = b.l.eval()
                 let r = b.r.eval()
-                if l == .Zero || r == .Zero {
-                    return .Zero
-                }
-                if case let .Add(ladd) = l.amonoidOp {
-                    return ((ladd.l * r) + (ladd.r * r)).eval()
-                }
-                if case let .Add(radd) = r.amonoidOp {
-                    return ((l * radd.l) + (l * radd.r)).eval()
-                }
-                return mon.evalMul(evaledL: l, evaledR: r)
+                return Self.evalMul(evaledL: l, evaledR: r)
             }
             return mon.eval()
         case let .Abelian(abe):
@@ -50,6 +41,21 @@ indirect enum RingOperators<MUL:AssociativeBinary>:Operator where MUL.A:Ring {
                 return abe.eval()
             }
         }
+    }
+    
+    static func evalMul(evaledL:A, evaledR:A)->A {
+        let l = evaledL
+        let r = evaledR
+        if l == .Zero || r == .Zero {
+            return .Zero
+        }
+        if case let .Add(ladd) = l.amonoidOp {
+            return ((ladd.l * r) + (ladd.r * r)).eval()
+        }
+        if case let .Add(radd) = r.amonoidOp {
+            return ((l * radd.l) + (l * radd.r)).eval()
+        }
+        return A.MMonO.evalMul(evaledL: l, evaledR: r)
     }
 }
 func flatRingMul<A:Ring>(_ x:A)-> List<A> {

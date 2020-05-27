@@ -14,10 +14,10 @@ indirect enum MMonoidOperators<A:MMonoid>:Operator {
             let l = b.l.eval()
             let r = b.r.eval()
             
-            return evalMul(evaledL: l, evaledR: r)
+            return Self.evalMul(evaledL: l, evaledR: r)
         }
     }
-    func evalMul(evaledL:A, evaledR:A) -> A {//seperated it for optimizating purpose
+    static func evalMul(evaledL:A, evaledR:A) -> A {//seperated it for optimizating purpose
         let l = evaledL
         let r = evaledR
         if l == .Id { return r }
