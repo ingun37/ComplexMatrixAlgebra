@@ -34,11 +34,7 @@ indirect enum RingOperators<MUL:AssociativeBinary>:Operator where MUL.A:Ring {
             }
             return mon.eval()
         case let .Abelian(abe):
-            if case let .Negate(x) = abe, case let .Mul(b) = x.mmonoidOp {
-                return ((-b.l) * b.r).eval()
-            } else {
-                return abe.eval()
-            }
+            return abe.eval()
         }
     }
 }
