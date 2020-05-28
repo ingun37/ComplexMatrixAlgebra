@@ -8,7 +8,7 @@
 import Foundation
 import NumberKit
 
-enum RealBasis: Equatable, FieldBasis {
+enum RealBasis: FieldBasis {
     static func whole(n: Int) -> RealBasis {
         return .N(n)
     }

@@ -7,20 +7,20 @@
 
 import Foundation
 import NumberKit
-indirect enum Element<B:Basis>:Equatable {
+indirect enum Element<B:Basis>:Hashable {
     case Basis(B)
     case Var(String)
 }
-protocol Operator:Equatable {
+protocol Operator:Hashable {
     associatedtype A:Algebra
     func eval() -> A
 }
-indirect enum Construction<A:Algebra>: Equatable {
+indirect enum Construction<A:Algebra>: Hashable {
     case e(A.E)
     case o(A.O)
 }
 //TODO: Change once accepted: https://forums.swift.org/t/accepted-se-0280-enum-cases-as-protocol-witnesses/34850
-protocol Algebra: Equatable {
+protocol Algebra: Hashable {
     associatedtype B:Basis
     associatedtype O:Operator where O.A == Self
     typealias E = Element<B>
@@ -50,7 +50,7 @@ extension Algebra {
         self.init(.e(element))
     }
 }
-protocol Basis:Equatable {}
+protocol Basis:Hashable {}
 
 func commuteSame<C:Collection, T:Algebra>(_ xs:C, _ ys:C) -> Bool where C.Element == T, C.Index == Int{
     guard xs.count == ys.count else { return false }
@@ -76,7 +76,7 @@ func commuteEqual<C:Collection, T:Algebra>(_ xs:C, _ ys:C) -> Bool where C.Eleme
     }
     
 }
-protocol AssociativeBinary:Equatable {
+protocol AssociativeBinary:Hashable {
     associatedtype A:Algebra
     var l: A { get }
     var r: A { get }

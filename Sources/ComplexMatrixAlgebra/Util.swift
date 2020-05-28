@@ -75,7 +75,11 @@ struct List<T> {
         return List<(T,T)>(newHead, newTail)
     }
 }
-extension List: Equatable where T:Equatable {}
+
+extension List: Equatable where T: Equatable {}
+
+extension List: Hashable where T:Hashable {}
+
 extension List where T:Algebra {
     func grouped()-> List<List<T>> {
         let (us, others) = tail.seperate { (x) in head == (x) }

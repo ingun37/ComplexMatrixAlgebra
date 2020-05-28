@@ -15,7 +15,7 @@ struct Dimension:Hashable {
         self.cols = cols
     }
 }
-struct Mat<F:Field>:Equatable {
+struct Mat<F:Field>:Hashable {
     let e:List<List<F>>
     var rowLen:Int {
         return e.all.count
