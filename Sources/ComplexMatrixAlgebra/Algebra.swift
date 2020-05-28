@@ -29,6 +29,7 @@ protocol Algebra: Hashable {
     var c: Construction<Self> {
         get
     }
+    static var cache:Dictionary<Self, Self>? {get set}
 }
 extension Algebra {
     var element:E? {
@@ -44,7 +45,14 @@ extension Algebra {
         }
     }
     func eval() -> Self {
-        return o?.eval() ?? self
+        if let cache = Self.cache {
+            if let c = cache[self] {
+                return c
+            }
+        }
+        let result = o?.eval() ?? self
+        Self.cache?[self] = result
+        return result
     }
     init(element:E) {
         self.init(.e(element))

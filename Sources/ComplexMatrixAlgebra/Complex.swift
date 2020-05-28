@@ -84,6 +84,8 @@ struct ComplexAddition:CommutativeAddition {
     typealias A = Complex
 }
 struct Complex:Field {
+    static var cache:Dictionary<Complex, Complex>? = .init()
+    
     typealias ADD = ComplexAddition
     typealias MUL = ComplexMultiplication
     init(_ c: Construction<Complex>) {

@@ -128,6 +128,15 @@ struct Mat<F:Field>:Hashable {
 
 
 struct Matrix<F:Field>:Ring {
+    static var cache: Dictionary<Matrix<F>, Matrix<F>>? {
+        get {
+            return nil
+        }
+        set {
+            
+        }
+    }
+    
     typealias ADD = MatrixAddition<F>
     typealias MUL = MatrixMultiplication<F>
     
