@@ -36,6 +36,13 @@ indirect enum RingOperators<MUL:AssociativeBinary>:Operator where MUL.A:Ring {
                     return .Zero
                 }
                 
+                if case let .Negate(nl) = l.abelianOp {
+                    return A(abelianOp: .Negate(nl * r)).eval()
+                }
+                if case let .Negate(nr) = r.abelianOp {
+                    return A(abelianOp: .Negate(l * nr)).eval()
+                }
+                
                 if case let .Add(ladd) = l.amonoidOp {
                     return ((ladd.l * r) + (ladd.r * r)).eval()
                 }

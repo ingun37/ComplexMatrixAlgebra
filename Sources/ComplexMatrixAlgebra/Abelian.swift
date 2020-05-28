@@ -69,7 +69,7 @@ indirect enum AbelianOperator<A:Abelian>:Operator {
             }
             switch x.abelianOp {
             case let .Negate(x):
-                return x.eval()
+                return x
             case let .Subtract(l, r):
                 return (r - l).eval()
             default: break
