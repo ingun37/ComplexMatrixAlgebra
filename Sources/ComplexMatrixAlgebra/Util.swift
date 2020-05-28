@@ -200,3 +200,14 @@ func operateCommutativeBinary<A>(_ trial:(A, A)->A?, _ xs:List<A> ) -> List<A> {
     }
 }
 
+func join<T>(optionals:[T?])->[T]? {
+    return optionals.reduce([]) { (l, e)->[T]? in
+        guard let l = l else {return nil}
+        switch e {
+        case .none:
+            return nil
+        case let .some(v):
+            return l + [v]
+        }
+    }
+}

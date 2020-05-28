@@ -13,9 +13,15 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
     enum Sum {
         case C(Complex)
         case R(Real)
+        case MR(Matrix<Real>)
+        case MC(Matrix<Complex>)
     }
     func genLine<T:Field>(_ x:T)-> String {
         return "$$\n" + genLaTex(x) + "=" + genLaTex(x.eval().prettify()) + "\n$$"
+    }
+    func genLine<F:Field>(_ x:Matrix<F>)-> String {
+        let v = x.eval()
+        return "$$\n" + genLaTex(x) + "=" + genLaTex(x.eval()) + "\n$$"
     }
     func testOutput() {
         
@@ -37,13 +43,17 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let z = (ComplexBasis(r: x, i: y)).f
         let ddd = [[x, a],
                    [b, y]].matrix()
+        let ivv = [[1, 3],
+                   [2, 4]].rmatrix()
         
-        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)), .C(~auhs), .C(ggg*hch), .C(z * *z), .R(.init(fieldOp: .Determinant(ddd)))]
+        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)), .C(~auhs), .C(ggg*hch), .C(z * *z), .R(.init(fieldOp: .Determinant(ddd))), .MR(.init(.o(.Inverse(ivv))))]
         
         let tex = samples.map { (expression) in
             switch expression {
             case let .C(expression): return genLine(expression)
             case let .R(expression): return genLine(expression)
+            case let .MC(exp): return genLine(exp)
+            case let .MR(exp): return genLine(exp)
             }
             
         }.joined(separator: "\n\n")
@@ -160,6 +170,10 @@ extension Collection where Element == List<Complex>{
     }
 }
 extension Collection where Element: Collection, Element.Element == Real {
+    func mat()->Mat<Real> {
+        let aaa = map({$0.decompose()!}).decompose()!
+        return .init(e: aaa)
+    }
     func matrix()->Matrix<Real> {
         let aaa = map({$0.decompose()!}).decompose()!
         return .init(element: .Basis(.Matrix(.init(e: aaa))))
@@ -176,6 +190,14 @@ extension Collection where Element: Collection, Element.Element == Int {
         let rows = map { (row) in
             row.map { (i) in
                 i.complex(i: 0).f
+            }.decompose()!
+        }.decompose()!
+        return Matrix(element: .Basis(.Matrix(.init(e: rows))))
+    }
+    func rmatrix()->Matrix<Real> {
+        let rows = map { (row) in
+            row.map { (i) in
+                i.real.f
             }.decompose()!
         }.decompose()!
         return Matrix(element: .Basis(.Matrix(.init(e: rows))))

@@ -31,6 +31,9 @@ protocol Algebra: Hashable {
     }
     static var cache:Dictionary<Self, Self>? {get set}
 }
+
+let serialQueue = DispatchQueue(label: "com.test.mySerialQueue")
+
 extension Algebra {
     var element:E? {
         switch c {
@@ -51,7 +54,14 @@ extension Algebra {
             }
         }
         let result = o?.eval() ?? self
-        Self.cache?[self] = result
+        
+        serialQueue.sync {
+            if let _ = Self.cache?[self] {
+                
+            } else {
+                Self.cache?[self] = result
+            }
+        }
         return result
     }
     init(element:E) {

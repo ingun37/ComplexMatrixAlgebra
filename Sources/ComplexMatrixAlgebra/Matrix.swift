@@ -124,6 +124,24 @@ struct Mat<F:Field>:Hashable {
             }
         }.reduce(+).eval()
     }
+    func cofactor(i:Int, j:Int)-> F? {
+        if let detAij = without(row: i, col: j)?.determinant {
+            let co = F._Id^F.B.whole(n: i+j).asNumber(F.self)
+            return co * detAij
+        } else {
+            return nil
+        }
+    }
+    var inversed:Self? {
+        let cofacs = join(optionals: (0..<rowLen).map { (row) in
+            join(optionals: (0..<colLen).map { (col) in
+                cofactor(i: col, j: row)
+            })?.decompose()
+        })?.decompose()
+        guard let cofactors = cofacs else { return nil }
+        let coMat = Mat(e: cofactors)
+        return (~determinant).eval() * coMat
+    }
 }
 
 
@@ -297,11 +315,25 @@ indirect enum MatrixOp<F:Field>:Operator {
             return s * m
         case let .Ring(ring):
             return ring.eval()
+        case let .Inverse(m):
+            let m = m.eval()
+            if case let .Basis(mb) = m.element {
+                switch mb {
+                case let .id(f): return .init(element: .Basis(.id((~f).eval())))
+                case .zero: return m
+                case let .Matrix(mat):
+                    if let inv = mat.inversed {
+                        return .init(element: .Basis(.Matrix(inv)))
+                    }
+                }
+            }
+            return .init(.o(.Inverse(m)))
         }
     }
     
     case Ring(A.RingOp)
     case Scale(F, A)
+    case Inverse(A)
     var matrix:A {
         return A(.o(self))
     }

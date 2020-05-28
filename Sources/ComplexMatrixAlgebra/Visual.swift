@@ -84,8 +84,16 @@ func genLaTex<F:Field>(_ m:Matrix<F>) -> String {
         case let .Var(v):
             return v
         }
-    default: return "error"
+    case let .o(o):
+        switch o {
+        case let .Inverse(m):
+            let mTex = genLaTex(m)
+            return "{\(mTex)}^{-1}"
+        default: break
+        }
+    default: break
     }
+    return "error"
 }
 func genLaTex<F:Field>(_ x:F) -> String {
     if let x = x as? Real, let tex = genLaTex(r: x) {
