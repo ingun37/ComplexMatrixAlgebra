@@ -21,6 +21,8 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         
         let x = "x".rvar
         let y = "y".rvar
+        let a = "a".rvar
+        let b = "b".rvar
         let _x = -x
         let xy = "x".rvar - "y".rvar
         let xyxy = xy * xy
@@ -33,9 +35,10 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let ggg = (ComplexBasis(r: "a_1".rvar, i: "b_1".rvar)).f
         let hch = (ComplexBasis(r: "a_2".rvar, i: "b_2".rvar)).f
         let z = (ComplexBasis(r: x, i: y)).f
+        let ddd = [[x, a],
+                   [b, y]].matrix()
         
-        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)),
-                             .C(~auhs), .C(ggg*hch), .C(z * *z)]
+        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)), .C(~auhs), .C(ggg*hch), .C(z * *z), .R(.init(fieldOp: .Determinant(ddd)))]
         
         let tex = samples.map { (expression) in
             switch expression {
@@ -154,6 +157,12 @@ extension Collection where Element == List<Complex>{
         let e = decompose()!
         return .init(element: .Basis(.Matrix(.init(e: e))))
 //        return Matrix(op: Ring.Number(MatrixNumber<N, Complex>(e: e)))
+    }
+}
+extension Collection where Element: Collection, Element.Element == Real {
+    func matrix()->Matrix<Real> {
+        let aaa = map({$0.decompose()!}).decompose()!
+        return .init(element: .Basis(.Matrix(.init(e: aaa))))
     }
 }
 extension Collection where Element: Collection, Element.Element == (Int,Int) {

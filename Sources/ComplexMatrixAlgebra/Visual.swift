@@ -56,7 +56,37 @@ private func unNegateMul<A:Field>(_ l:A, _ r:A) -> (Bool, List<A>) {
         (l.0 == r.0 , l.1 + List(r.1) )
     }
 }
+func renderMatrix<F:Field>(_ m:Mat<F>, kind:String = "pmatrix")-> String {
+    let content = m.e.fmap({$0.fmap({genLaTex($0)})})
+    let contentStr = content.all.map { (row) in
+        row.all.map({"{ \($0) }"}).joined(separator: " & ")
+    }.joined(separator: " \\\\ \n")
+    return """
+    \\begin{\(kind)}
+       \(contentStr)
+    \\end{\(kind)}
+    """
+}
+func genLaTex<F:Field>(_ m:Matrix<F>) -> String {
+    switch m.c {
+    case let .e(me):
+        switch me {
+        case let .Basis(b):
+            switch b {
+            case let .id(f):
+                return "Id_{\(genLaTex(f))}"
+            case .zero:
+                return "Id_0"
+            case let .Matrix(m):
+                return renderMatrix(m)
+            }
 
+        case let .Var(v):
+            return v
+        }
+    default: return "error"
+    }
+}
 func genLaTex<F:Field>(_ x:F) -> String {
     if let x = x as? Real, let tex = genLaTex(r: x) {
         return tex
@@ -143,6 +173,13 @@ func genLaTex<F:Field>(_ x:F) -> String {
         return "{\(baseTex)}^{\(expTex)}"
     case let .Conjugate(xx):
         return "\\overline{ \(genLaTex(xx)) }"
+    case let .Determinant(mat):
+        switch mat.element {
+        case let .Basis(.Matrix(m)):
+            return renderMatrix(m, kind: "vmatrix")
+        default: break
+        }
+        
     default:
         return "error"
     }
