@@ -43,10 +43,8 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let z = (ComplexBasis(r: x, i: y)).f
         let ddd = [[x, a],
                    [b, y]].matrix()
-        let ivv = [[1, 3],
-                   [2, 4]].rmatrix()
         
-        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)), .C(~auhs), .C(ggg*hch), .C(z * *z), .R(.init(fieldOp: .Determinant(ddd))), .MR(.init(.o(.Inverse(ivv))))]
+        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)), .C(~auhs), .C(ggg*hch), .C(z * *z), .R(.init(fieldOp: .Determinant(ddd)))]
         
         let tex = samples.map { (expression) in
             switch expression {
@@ -150,6 +148,11 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
                    [2, 4,-1],
                    [0,-2, 0]].matrix()
         expect(Complex.init(fieldOp: .Determinant(mxx)).eval()).to(equal((-2).complex(i: 0).f))
+        
+        
+        let myx = [[ 2, 5],
+                   [-3,-7]].rmatrix()
+        expect(Matrix<Real>.init(.o(.Inverse(myx))).eval()).to(equal([[-7,-5],[3,2]].rmatrix()))
 
     }
     static var allTests = [
