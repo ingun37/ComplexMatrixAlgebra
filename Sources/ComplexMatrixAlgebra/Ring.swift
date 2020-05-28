@@ -29,8 +29,19 @@ indirect enum RingOperators<MUL:AssociativeBinary>:Operator where MUL.A:Ring {
         switch self {
         case let .MMonoid(mon):
             if case let .Mul(_b) = mon {
-                let b = _b.eachEvaled
-                return b.caseMultiplicationWithZero() ?? b.caseMultiplicationWithId() ?? b.caseBothBasis() ?? b.caseDistributive() ?? b.caseAssociative() ?? b.l * b.r
+                let l = _b.l.eval()
+                let r = _b.r.eval()
+                
+                if l == .Zero || r == .Zero {
+                    return .Zero
+                }
+                
+                if case let .Add(ladd) = l.amonoidOp {
+                    return ((ladd.l * r) + (ladd.r * r)).eval()
+                }
+                if case let .Add(radd) = r.amonoidOp {
+                    return ((l * radd.l) + (l * radd.r)).eval()
+                }
             }
             return mon.eval()
         case let .Abelian(abe):

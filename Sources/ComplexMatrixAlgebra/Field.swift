@@ -23,12 +23,12 @@ indirect enum FieldOperators<A:Field>: Operator {
         switch self {
         case let .Mabelian(mab):
             if case let .Monoid(.Mul(_b)) = mab {
-                let b = _b.eachEvaled
-                let cases1 = b.caseMultiplicationWithZero() ?? b.caseMultiplicationWithId() ?? b.caseBothBasis() ?? b.caseMultiplicationWithInverse()
-                let cases2 = cases1 ?? b.caseDistributive()
-                let cases3 = cases2 ?? b.caseAssociative()
-                let cases4 = cases3 ?? b.caseCommutative()
-                return cases4 ?? b.l * b.r
+                let l = _b.l.eval()
+                let r = _b.r.eval()
+                let evaledAsRing = RingOperators<A.MUL>.MMonoid(.Mul(.init(l: l, r: r))).eval()
+                if A(mmonoidOp: .Mul(.init(l: l, r: r))) != evaledAsRing {
+                    return evaledAsRing
+                }
             }
             return mab.eval()
         case let .Abelian(abe):

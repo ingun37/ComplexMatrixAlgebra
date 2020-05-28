@@ -19,9 +19,38 @@ indirect enum MAbelianOperator<A:MAbelian>:Operator {
         switch self {
         case let .Monoid(mon):
             if case let .Mul(_b) = mon {
-                let b = _b.eachEvaled
-                let cases1 = b.caseMultiplicationWithId() ?? b.caseMultiplicationWithInverse() ?? b.caseBothBasis()
-                return cases1 ?? b.caseAssociative() ?? b.caseCommutative() ?? b.l * b.r
+                let l = _b.l.eval()
+                let r = _b.r.eval()
+                
+                if case let .Inverse(l) = l.mabelianOp {
+                    if l == r {
+                        return .Id
+                    }
+                }
+                if case let .Inverse(r) = r.mabelianOp {
+                    if l == r {
+                        return .Id
+                    }
+                }
+                
+                if case let .Mul(lm) = l.mmonoidOp {
+                    if (true) {//(x*y)*r = (x*r)*y
+                        let alter = (lm.x * r)
+                        let aeval = alter.eval()
+                        if alter != aeval {
+                            return (aeval * lm.y).eval()
+                        }
+                    }
+                }
+                if case let .Mul(rm) = r.mmonoidOp {
+                    if (true) {//l(xy) = x(ly)
+                        let alter = (l * rm.y)
+                        let aeval = alter.eval()
+                        if alter != aeval {
+                            return (rm.x * aeval).eval()
+                        }
+                    }
+                }
             }
             return mon.eval()
         case let .Quotient(l, r):
