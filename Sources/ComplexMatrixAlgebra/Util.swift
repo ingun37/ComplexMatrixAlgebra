@@ -81,6 +81,13 @@ struct List<T> {
             return i(head)
         }
     }
+    var reversed:List<T> {
+        return reduceR({ (last) -> List<T> in
+            List(last)
+        }) { (last, ls) -> List<T> in
+            ls + List(last)
+        }
+    }
 }
 
 extension List: Equatable where T: Equatable {}

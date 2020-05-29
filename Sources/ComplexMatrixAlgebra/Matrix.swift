@@ -149,7 +149,7 @@ struct Mat<F:Field>:Hashable {
         let coMat = Mat(e: cofactors)
         return (~determinant).eval() * coMat
     }
-    var rowReduced:Self {
+    var echelon:Self {
         let nonZeroTopEntry = rows.reduceR({ (end) in
             List(end)
         }, { (prev, newRows) in
@@ -162,7 +162,7 @@ struct Mat<F:Field>:Hashable {
         
         if nonZeroTopEntry.head.head == .Zero {
             let nx = without(col: 0)
-            if let nx_rdc = nx?.rowReduced {
+            if let nx_rdc = nx?.echelon {
                 let newRows = nx_rdc.rows.fmap({List(.Zero) + $0})
                 return .init(e: newRows)
             } else {
@@ -177,10 +177,11 @@ struct Mat<F:Field>:Hashable {
             return Tn.fzip(h).fmap({(t,h) in (t + (co * h)).eval()})
         }
         
-        let Z = Mat(e: Zrows).rowReduced
+        let Z = Mat(e: Zrows).echelon
         
         return Mat(e: List(h) + Z.rows)
     }
+    
 }
 
 
@@ -367,24 +368,24 @@ indirect enum MatrixOp<F:Field>:Operator {
                 }
             }
             return .init(.o(.Inverse(m)))
-        case let .RowReduced(m):
+        case let .Echelon(m):
             let m = m.eval()
             if case let .Basis(mb) = m.element {
                 switch mb {
                 case let .id(f): return .init(element: .Basis(mb))
                 case .zero: return .init(element: .Basis(mb))
                 case let .Matrix(m):
-                    return .init(element: .Basis(.Matrix(m.rowReduced)))
+                    return .init(element: .Basis(.Matrix(m.echelon)))
                 }
             }
-            return .init(.o(.RowReduced(m)))
+            return .init(.o(.Echelon(m)))
         }
     }
     
     case Ring(A.RingOp)
     case Scale(F, A)
     case Inverse(A)
-    case RowReduced(A)
+    case Echelon(A)
     var matrix:A {
         return A(.o(self))
     }
