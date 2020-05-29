@@ -107,6 +107,13 @@ struct Mat<F:Field>:Hashable {
     var transposed:Self {
         return Mat(e: cols)
     }
+    func without(col:Int)->Self? {
+        if let newCols = cols.all.without(at: col).decompose() {
+            return Self(e: newCols).transposed
+        } else {
+            return nil
+        }
+    }
     func without(row:Int, col:Int) -> Self?  {
         if let remainRows = rows.all.without(at: row).decompose() {
             if let remainCols = Mat(e: remainRows).cols.all.without(at: col).decompose() {
@@ -141,6 +148,38 @@ struct Mat<F:Field>:Hashable {
         guard let cofactors = cofacs else { return nil }
         let coMat = Mat(e: cofactors)
         return (~determinant).eval() * coMat
+    }
+    var rowReduced:Self {
+        let nonZeroTopEntry = rows.reduceR({ (end) in
+            List(end)
+        }, { (prev, newRows) in
+            if prev.head == .Zero {
+                return newRows + List(prev)
+            } else {
+                return List(prev) + newRows
+            }
+        })
+        
+        if nonZeroTopEntry.head.head == .Zero {
+            let nx = without(col: 0)
+            if let nx_rdc = nx?.rowReduced {
+                let newRows = nx_rdc.rows.fmap({List(.Zero) + $0})
+                return .init(e: newRows)
+            } else {
+                return self
+            }
+        }
+        guard let Trows = nonZeroTopEntry.tail.decompose() else { return self }
+        let h = nonZeroTopEntry.head
+        let Zrows = Trows.fmap { (Tn) -> List<F> in
+            let bn = Tn.head
+            let co = (-bn)/h.head
+            return Tn.fzip(h).fmap({(t,h) in (t + (co * h)).eval()})
+        }
+        
+        let Z = Mat(e: Zrows).rowReduced
+        
+        return Mat(e: List(h) + Z.rows)
     }
 }
 
@@ -328,12 +367,24 @@ indirect enum MatrixOp<F:Field>:Operator {
                 }
             }
             return .init(.o(.Inverse(m)))
+        case let .RowReduced(m):
+            let m = m.eval()
+            if case let .Basis(mb) = m.element {
+                switch mb {
+                case let .id(f): return .init(element: .Basis(mb))
+                case .zero: return .init(element: .Basis(mb))
+                case let .Matrix(m):
+                    return .init(element: .Basis(.Matrix(m.rowReduced)))
+                }
+            }
+            return .init(.o(.RowReduced(m)))
         }
     }
     
     case Ring(A.RingOp)
     case Scale(F, A)
     case Inverse(A)
+    case RowReduced(A)
     var matrix:A {
         return A(.o(self))
     }

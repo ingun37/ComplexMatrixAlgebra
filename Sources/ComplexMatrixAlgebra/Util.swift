@@ -74,6 +74,13 @@ struct List<T> {
         let newTail = zip(tail, with.tail)
         return List<(T,T)>(newHead, newTail)
     }
+    func reduceR<R>(_ i:(T)->R, _ eval: (T,R)->R)->R {
+        if let t = tail.decompose() {
+            return eval(head, t.reduceR(i, eval))
+        } else {
+            return i(head)
+        }
+    }
 }
 
 extension List: Equatable where T: Equatable {}
