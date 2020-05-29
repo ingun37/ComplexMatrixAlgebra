@@ -182,6 +182,22 @@ struct Mat<F:Field>:Hashable {
         return Mat(e: List(h) + Z.rows)
     }
     
+    var reducedEchelon:Self {
+        let ech = echelon
+        var rows = ech.rows.all
+        for i in (0..<rows.count).reversed() {
+            let row = rows[i]
+            guard let entryIdx = row.entryIdx else { continue }
+            let entry = row.all[entryIdx]
+            let row2 = ~entry * row
+            rows[i] = row2
+            for j in (0..<i) {
+                let rowj = rows[j]
+                rows[j] = rowj.subtract(rowj.all[entryIdx] * row2)
+            }
+        }
+        return Mat(e: rows.decompose()!)
+    }
 }
 
 
@@ -379,6 +395,17 @@ indirect enum MatrixOp<F:Field>:Operator {
                 }
             }
             return .init(.o(.Echelon(m)))
+        case let .ReducedEchelon(m):
+            let m = m.eval()
+            if case let .Basis(mb) = m.element {
+                switch mb {
+                case let .id(f): return .init(element: .Basis(mb))
+                case .zero: return .init(element: .Basis(mb))
+                case let .Matrix(m):
+                    return .init(element: .Basis(.Matrix(m.reducedEchelon)))
+                }
+            }
+            return .init(.o(.ReducedEchelon(m)))
         }
     }
     
@@ -386,7 +413,23 @@ indirect enum MatrixOp<F:Field>:Operator {
     case Scale(F, A)
     case Inverse(A)
     case Echelon(A)
+    case ReducedEchelon(A)
     var matrix:A {
         return A(.o(self))
+    }
+}
+
+extension List where T:Field {
+    var entryIdx:Int? {
+        return all.firstIndex(where: {$0 != .Zero})
+    }
+    static func * (l:T, r:Self)->Self {
+        return r.fmap({(l * $0).eval()})
+    }
+    func add(_ to:Self)->Self {
+        return fzip(to).fmap(+).fmap({$0.eval()})
+    }
+    func subtract(_ by:Self)->Self {
+        return fzip(by).fmap(-).fmap({$0.eval()})
     }
 }

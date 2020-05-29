@@ -46,7 +46,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let rm = [[0, 3, -6, 6, 4, -5],
                   [3, -7, 8, -5, 8, 9],
                   [3, -9, 12, -9, 6, 15]].rmatrix()
-        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)), .C(~auhs), .C(ggg*hch), .C(z * *z), .R(.init(fieldOp: .Determinant(ddd))), .MR(.init(.o(.Echelon(rm))))]
+        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)), .C(~auhs), .C(ggg*hch), .C(z * *z), .R(.init(fieldOp: .Determinant(ddd))), .MR(.init(.o(.ReducedEchelon(rm))))]
         
         let tex = samples.map { (expression) in
             switch expression {
@@ -156,6 +156,13 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
                    [-3,-7]].rmatrix()
         expect(Matrix<Real>.init(.o(.Inverse(myx))).eval()).to(equal([[-7,-5],[3,2]].rmatrix()))
 
+        let rm = [[0, 3, -6, 6, 4, -5],
+                    [3, -7, 8, -5, 8, 9],
+                    [3, -9, 12, -9, 6, 15]].rmatrix()
+        let rmexppp = [[1, 0, -2, 3, 0, -24],
+                       [0, 1, -2, 2, 0, -7],
+                       [0, 0,  0, 0, 1, 4]].rmatrix()
+        expect(Matrix<Real>.init(.o(.ReducedEchelon(rm))).eval()).to(equal(rmexppp))
     }
     static var allTests = [
         ("testExample", testExample),
