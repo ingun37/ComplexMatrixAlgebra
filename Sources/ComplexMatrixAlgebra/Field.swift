@@ -25,8 +25,9 @@ indirect enum FieldOperators<A:Field>: Operator {
             if case let .Monoid(.Mul(_b)) = mab {
                 let l = _b.l.eval()
                 let r = _b.r.eval()
+
                 let evaledAsRing = RingOperators<A>.MMonoid(.Mul(.init(l: l, r: r))).eval()
-                if A(mmonoidOp: .Mul(.init(l: l, r: r))) != evaledAsRing {
+                if l*r != evaledAsRing {
                     return evaledAsRing
                 }
             }
