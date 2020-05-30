@@ -28,12 +28,22 @@ func renderMatrix<F:Field>(_ m:Mat<F>, kind:String = "pmatrix")-> String {
 func latex<F:Field>(fieldOp:FieldOperators<F>)->String {
     switch fieldOp {
     case let .Mabelian(mab):
-        return latex(mabelianOp: mab)
+        switch mab {
+        case let .Inverse(x):
+            return latex(x ^ F._Id)
+        case let .Monoid(x): return latex(mmonoidOp: x)
+        case let .Quotient(x, y): return "\\frac{\(latex(x))}{\(latex(y))}"
+        }
     case let .Abelian(ab):
         return latex(abelianOp: ab)
     case .Power(base: let base, exponent: let exponent):
-        let expTex = latex(exponent)
-        let baseTex = latex(base)
+        var expTex = latex(exponent)
+        var baseTex = latex(base)
+        if case let .e(.Var(v)) = base.c {
+            
+        } else {
+            baseTex = baseTex.paren
+        }
         return "{\(baseTex)}^{\(expTex)}"
     case let .Conjugate(xx):
         return "\\overline{ \(latex(xx)) }"
@@ -77,34 +87,33 @@ func latex<A:MMonoid>(mmonoidOp:MMonoidOperators<A>)-> String {
             return tex.paren
         }) { (str:String, next) -> String in
             let tex = latex(next)
-            if case .Var(_) = next.element { return tex }
-            if case .Power(base: _, exponent: _) = (next as? Real)?.fieldOp { return tex }
-            if case .Power(base: _, exponent: _) = (next as? Complex)?.fieldOp { return tex }
+            if case .Var(_) = next.element { return str + tex }
+            if case .Power(base: _, exponent: _) = (next as? Real)?.fieldOp { return str + tex }
+            if case .Power(base: _, exponent: _) = (next as? Complex)?.fieldOp { return str + tex }
             return str + tex.paren
         }
 //        return latex(flatten.head) + flatten.tail.map({latex($0).paren}).joined()
     }
 }
 
-func latex<A:AMonoid>(amonoidOp:AMonoidOperators<A>)-> String {
-    switch amonoidOp {
-    case let .Add(m):
-        let flatten = flatAdd(m.l) + flatAdd(m.r)
-        return flatten.all.map({latex($0)}).joined(separator: " + ")
-    }
-}
-func latex<A:MAbelian>(mabelianOp:MAbelianOperator<A>)-> String {
-    switch mabelianOp {
-    case let .Inverse(x): return "{\(latex(x))}^{-1}"
-    case let .Monoid(x): return latex(mmonoidOp: x)
-    case let .Quotient(x, y): return "\\frac{\(latex(x))}{\(latex(y))}"
-    }
-}
 func latex<A:Abelian>(abelianOp:AbelianOperator<A>)-> String {
     switch abelianOp {
-    case let .Monoid(m): return latex(amonoidOp: m)
+    case let .Monoid(m):
+        switch m {
+        case let .Add(m):
+            let flatten = flatAdd(m.l) + flatAdd(m.r)
+            return flatten.reduce(head: { (h:A) -> String in
+                let tex = latex(h)
+                return tex
+            }) { (str:String, nx:A) -> String in
+                let tex = latex(nx)
+                if case let .Negate(n) = nx.abelianOp { return str + " - " + latex(n) }
+                return str + " + " + tex
+            }
+        }
     case let .Negate(x): return "- \(latex(x).paren)"
-    case let .Subtract(x, y): return "\(latex(x).paren) - \(latex(y).paren)"
+    case let .Subtract(x, y):
+        return latex(x + (-y))
     }
 }
 func latex<F:Field>(matrixOp:MatrixOp<F>)->String {
@@ -144,7 +153,13 @@ func latex<A:Algebra>(_ a:A)->String {
         case let .e(e):
             switch e {
             case let .Basis(b):
-                return "\(latex(b.r)) + \(latex(b.i)) {i}"
+                var i = latex(b.i)
+                if let e = b.i.element {
+                    
+                } else {
+                    i = i.paren
+                }
+                return "\(latex(b.r)) + \(i) {i}"
             case let .Var(v):
                 return v
             }
