@@ -67,9 +67,25 @@ func latex<A:MMonoid>(mmonoidOp:MMonoidOperators<A>)-> String {
     switch mmonoidOp {
     case let .Mul(m):
         let flatten = flatMul(m.l) + flatMul(m.r)
-        return latex(flatten.head) + flatten.tail.map({latex($0).paren}).joined()
+        return flatten.reduce(head: { (h) -> String in
+            let tex = latex(h)
+            if case .Var(_) = h.element { return tex }
+            if case .Basis(_) = (h as? Real)?.element { return tex }
+            if case .Power(base: _, exponent: _) = (h as? Real)?.fieldOp { return tex }
+            if case .Power(base: _, exponent: _) = (h as? Complex)?.fieldOp { return tex }
+
+            return tex.paren
+        }) { (str:String, next) -> String in
+            let tex = latex(next)
+            if case .Var(_) = next.element { return tex }
+            if case .Power(base: _, exponent: _) = (next as? Real)?.fieldOp { return tex }
+            if case .Power(base: _, exponent: _) = (next as? Complex)?.fieldOp { return tex }
+            return str + tex.paren
+        }
+//        return latex(flatten.head) + flatten.tail.map({latex($0).paren}).joined()
     }
 }
+
 func latex<A:AMonoid>(amonoidOp:AMonoidOperators<A>)-> String {
     switch amonoidOp {
     case let .Add(m):
