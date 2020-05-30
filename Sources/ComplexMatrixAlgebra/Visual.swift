@@ -214,57 +214,57 @@ private func wrappedLatex<A:Field>(_ x:A)-> String {
 }
 
 extension Field {
-    func prettify() -> Self {
-        if let com = self as? Complex {
-            if case let .e(.Basis(com)) = com.c {
-                return ComplexBasis(r: com.r.prettify(), i: com.i.prettify()).f as! Self
-            }
-        }
-        switch ringOp {
-        case let .MMonoid( .Mul(b)):
-            let (sign, _flat) = unNegateMul(b.l, b.r)
-            let (numbers, terms) = _flat.all.seperate({
-                if case .e(.Basis(_)) = $0.c { return true }
-                else {return false}
-            })
-            let prettyTerms = terms.decompose()?.grouped().fmap { (g) in
-                (g.all.count, g.head.prettify())
-            }.fmap { (size,term) in
-                size == 1 ? term : Self.init(fieldOp: .Power(base: term, exponent: B.whole(n: size).asNumber(Self.self)))
-            }.reduce(*)
-            
-            let prettyNumbers = numbers.decompose()?.reduce(*).eval()
-            
-            let aa:Self?
-            
-            if let pn = prettyNumbers, let pt = prettyTerms {
-                aa = pn * pt
-            } else if let pn = prettyNumbers {
-                aa = pn
-            } else if let pt = prettyTerms {
-                aa = pt
-            } else {
-                aa = nil
-            }
-            
-            if let aa = aa {
-                return sign ? aa : Self.init(abelianOp: .Negate(aa))
-            }
-        default: break
-        }
-        switch amonoidOp {
-        case let .Add(b):
-            let _flat = flatAbelianAdd(self)
-            let flat = _flat.grouped().fmap { (g) in
-                (g.all.count, g.head.prettify())
-            }.fmap { (size, term) in
-                size == 1 ? term : (B.whole(n: size).asNumber(Self.self) * term).prettify()
-            }
-            return flat.reduce(+)
-        default: break
-        }
-        return self
-    }
+//    func prettify() -> Self {
+//        if let com = self as? Complex {
+//            if case let .e(.Basis(com)) = com.c {
+//                return ComplexBasis(r: com.r.prettify(), i: com.i.prettify()).f as! Self
+//            }
+//        }
+//        switch ringOp {
+//        case let .MMonoid( .Mul(b)):
+//            let (sign, _flat) = unNegateMul(b.l, b.r)
+//            let (numbers, terms) = _flat.all.seperate({
+//                if case .e(.Basis(_)) = $0.c { return true }
+//                else {return false}
+//            })
+//            let prettyTerms = terms.decompose()?.grouped().fmap { (g) in
+//                (g.all.count, g.head.prettify())
+//            }.fmap { (size,term) in
+//                size == 1 ? term : Self.init(fieldOp: .Power(base: term, exponent: B.whole(n: size).asNumber(Self.self)))
+//            }.reduce(*)
+//
+//            let prettyNumbers = numbers.decompose()?.reduce(*).eval()
+//
+//            let aa:Self?
+//
+//            if let pn = prettyNumbers, let pt = prettyTerms {
+//                aa = pn * pt
+//            } else if let pn = prettyNumbers {
+//                aa = pn
+//            } else if let pt = prettyTerms {
+//                aa = pt
+//            } else {
+//                aa = nil
+//            }
+//
+//            if let aa = aa {
+//                return sign ? aa : Self.init(abelianOp: .Negate(aa))
+//            }
+//        default: break
+//        }
+//        switch amonoidOp {
+//        case let .Add(b):
+//            let _flat = flatAbelianAdd(self)
+//            let flat = _flat.grouped().fmap { (g) in
+//                (g.all.count, g.head.prettify())
+//            }.fmap { (size, term) in
+//                size == 1 ? term : (B.whole(n: size).asNumber(Self.self) * term).prettify()
+//            }
+//            return flat.reduce(+)
+//        default: break
+//        }
+//        return self
+//    }
 }
 
 func latex<F:Field>(fieldOp:FieldOperators<F>)->String {
@@ -419,6 +419,127 @@ func flatAdd<A:AMonoid>(_ x:A)-> List<A> {
             return [bin.l,bin.r]
         } else {
             return []
+        }
+    }
+}
+
+func gprettify<A:Prettifiable>(fieldOp:FieldOperators<A>)->A {
+    switch fieldOp {
+    case let .Abelian(a):
+        switch a {
+        case let .Monoid(x):
+            switch x {
+            case let .Add(x):
+                let flat = flatAdd(x.l) + flatAdd(x.r)
+                let pretty = flat.grouped().fmap { (g) in
+                    (g.all.count, g.head.prettyfy())
+                }.fmap { (size, term)->A in
+                    if size == 1 {
+                        return term
+                    } else {
+                        let times = A.B.whole(n: size).asNumber(A.self)
+                        return (times * term).prettyfy()
+                    }
+                }.reduce(+)
+                return pretty
+            }
+        case let .Negate(x): return .init(abelianOp: .Negate(x.prettyfy()))
+        case let .Subtract(x, y): return .init(abelianOp: .Subtract(x.prettyfy(), y.prettyfy()))
+        }
+    case let .Conjugate(c): return A(fieldOp: .Conjugate(c))
+    case let .Determinant(x): return A(fieldOp: .Determinant(x.prettyfy()))
+    case let .Mabelian(ma):
+        switch ma {
+        case let .Inverse(x): return .init(mabelianOp: .Inverse(x.prettyfy()))
+        case let .Monoid(x):
+            switch x {
+            case let .Mul(m):
+                let flat = flatMul(m.l) + flatMul(m.r)
+                let prettyTerms = flat.grouped().fmap { (g) in
+                    (g.all.count, g.head.prettyfy())
+                }.fmap { (size,term)->A in
+                    if size == 1 {
+                        return term
+                    } else {
+                        let exp = A.B.whole(n: size).asNumber(A.self)
+                        return A(fieldOp: .Power(base: term, exponent: exp))
+                    }
+                }.reduce(*)
+                return prettyTerms
+            }
+        case let .Quotient(x, y): return .init(mabelianOp: .Quotient(x.prettyfy(), y.prettyfy()))
+        }
+    case .Power(let base, let exponent): return A(fieldOp: .Power(base: base.prettyfy(), exponent: exponent.prettyfy()))
+    }
+}
+func gprettify<A:Prettifiable>(ringOp:RingOperators<A>)->A {
+    //todo: come back after implementing power
+    switch ringOp {
+    case let .Abelian(ab):
+        switch ab {
+        case let .Monoid(mon):
+            switch mon {
+            case let .Add(a): return .init(amonoidOp: .Add(.init(l: a.l.prettyfy(), r: a.r.prettyfy())))
+            }
+        case let .Negate(x): return .init(abelianOp: .Negate(x.prettyfy()))
+        case let .Subtract(x, y): return .init(abelianOp: .Subtract(x.prettyfy(), y.prettyfy()))
+        }
+    case let .MMonoid(mmon):
+        switch mmon {
+        case let .Mul(x): return .init(mmonoidOp: .Mul(.init(l: x.l.prettyfy(), r: x.r.prettyfy())))
+        }
+    }
+}
+protocol Prettifiable:Algebra {
+    func prettyfy()->Self
+}
+extension Real:Prettifiable {
+    func prettyfy()->Self {
+        switch c {
+        case .e(_): return self
+        case let .o(o):
+            switch o {
+            case let .f(f): return gprettify(fieldOp: f)
+            }
+        }
+    }
+}
+extension Complex:Prettifiable {
+    func prettyfy()-> Self {
+        switch c {
+        case let .e(e):
+            switch e {
+            case let .Basis(b): return .init(element: .Basis(.init(r: b.r.prettyfy(), i: b.i.prettyfy())))
+            case .Var(_): return self
+            }
+        case let .o(o): return gprettify(fieldOp: o)
+        }
+    }
+}
+extension Matrix:Prettifiable where F:Prettifiable {
+    func prettyfy()-> Self {
+        switch c {
+        case let .e(e):
+            switch e {
+            case let .Basis(b):
+                switch b {
+                case let .Matrix(m):
+                    return .init(element: .Basis(.Matrix(.init(e: m.e.fmap({ (row) in
+                        row.fmap({$0.prettyfy()})
+                    })))))
+                case let .id(f): return .init(element: .Basis(.id(f.prettyfy())))
+                case .zero: return self
+                }
+            case .Var(_): return self
+            }
+        case let .o(o):
+            switch o {
+            case let .Echelon(m): return .init(.o(.Echelon(m.prettyfy())))
+            case let .Inverse(m): return .init(.o(.Inverse(m.prettyfy())))
+            case let .ReducedEchelon(m): return .init(.o(.ReducedEchelon(m.prettyfy())))
+            case let .Ring(ro): return gprettify(ringOp: ro)
+            case let .Scale(f, m): return .init(.o(.Scale(f.prettyfy(), m.prettyfy())))
+            }
         }
     }
 }

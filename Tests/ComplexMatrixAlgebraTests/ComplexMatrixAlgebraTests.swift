@@ -16,12 +16,12 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         case MR(Matrix<Real>)
         case MC(Matrix<Complex>)
     }
-    func genLine<T:Field>(_ x:T)-> String {
-        return "$$\n" + latex(x) + "=" + latex(x.eval()) + "\n$$"
+    func genLine<T:Field & Prettifiable>(_ x:T)-> String {
+        return "$$\n" + latex(x) + "=" + latex(x.eval().prettyfy()) + "\n$$"
     }
-    func genLine<F:Field>(_ x:Matrix<F>)-> String {
+    func genLine<F:Field & Prettifiable>(_ x:Matrix<F>)-> String {
         let v = x.eval()
-        return "$$\n" + latex(x) + "=" + latex(x.eval()) + "\n$$"
+        return "$$\n" + latex(x) + "=" + latex(x.eval().prettyfy()) + "\n$$"
     }
     func testOutput() {
         
