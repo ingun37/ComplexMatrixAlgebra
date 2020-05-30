@@ -159,7 +159,13 @@ func latex<A:Algebra>(_ a:A)->String {
                 } else {
                     i = i.paren
                 }
-                return "\(latex(b.r)) + \(i) {i}"
+                if b.i == .Zero {
+                    return latex(b.r)
+                } else if b.r == .Zero {
+                    return "\(i) {i}"
+                } else {
+                    return "\(latex(b.r)) + \(i) {i}"
+                }
             case let .Var(v):
                 return v
             }
