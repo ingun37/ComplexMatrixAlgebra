@@ -17,11 +17,11 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         case MC(Matrix<Complex>)
     }
     func genLine<T:Field>(_ x:T)-> String {
-        return "$$\n" + genLaTex(x) + "=" + genLaTex(x.eval().prettify()) + "\n$$"
+        return "$$\n" + latex(x) + "=" + latex(x.eval()) + "\n$$"
     }
     func genLine<F:Field>(_ x:Matrix<F>)-> String {
         let v = x.eval()
-        return "$$\n" + genLaTex(x) + "=" + genLaTex(x.eval()) + "\n$$"
+        return "$$\n" + latex(x) + "=" + latex(x.eval()) + "\n$$"
     }
     func testOutput() {
         

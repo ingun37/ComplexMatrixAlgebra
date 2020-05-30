@@ -15,13 +15,12 @@ extension RingBasis {
     }
 }
 protocol Ring:Abelian & MMonoid where B:RingBasis{
-    typealias RingOp = RingOperators<MUL>
+    typealias RingOp = RingOperators<Self>
     init(ringOp:RingOp)
     var ringOp: RingOp? { get }
 }
 
-indirect enum RingOperators<MUL:AssociativeBinary>:Operator where MUL.A:Ring {
-    typealias A = MUL.A
+indirect enum RingOperators<A:Ring>:Operator {
     case MMonoid(A.MMonO)
     case Abelian(A.AbelianO)
     

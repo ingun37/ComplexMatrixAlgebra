@@ -25,7 +25,7 @@ indirect enum FieldOperators<A:Field>: Operator {
             if case let .Monoid(.Mul(_b)) = mab {
                 let l = _b.l.eval()
                 let r = _b.r.eval()
-                let evaledAsRing = RingOperators<A.MUL>.MMonoid(.Mul(.init(l: l, r: r))).eval()
+                let evaledAsRing = RingOperators<A>.MMonoid(.Mul(.init(l: l, r: r))).eval()
                 if A(mmonoidOp: .Mul(.init(l: l, r: r))) != evaledAsRing {
                     return evaledAsRing
                 }
@@ -78,7 +78,7 @@ extension Field {
     static prefix func * (lhs: Self) -> Self { return .init(fieldOp: .Conjugate(lhs)) }
     static func ^ (lhs: Self, rhs: Self) -> Self { return .init(fieldOp: .Power(base: lhs, exponent: rhs)) }
 
-    var ringOp: RingOperators<MUL>? {
+    var ringOp: RingOperators<Self>? {
         switch fieldOp {
         case let .Abelian(abe):
             return .Abelian(abe)
@@ -87,7 +87,7 @@ extension Field {
         default: return nil
         }
     }
-    init(ringOp: RingOperators<MUL>) {
+    init(ringOp: RingOperators<Self>) {
         switch ringOp {
         case let .Abelian(abe):
             self.init(fieldOp: .Abelian(abe))

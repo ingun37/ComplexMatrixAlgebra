@@ -266,3 +266,159 @@ extension Field {
         return self
     }
 }
+
+func latex<F:Field>(fieldOp:FieldOperators<F>)->String {
+    switch fieldOp {
+    case let .Mabelian(mab):
+        return latex(mabelianOp: mab)
+    case let .Abelian(ab):
+        return latex(abelianOp: ab)
+    case .Power(base: let base, exponent: let exponent):
+        let expTex = latex(exponent)
+        let baseTex = latex(base)
+        return "{\(baseTex)}^{\(expTex)}"
+    case let .Conjugate(xx):
+        return "\\overline{ \(latex(xx)) }"
+    case let .Determinant(x):
+        if case let .Basis(.Matrix(m)) = x.element {
+            return renderMatrix(m, kind: "vmatrix")
+        } else {
+            return "\\left | \(latex(x)) \\right |"
+        }
+    }
+}
+func latex<F:Field>(matrixBasis:MatrixBasis<F>)->String {
+    switch matrixBasis {
+    case let .id(f):
+        return "Id_{\(genLaTex(f))}"
+    case .zero:
+        return "Id_0"
+    case let .Matrix(m):
+        return renderMatrix(m)
+    }
+}
+func latex<A:Ring>(ringOp:RingOperators<A>)-> String {
+    switch ringOp {
+    case let .MMonoid(o):
+        return latex(mmonoidOp: o)
+    case let .Abelian(o):
+        return latex(abelianOp: o)
+    }
+}
+func latex<A:MMonoid>(mmonoidOp:MMonoidOperators<A>)-> String {
+    switch mmonoidOp {
+    case let .Mul(m):
+        let flatten = flatMul(m.l) + flatMul(m.r)
+        return latex(flatten.head) + flatten.tail.map({latex($0).paren}).joined()
+    }
+}
+func latex<A:AMonoid>(amonoidOp:AMonoidOperators<A>)-> String {
+    switch amonoidOp {
+    case let .Add(m):
+        let flatten = flatAdd(m.l) + flatAdd(m.r)
+        return flatten.all.map({latex($0)}).joined(separator: " + ")
+    }
+}
+func latex<A:MAbelian>(mabelianOp:MAbelianOperator<A>)-> String {
+    switch mabelianOp {
+    case let .Inverse(x): return "{\(latex(x))}^{-1}"
+    case let .Monoid(x): return latex(mmonoidOp: x)
+    case let .Quotient(x, y): return "\\frac{\(latex(x))}{\(latex(y))}"
+    }
+}
+func latex<A:Abelian>(abelianOp:AbelianOperator<A>)-> String {
+    switch abelianOp {
+    case let .Monoid(m): return latex(amonoidOp: m)
+    case let .Negate(x): return "- \(latex(x).paren)"
+    case let .Subtract(x, y): return "\(latex(x).paren) - \(latex(y).paren)"
+    }
+}
+func latex<F:Field>(matrixOp:MatrixOp<F>)->String {
+    switch matrixOp {
+    case let .Echelon(x): return "E \(latex(x).paren)"
+    case let .Inverse(x): return "{\(latex(x).paren)}^{-1}"
+    case let .ReducedEchelon(x): return "RE \(latex(x).paren)"
+    case let .Ring(x): return latex(ringOp: x)
+    case let .Scale(x, y): return "\(latex(x)) \(latex(y))"
+    }
+}
+func latex<A:Algebra>(_ a:A)->String {
+    if let a = a as? Real {
+        switch a.c {
+        case let .e(e):
+            switch e {
+            case let .Basis(b):
+                switch b {
+                case let .N(n):
+                    return n.description
+                case let .Q(q):
+                    return "{\(q.numerator.description) \\over \(q.denominator.description)}"
+                case let .R(r):
+                    return r.description
+                }
+            case let .Var(v):
+                return v
+            }
+        case let .o(o):
+            switch o {
+            case let .f(fo):
+                return latex(fieldOp: fo)
+            }
+        }
+    } else if let a = a as? Complex {
+        switch a.c {
+        case let .e(e):
+            switch e {
+            case let .Basis(b):
+                return "\(latex(b.r)) + \(latex(b.i)) {i}"
+            case let .Var(v):
+                return v
+            }
+        case let .o(o):
+            return latex(fieldOp: o)
+        }
+    } else if let a = a as? Matrix<Real> {
+        switch a.c {
+        case let .e(e):
+            switch e {
+            case let .Basis(b):
+                return latex(matrixBasis: b)
+            case let .Var(v):
+                return v
+            }
+        case let .o(o):
+            return latex(matrixOp: o)
+        }
+    } else if let a = a as? Matrix<Complex> {
+        switch a.c {
+        case let .e(e):
+            switch e {
+            case let .Basis(b):
+                return latex(matrixBasis: b)
+            case let .Var(v):
+                return v
+            }
+        case let .o(o):
+            return latex(matrixOp: o)
+        }
+    }
+    return "unknown algebra"
+}
+func flatMul<A:MMonoid>(_ x:A)-> List<A> {
+    return flatAlgebra(x) { (x) -> [A] in
+        if case let .Mul(b) = x.mmonoidOp {
+            return [b.l,b.r]
+        } else {
+            return []
+        }
+    }
+}
+func flatAdd<A:AMonoid>(_ x:A)-> List<A> {
+    return flatAlgebra(x) { (x) -> [A] in
+        if case let .Add(bin) = x.amonoidOp {
+            return [bin.l,bin.r]
+        } else {
+            return []
+        }
+    }
+}
