@@ -32,7 +32,7 @@ protocol Algebra: Hashable {
     static var cache:Dictionary<Self, Self>? {get set}
 }
 
-let serialQueue = DispatchQueue(label: "com.test.mySerialQueue")
+let lock = NSLock()
 
 extension Algebra {
     var element:E? {
@@ -48,20 +48,26 @@ extension Algebra {
         }
     }
     func eval() -> Self {
-        if let cache = Self.cache {
-            if let c = cache[self] {
-                return c
-            }
+        
+        
+        var cached:Self?
+        lock.lock()
+        cached = Self.cache?[self]
+        lock.unlock()
+        
+        if let cached = cached {
+            return cached
         }
+        
         let result = o?.eval() ?? self
         
-        serialQueue.sync {
-            if let _ = Self.cache?[self] {
-                
-            } else {
-                Self.cache?[self] = result
-            }
+        lock.lock()
+        if let _ = Self.cache?[self] {
+            
+        } else {
+            Self.cache?[self] = result
         }
+        lock.unlock()
         return result
     }
     init(element:E) {
