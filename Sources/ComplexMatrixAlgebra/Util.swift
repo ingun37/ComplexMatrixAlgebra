@@ -40,8 +40,8 @@ public struct List<T> {
         return List<Int>(0, (1..<limit))
     }
     typealias Element = T
-    let head:T
-    let tail:[T]
+    public let head:T
+    public let tail:[T]
     init<C:Sequence>(_ h:T, _ t:C) where C.Element == T {
         head = h
         tail = Array(t)
@@ -50,38 +50,38 @@ public struct List<T> {
         head = h
         tail = []
     }
-    var pair:(T,[T]) { return (head, tail)}
-    var all:[T] {return [head] + tail}
-    func fmap<Q>(_ f:@escaping (T)->Q) -> List<Q> {
+    public var pair:(T,[T]) { return (head, tail)}
+    public var all:[T] {return [head] + tail}
+    public func fmap<Q>(_ f:@escaping (T)->Q) -> List<Q> {
         return List<Q>(f(head), tail.map(f))
     }
-    static func + (lhs: List, rhs: List) -> List {
+    public static func + (lhs: List, rhs: List) -> List {
         return List(lhs.head, lhs.tail + rhs.all)
     }
-    static func + <C:Collection>(lhs: List, rhs: C) -> List where C.Element == T {
+    public static func + <C:Collection>(lhs: List, rhs: C) -> List where C.Element == T {
         return List(lhs.head, lhs.tail + rhs)
     }
-    func reduce(_ next:(T,T)->T) -> T  {
+    public func reduce(_ next:(T,T)->T) -> T  {
         return tail.reduce(head, next)
     }
-    func reduce<R>(head transHead: (T)->R, _ reducer:(R, T)->R) -> R {
+    public func reduce<R>(head transHead: (T)->R, _ reducer:(R, T)->R) -> R {
         return tail.reduce(transHead(head)) { (l, r) in
             reducer(l,r)
         }
     }
-    func fzip(_ with:List<T>) -> List<(T,T)> {
+    public func fzip(_ with:List<T>) -> List<(T,T)> {
         let newHead = (head, with.head)
         let newTail = zip(tail, with.tail)
         return List<(T,T)>(newHead, newTail)
     }
-    func reduceR<R>(_ i:(T)->R, _ eval: (T,R)->R)->R {
+    public func reduceR<R>(_ i:(T)->R, _ eval: (T,R)->R)->R {
         if let t = tail.decompose() {
             return eval(head, t.reduceR(i, eval))
         } else {
             return i(head)
         }
     }
-    var reversed:List<T> {
+    public var reversed:List<T> {
         return reduceR({ (last) -> List<T> in
             List(last)
         }) { (last, ls) -> List<T> in
