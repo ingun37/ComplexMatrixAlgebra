@@ -6,9 +6,9 @@
 //
 
 import Foundation
-indirect enum MMonoidOperators<A:MMonoid>:Operator {
+public indirect enum MMonoidOperators<A:MMonoid>:Operator {
     case Mul(A.MUL)
-    func eval() -> A {
+    public func eval() -> A {
         switch self {
         case let .Mul(_b):
             let l = _b.l.eval()
@@ -46,11 +46,11 @@ indirect enum MMonoidOperators<A:MMonoid>:Operator {
     }
 }
 
-protocol MMonoidBasis:Basis {
+public protocol MMonoidBasis:Basis {
     static func * (l:Self, r:Self)->Self
     static var Id:Self {get}
 }
-protocol MMonoid:Algebra where B:MMonoidBasis {
+public protocol MMonoid:Algebra where B:MMonoidBasis {
     associatedtype MUL:AssociativeMultiplication where MUL.A == Self
     typealias MMonO = MMonoidOperators<Self>
     init(mmonoidOp:MMonO)

@@ -7,9 +7,9 @@
 
 import Foundation
 
-indirect enum AMonoidOperators<A:AMonoid>:Operator {
+public indirect enum AMonoidOperators<A:AMonoid>:Operator {
     case Add(A.ADD)
-    func eval() -> A {
+    public func eval() -> A {
         switch self {
         case let .Add(b):
             let l = b.l.eval()
@@ -48,11 +48,11 @@ indirect enum AMonoidOperators<A:AMonoid>:Operator {
     }
 }
 
-protocol AMonoidBasis:Basis {
+public protocol AMonoidBasis:Basis {
     static func + (l:Self, r:Self)->Self
     static var Zero:Self {get}
 }
-protocol AMonoid:Algebra where B:AMonoidBasis {
+public protocol AMonoid:Algebra where B:AMonoidBasis {
     associatedtype ADD:AssociativeBinary where ADD.A == Self
     typealias AMonO = AMonoidOperators<Self>
     init(amonoidOp:AMonO)

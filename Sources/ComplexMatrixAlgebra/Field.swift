@@ -7,19 +7,19 @@
 
 import Foundation
 
-protocol FieldBasis: RingBasis & MAbelianBasis {
+public protocol FieldBasis: RingBasis & MAbelianBasis {
     static prefix func * (lhs: Self) -> Self
     static func whole(n:Int)->Self
 }
 
 
-protocol Field:Ring & MAbelian where B:FieldBasis {
+public protocol Field:Ring & MAbelian where B:FieldBasis {
     var fieldOp: FieldOperators<Self>? { get }
     init(fieldOp:FieldOperators<Self>)
 }
 
-indirect enum FieldOperators<A:Field>: Operator {
-    func eval() -> A {
+public indirect enum FieldOperators<A:Field>: Operator {
+    public func eval() -> A {
         switch self {
         case let .Mabelian(mab):
             if case let .Monoid(.Mul(_b)) = mab {
@@ -79,7 +79,7 @@ extension Field {
     static prefix func * (lhs: Self) -> Self { return .init(fieldOp: .Conjugate(lhs)) }
     static func ^ (lhs: Self, rhs: Self) -> Self { return .init(fieldOp: .Power(base: lhs, exponent: rhs)) }
 
-    var ringOp: RingOperators<Self>? {
+    public var ringOp: RingOperators<Self>? {
         switch fieldOp {
         case let .Abelian(abe):
             return .Abelian(abe)
@@ -88,7 +88,7 @@ extension Field {
         default: return nil
         }
     }
-    init(ringOp: RingOperators<Self>) {
+    public init(ringOp: RingOperators<Self>) {
         switch ringOp {
         case let .Abelian(abe):
             self.init(fieldOp: .Abelian(abe))
@@ -96,7 +96,7 @@ extension Field {
             self.init(fieldOp: .Mabelian(.Monoid(mmon)))
         }
     }
-    var mabelianOp: MAbelianO? {
+    public var mabelianOp: MAbelianO? {
         switch fieldOp {
         case let .Mabelian(mab):
             return mab
@@ -104,10 +104,10 @@ extension Field {
             return nil
         }
     }
-    init(mabelianOp: MAbelianO) {
+    public init(mabelianOp: MAbelianO) {
         self.init(fieldOp: .Mabelian(mabelianOp))
     }
-    var mmonoidOp: MMonO? {
+    public var mmonoidOp: MMonO? {
         switch fieldOp {
         case let .Mabelian(.Monoid(mon)):
             return mon
@@ -115,7 +115,7 @@ extension Field {
             return nil
         }
     }
-    init(mmonoidOp: MMonO) {
+    public init(mmonoidOp: MMonO) {
         self.init(fieldOp: .Mabelian(.Monoid(mmonoidOp)))
     }
 }

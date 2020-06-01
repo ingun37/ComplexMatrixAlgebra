@@ -6,16 +6,16 @@
 //
 
 import Foundation
-protocol AbelianBasis:AMonoidBasis {
+public protocol AbelianBasis:AMonoidBasis {
     static prefix func - (l:Self)->Self
 }
 
-indirect enum AbelianOperator<A:Abelian>:Operator {
+public indirect enum AbelianOperator<A:Abelian>:Operator {
     case Monoid(A.AMonO)
     case Subtract(A,A)
     case Negate(A)
     
-    func eval() -> A {
+    public func eval() -> A {
         switch self {
         case let .Monoid(mon):
             if case let .Add(bin) = mon {
@@ -78,7 +78,7 @@ indirect enum AbelianOperator<A:Abelian>:Operator {
         return .init(abelianOp: self)
     }
 }
-protocol Abelian:AMonoid where B:AbelianBasis, ADD:CommutativeBinary {
+public protocol Abelian:AMonoid where B:AbelianBasis, ADD:CommutativeBinary {
     typealias AbelianO = AbelianOperator<Self>
     init(abelianOp:AbelianO)
     var abelianOp: AbelianO? {get}
@@ -90,13 +90,13 @@ extension Abelian {
     static prefix func - (l:Self)-> Self {
         return .init(abelianOp: .Negate(l))
     }
-    var amonoidOp: AMonO? {
+    public var amonoidOp: AMonO? {
         switch abelianOp {
         case let .Monoid(m): return m
         default: return nil
         }
     }
-    init(amonoidOp: AMonO) {
+    public init(amonoidOp: AMonO) {
         self.init(abelianOp: .Monoid(amonoidOp))
     }
 }

@@ -6,16 +6,16 @@
 //
 
 import Foundation
-protocol MAbelianBasis:MMonoidBasis {
+public protocol MAbelianBasis:MMonoidBasis {
     static prefix func ~ (l:Self)->Self
 }
 
-indirect enum MAbelianOperator<A:MAbelian>:Operator {
+public indirect enum MAbelianOperator<A:MAbelian>:Operator {
     case Monoid(A.MMonO)
     case Quotient(A,A)
     case Inverse(A)
     
-    func eval() -> A {
+    public func eval() -> A {
         switch self {
         case let .Monoid(mon):
             if case let .Mul(_b) = mon {
@@ -77,7 +77,7 @@ indirect enum MAbelianOperator<A:MAbelian>:Operator {
         return .init(mabelianOp: self)
     }
 }
-protocol MAbelian:MMonoid where B:MAbelianBasis, MUL:CommutativeMultiplication {
+public protocol MAbelian:MMonoid where B:MAbelianBasis, MUL:CommutativeMultiplication {
     typealias MAbelianO = MAbelianOperator<Self>
     init(mabelianOp:MAbelianO)
     var mabelianOp: MAbelianO? {get}

@@ -7,12 +7,12 @@
 
 import Foundation
 
-struct ComplexBasis: FieldBasis {
-    static func whole(n: Int) -> ComplexBasis {
+public struct ComplexBasis: FieldBasis {
+    public static func whole(n: Int) -> ComplexBasis {
         return .init(r: .init(element: .Basis(.N(n))), i: .Zero)
     }
     
-    static prefix func * (lhs: ComplexBasis) -> ComplexBasis {
+    public static prefix func * (lhs: ComplexBasis) -> ComplexBasis {
         return ComplexBasis(r: lhs.r, i: -lhs.i).eval()
     }
     
@@ -35,11 +35,11 @@ struct ComplexBasis: FieldBasis {
     }
     
     
-    static prefix func ~ (lhs: ComplexBasis) -> ComplexBasis {
+    public static prefix func ~ (lhs: ComplexBasis) -> ComplexBasis {
         return (*lhs / (lhs * *lhs)).eval()
     }
     
-    static prefix func - (lhs: ComplexBasis) -> ComplexBasis {
+    public static prefix func - (lhs: ComplexBasis) -> ComplexBasis {
         return ComplexBasis(r: -lhs.r, i: -lhs.i).eval()
     }
     
@@ -47,18 +47,18 @@ struct ComplexBasis: FieldBasis {
         return ComplexBasis(r: lhs.r - rhs.r, i: lhs.i - rhs.i).eval()
     }
     
-    static func + (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis {
+    public static func + (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis {
         return ComplexBasis(r: lhs.r + rhs.r, i: lhs.i + rhs.i).eval()
     }
     
     let r:Real
     let i:Real
 
-    static var Zero: ComplexBasis {
+    public static var Zero: ComplexBasis {
         return ComplexBasis(r: Real.Zero, i: Real.Zero)
     }
     
-    static var Id: ComplexBasis {
+    public static var Id: ComplexBasis {
         return ComplexBasis(r: Real.Id, i: Real.Zero)
     }
     
@@ -66,48 +66,56 @@ struct ComplexBasis: FieldBasis {
         ComplexBasis(r: r.eval(), i: i.eval())
     }
     
-    static func * (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis {
+    public static func * (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis {
         let img = (lhs.r * rhs.i) + (lhs.i * rhs.r)
         let real = (lhs.r * rhs.r) - (lhs.i * rhs.i)
         return ComplexBasis(r: real, i: img).eval()
     }
     
 }
-struct ComplexMultiplication:CommutativeMultiplication {
-    let l: Complex
-    let r: Complex
-    typealias A = Complex
+public struct ComplexMultiplication:CommutativeMultiplication {
+    public let l: Complex
+    public let r: Complex
+    public typealias A = Complex
+    public init(l ll:Complex, r rr:Complex) {
+        l = ll
+        r = rr
+    }
 }
-struct ComplexAddition:CommutativeAddition {
-    let l: Complex
-    let r: Complex
-    typealias A = Complex
+public struct ComplexAddition:CommutativeAddition {
+    public let l: Complex
+    public let r: Complex
+    public typealias A = Complex
+    public init(l ll:Complex, r rr:Complex) {
+        l = ll
+        r = rr
+    }
 }
 public struct Complex:Field {
-    static var cache:Dictionary<Int, Complex>? = .init()
+    public static var cache:Dictionary<Int, Complex>? = .init()
     
-    typealias ADD = ComplexAddition
-    typealias MUL = ComplexMultiplication
-    init(_ c: Construction<Complex>) {
+    public typealias ADD = ComplexAddition
+    public typealias MUL = ComplexMultiplication
+    public init(_ c: Construction<Complex>) {
         self.c = c
     }
     
-    let c: Construction<Complex>
+    public let c: Construction<Complex>
     
-    var fieldOp: FieldOperators<Complex>? {
+    public var fieldOp: FieldOperators<Complex>? {
         switch c {
         case let .o(f): return f
         default: return nil
         }
     }
     
-    typealias O = FieldOperators<Complex>
+    public typealias O = FieldOperators<Complex>
     
     
-    init(fieldOp: FieldOperators<Complex>) {
+    public init(fieldOp: FieldOperators<Complex>) {
         c = .o(fieldOp)
     }
-    typealias B = ComplexBasis
+    public typealias B = ComplexBasis
 
     
     

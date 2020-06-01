@@ -15,7 +15,7 @@ struct Dimension:Hashable {
         self.cols = cols
     }
 }
-struct Mat<F:Field>:Hashable {
+public struct Mat<F:Field>:Hashable {
     let e:List<List<F>>
     var rowLen:Int {
         return e.all.count
@@ -85,7 +85,7 @@ struct Mat<F:Field>:Hashable {
         }
         return (.init(e: newElements))
     }
-    static func == (l:Self, r:Self)->Bool {
+    public static func == (l:Self, r:Self)->Bool {
         guard l.dim == r.dim else { return false }
         return l.e.fzip(r.e).all.allSatisfy { (x,y) -> Bool in
             x.fzip(y).all.allSatisfy { (x,y) -> Bool in
@@ -201,8 +201,8 @@ struct Mat<F:Field>:Hashable {
 }
 
 
-struct Matrix<F:Field>:Ring {
-    static var cache: Dictionary<Int, Matrix<F>>? {
+public struct Matrix<F:Field>:Ring {
+    public static var cache: Dictionary<Int, Matrix<F>>? {
         get {
             return nil
         }
@@ -211,24 +211,24 @@ struct Matrix<F:Field>:Ring {
         }
     }
     
-    typealias ADD = MatrixAddition<F>
-    typealias MUL = MatrixMultiplication<F>
+    public typealias ADD = MatrixAddition<F>
+    public typealias MUL = MatrixMultiplication<F>
     
-    init(_ c: Construction<Matrix>) {
+    public init(_ c: Construction<Matrix>) {
         self.c = c
     }
     
-    let c: Construction<Matrix>
+    public let c: Construction<Matrix>
     
-    typealias B = MatrixBasis<F>
-    typealias O = MatrixOp<F>
+    public typealias B = MatrixBasis<F>
+    public typealias O = MatrixOp<F>
     
     
-    init(ringOp: RingOp) {
+    public init(ringOp: RingOp) {
         c = .o(.Ring(ringOp))
     }
     
-    var ringOp: RingOp? {
+    public var ringOp: RingOp? {
         switch o {
         case let .Ring(r): return r
         default: return nil
@@ -244,16 +244,16 @@ struct Matrix<F:Field>:Ring {
 
 
 
-enum MatrixBasis<F:Field>:RingBasis {
-    static var Id: MatrixBasis<F> {return .id(.Id)}
+public enum MatrixBasis<F:Field>:RingBasis {
+    public static var Id: MatrixBasis<F> {return .id(.Id)}
     
-    static var Zero: MatrixBasis<F> {return .zero}
+    public static var Zero: MatrixBasis<F> {return .zero}
     
     case zero
     case id(F)
     case Matrix(Mat<F>)
     
-    static prefix func - (l: Self) -> Self {
+    public static prefix func - (l: Self) -> Self {
         switch l {
         case .zero: return .zero
         case let .id(f): return .id((-f).eval())
@@ -267,7 +267,7 @@ enum MatrixBasis<F:Field>:RingBasis {
         }
     }
     
-    static func * (l:Self, r:Self)->Self {
+    public static func * (l:Self, r:Self)->Self {
         switch (l,r) {
         case let (.zero,_): return .zero
         case let (_,.zero): return .zero
@@ -281,7 +281,7 @@ enum MatrixBasis<F:Field>:RingBasis {
 
     }
     
-    static func * (l:F, r:MatrixBasis)->MatrixBasis {
+    public static func * (l:F, r:MatrixBasis)->MatrixBasis {
         switch r {
         case .zero: return .zero
         case let .id(f): return .id((l*f).eval())
@@ -291,7 +291,7 @@ enum MatrixBasis<F:Field>:RingBasis {
 
     }
     
-    static func + (l:MatrixBasis, r:MatrixBasis)->MatrixBasis {
+    public static func + (l:MatrixBasis, r:MatrixBasis)->MatrixBasis {
         switch (l,r) {
         case let (.zero, x): return x
         case let (x, .zero): return x
@@ -313,7 +313,7 @@ enum MatrixBasis<F:Field>:RingBasis {
         }
     }
     
-    static func == (lhs:Self, rhs:Self)-> Bool {
+    public static func == (lhs:Self, rhs:Self)-> Bool {
         switch (lhs,rhs) {
         case let (.zero,.zero): return true
         case let (.zero,.id(x)): return x == .Zero
@@ -335,19 +335,27 @@ extension MatrixBasis {
         return .init(element: .Basis(self))
     }
 }
-struct MatrixMultiplication<F:Field>:AssociativeMultiplication {
-    let l: Matrix<F>
-    let r: Matrix<F>
-    typealias A = Matrix<F>
+public struct MatrixMultiplication<F:Field>:AssociativeMultiplication {
+    public let l: Matrix<F>
+    public let r: Matrix<F>
+    public typealias A = Matrix<F>
+    public init(l ll:Matrix<F>, r rr:Matrix<F>) {
+        l = ll
+        r = rr
+    }
 }
-struct MatrixAddition<F:Field>:CommutativeAddition {
-    let l: Matrix<F>
-    let r: Matrix<F>
-    typealias A = Matrix<F>
+public struct MatrixAddition<F:Field>:CommutativeAddition {
+    public let l: Matrix<F>
+    public let r: Matrix<F>
+    public typealias A = Matrix<F>
+    public init(l ll:Matrix<F>, r rr:Matrix<F>) {
+        l = ll
+        r = rr
+    }
 }
-indirect enum MatrixOp<F:Field>:Operator {
-    typealias A = Matrix<F>
-    func eval() -> A {
+public indirect enum MatrixOp<F:Field>:Operator {
+    public typealias A = Matrix<F>
+    public func eval() -> A {
         switch self {
         case let .Scale(s, m):
             let s = s.eval()

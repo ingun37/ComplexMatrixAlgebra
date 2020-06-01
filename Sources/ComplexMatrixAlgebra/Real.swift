@@ -8,12 +8,12 @@
 import Foundation
 import NumberKit
 
-enum RealBasis: FieldBasis {
-    static func whole(n: Int) -> RealBasis {
+public enum RealBasis: FieldBasis {
+    public static func whole(n: Int) -> RealBasis {
         return .N(n)
     }
     
-    static prefix func * (lhs: RealBasis) -> RealBasis {
+    public static prefix func * (lhs: RealBasis) -> RealBasis {
         return lhs
     }
     
@@ -21,7 +21,7 @@ enum RealBasis: FieldBasis {
         return lhs * (~rhs)
     }
     
-    static prefix func ~ (lhs: RealBasis) -> RealBasis {
+    public static prefix func ~ (lhs: RealBasis) -> RealBasis {
         switch lhs {
         case let .N(n):
             return (RealBasis.Q(Rational(1, n))).eval()
@@ -32,7 +32,7 @@ enum RealBasis: FieldBasis {
         }
     }
     
-    static prefix func - (lhs: RealBasis) -> RealBasis {
+    public static prefix func - (lhs: RealBasis) -> RealBasis {
         switch lhs {
         case let .N(n): return .N(-n)
         case let .Q(q): return .Q(-q)
@@ -44,7 +44,7 @@ enum RealBasis: FieldBasis {
         return lhs + (-rhs)
     }
     
-    static func + (lhs: RealBasis, rhs: RealBasis) -> RealBasis {
+    public static func + (lhs: RealBasis, rhs: RealBasis) -> RealBasis {
         switch (lhs,rhs) {
         case let (.N(x), .N(y)): return (.N(x+y))
 
@@ -63,9 +63,9 @@ enum RealBasis: FieldBasis {
         }
     }
     
-    static var Zero: RealBasis {return .N(0)}
+    public static var Zero: RealBasis {return .N(0)}
     
-    static var Id: RealBasis {return .N(1)}
+    public static var Id: RealBasis {return .N(1)}
     
     private func eval() -> RealBasis {
         switch self {
@@ -79,7 +79,7 @@ enum RealBasis: FieldBasis {
         }
     }
     
-    static func * (lhs: RealBasis, rhs: RealBasis) -> RealBasis {
+    public static func * (lhs: RealBasis, rhs: RealBasis) -> RealBasis {
         switch (lhs,rhs) {
         case let (.N(x), .N(y)): return (.N(x*y))
 
@@ -112,8 +112,8 @@ enum RealBasis: FieldBasis {
     case Q(Rational<Int>)
     case R(Double)
 }
-indirect enum RealOperator:Operator {
-    func eval() -> Real {
+public indirect enum RealOperator:Operator {
+    public func eval() -> Real {
         
         if case let .f(.Power(base: base, exponent: exponent)) = self {
             let exponent = exponent.eval()
@@ -136,44 +136,52 @@ indirect enum RealOperator:Operator {
         }
     }
     
-    typealias A = Real
+    public typealias A = Real
     
     case f(FieldOperators<Real>)
     
 }
-struct RealMultiplication:CommutativeMultiplication {
-    let l: Real
-    let r: Real
-    typealias A = Real
+public struct RealMultiplication:CommutativeMultiplication {
+    public let l: Real
+    public let r: Real
+    public typealias A = Real
+    public init(l ll:Real, r rr:Real) {
+        l = ll
+        r = rr
+    }
 }
-struct RealAddition:CommutativeAddition {
-    let l: Real
-    let r: Real
-    typealias A = Real
+public struct RealAddition:CommutativeAddition {
+    public let l: Real
+    public let r: Real
+    public typealias A = Real
+    public init(l ll:Real, r rr:Real) {
+        l = ll
+        r = rr
+    }
 }
 //typealias Real = Field<RealNumber>
 public struct Real:Field {
-    static var cache:Dictionary<Int, Real>? = .init()
+    public static var cache:Dictionary<Int, Real>? = .init()
     
-    typealias ADD = RealAddition
-    typealias MUL = RealMultiplication
-    var fieldOp: FieldOperators<Real>? {
+    public typealias ADD = RealAddition
+    public typealias MUL = RealMultiplication
+    public var fieldOp: FieldOperators<Real>? {
         switch c {
         case let .o(.f(f)): return f
         default: return nil
         }
     }
     
-    init(_ c: Construction<Real>) {
+    public init(_ c: Construction<Real>) {
         self.c = c
     }
     
-    let c: Construction<Real>
+    public let c: Construction<Real>
     
-    typealias O = RealOperator
+    public typealias O = RealOperator
     
-    init(fieldOp: FieldOperators<Real>) {
+    public init(fieldOp: FieldOperators<Real>) {
         c = .o(.f(fieldOp))
     }
-    typealias B = RealBasis
+    public typealias B = RealBasis
 }

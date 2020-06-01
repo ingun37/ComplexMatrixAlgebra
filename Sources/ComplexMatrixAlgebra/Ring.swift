@@ -6,7 +6,7 @@
 //
 
 import Foundation
-protocol RingBasis:AbelianBasis, MMonoidBasis {
+public protocol RingBasis:AbelianBasis, MMonoidBasis {
 }
 extension RingBasis {
     func asNumber<R:Ring>(_ a:R.Type) -> R where R.B == Self{
@@ -14,17 +14,17 @@ extension RingBasis {
 //        return R(op: .init(basisOp: .Number(self)))
     }
 }
-protocol Ring:Abelian & MMonoid where B:RingBasis{
+public protocol Ring:Abelian & MMonoid where B:RingBasis{
     typealias RingOp = RingOperators<Self>
     init(ringOp:RingOp)
     var ringOp: RingOp? { get }
 }
 
-indirect enum RingOperators<A:Ring>:Operator {
+public indirect enum RingOperators<A:Ring>:Operator {
     case MMonoid(A.MMonO)
     case Abelian(A.AbelianO)
     
-    func eval() -> A {
+    public func eval() -> A {
         switch self {
         case let .MMonoid(mon):
             if case let .Mul(_b) = mon {
@@ -69,10 +69,10 @@ extension Ring {
     static var Id:Self { return .init(element: .Basis(.Id)) }
     static var _Id:Self { return .init(element: .Basis(-.Id)) }
     
-    init(abelianOp: AbelianO) {
+    public init(abelianOp: AbelianO) {
         self.init(ringOp: .Abelian(abelianOp))
     }
-    var abelianOp: AbelianO? {
+    public var abelianOp: AbelianO? {
         switch ringOp {
         case let .Abelian(a):
             return a
@@ -80,7 +80,7 @@ extension Ring {
             return nil
         }
     }
-    var mmonoidOp: MMonO? {
+    public var mmonoidOp: MMonO? {
         switch ringOp {
         case let .MMonoid(m):
             return m
@@ -88,7 +88,7 @@ extension Ring {
             return nil
         }
     }
-    init(mmonoidOp: MMonO) {
+    public init(mmonoidOp: MMonO) {
         self.init(ringOp: .MMonoid(mmonoidOp))
     }
 }

@@ -7,20 +7,20 @@
 
 import Foundation
 import NumberKit
-indirect enum Element<B:Basis>:Hashable {
+public indirect enum Element<B:Basis>:Hashable {
     case Basis(B)
     case Var(String)
 }
-protocol Operator:Hashable {
+public protocol Operator:Hashable {
     associatedtype A:Algebra
     func eval() -> A
 }
-indirect enum Construction<A:Algebra>: Hashable {
+public indirect enum Construction<A:Algebra>: Hashable {
     case e(A.E)
     case o(A.O)
 }
 //TODO: Change once accepted: https://forums.swift.org/t/accepted-se-0280-enum-cases-as-protocol-witnesses/34850
-protocol Algebra: Hashable {
+public protocol Algebra: Hashable {
     associatedtype B:Basis
     associatedtype O:Operator where O.A == Self
     typealias E = Element<B>
@@ -71,7 +71,7 @@ extension Algebra {
         self.init(.e(element))
     }
 }
-protocol Basis:Hashable {}
+public protocol Basis:Hashable {}
 
 func commuteSame<C:Collection, T:Algebra>(_ xs:C, _ ys:C) -> Bool where C.Element == T, C.Index == Int{
     guard xs.count == ys.count else { return false }
@@ -97,7 +97,7 @@ func commuteEqual<C:Collection, T:Algebra>(_ xs:C, _ ys:C) -> Bool where C.Eleme
     }
     
 }
-protocol AssociativeBinary:Hashable {
+public protocol AssociativeBinary:Hashable {
     associatedtype A:Algebra
     var l: A { get }
     var r: A { get }
@@ -110,7 +110,7 @@ extension AssociativeBinary {
     func flat()->List<A> {
         return (match(l)?.flat() ?? List(l)) + (match(r)?.flat() ?? List(r))
     }
-    static func == (x:Self, y:Self)-> Bool {
+    public static func == (x:Self, y:Self)-> Bool {
         let xs = x.flat()
         let ys = y.flat()
         guard xs.all.count == ys.all.count else { return false }
@@ -121,28 +121,28 @@ extension AssociativeBinary {
         return .init(l: l.eval(), r: r.eval())
     }
 }
-protocol CommutativeBinary:AssociativeBinary {}
+public protocol CommutativeBinary:AssociativeBinary {}
 extension CommutativeBinary {
-    static func == (x:Self, y:Self)-> Bool {
+    public static func == (x:Self, y:Self)-> Bool {
         let xs = x.flat()
         let ys = y.flat()
         return commuteEqual(xs.all, ys.all)
     }
 }
-protocol AssociativeMultiplication:AssociativeBinary where A:MMonoid {}
+public protocol AssociativeMultiplication:AssociativeBinary where A:MMonoid {}
 extension AssociativeMultiplication {
-    func match(_ a: A) -> Self? {
+    public func match(_ a: A) -> Self? {
         if case let .Mul(b) = a.mmonoidOp {
             return .init(l: b.l, r: b.r)
         }
         return nil
     }
 }
-protocol CommutativeMultiplication:AssociativeMultiplication, CommutativeBinary where A:MAbelian {}
+public protocol CommutativeMultiplication:AssociativeMultiplication, CommutativeBinary where A:MAbelian {}
 
 protocol CommutativeAddition:CommutativeBinary where A:Abelian {}
 extension CommutativeAddition {
-    func match(_ a: A) -> Self? {
+    public func match(_ a: A) -> Self? {
         if case let .Add(b) = a.amonoidOp {
             return .init(l: b.l, r: b.r)
         }
