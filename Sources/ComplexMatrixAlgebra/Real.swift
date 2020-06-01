@@ -152,7 +152,7 @@ struct RealAddition:CommutativeAddition {
     typealias A = Real
 }
 //typealias Real = Field<RealNumber>
-struct Real:Field {
+public struct Real:Field {
     static var cache:Dictionary<Int, Real>? = .init()
     
     typealias ADD = RealAddition
