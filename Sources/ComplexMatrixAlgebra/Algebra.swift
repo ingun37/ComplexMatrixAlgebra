@@ -29,6 +29,8 @@ protocol Algebra: Hashable {
     var c: Construction<Self> {
         get
     }
+    
+    /// Reason why not <Self, Self> is that theres inexplicable bug that it crashes with KEY_TYPE_OF_DICTIONARY_VIOLATES_HASHABLE_REQUIREMENTS
     static var cache:Dictionary<Int, Self>? {get set}
 }
 
