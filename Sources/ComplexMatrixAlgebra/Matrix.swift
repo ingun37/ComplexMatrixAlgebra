@@ -7,43 +7,43 @@
 
 import Foundation
 
-struct Dimension:Hashable {
-    let rows:Int
-    let cols:Int
-    init(_ rows:Int, _ cols:Int) {
+public struct Dimension:Hashable {
+    public let rows:Int
+    public let cols:Int
+    public init(_ rows:Int, _ cols:Int) {
         self.rows = rows
         self.cols = cols
     }
 }
 public struct Mat<F:Field>:Hashable {
-    let e:List<List<F>>
-    var rowLen:Int {
+    public let e:List<List<F>>
+    public var rowLen:Int {
         return e.all.count
     }
-    var colLen:Int {
+    public var colLen:Int {
         return e.all.map({$0.all.count}).max() ?? e.head.all.count
     }
-    var dim:(Int, Int) {
+    public var dim:(Int, Int) {
         return (rowLen, colLen)
     }
-    var dimen:Dimension {
+    public var dimen:Dimension {
         return Dimension(rowLen, colLen)
     }
-    func row(_ i:Int) -> List<F> {
+    public func row(_ i:Int) -> List<F> {
         return e.all[i]
     }
-    func col(_ i:Int) -> List<F> {
+    public func col(_ i:Int) -> List<F> {
         return e.reduce(head: {List($0.all[i])}) { (l, r) in
             l + List(r.all[i])
         }
     }
-    var rows:List<List<F>> {
+    public var rows:List<List<F>> {
         return e
     }
-    var cols:List<List<F>> {
+    public var cols:List<List<F>> {
         return List(0, (1..<colLen)).fmap({self.col($0)})
     }
-    func fit(to:(Int,Int))-> Self {
+    public func fit(to:(Int,Int))-> Self {
         let maxRow = to.0
         let maxCol = to.1
         let template = List(0, (1..<maxRow)).fmap { (r) in
@@ -56,7 +56,7 @@ public struct Mat<F:Field>:Hashable {
         }
         return .init(e: newE)
     }
-    var id:Self {
+    public var id:Self {
         let mx = max(rowLen, colLen)
         let newE = List(0, (1..<mx)).fmap { (row) in
             List(0, (1..<mx)).fmap { (col) in
@@ -65,7 +65,7 @@ public struct Mat<F:Field>:Hashable {
         }
         return .init(e: newE)
     }
-    static func * (l:F, r:Self)->Self {
+    public static func * (l:F, r:Self)->Self {
         let newE = r.e.fmap { (row) in
             row.fmap { (e) in
                 (l*e).eval()
@@ -73,7 +73,7 @@ public struct Mat<F:Field>:Hashable {
         }
         return .init(e: newE)
     }
-    static func + (l:Self, r:Self)->Self {
+    public static func + (l:Self, r:Self)->Self {
         let maxRow = max(l.rowLen, r.rowLen)
         let maxCol = max(l.colLen, r.colLen)
         let dim = (maxRow, maxCol)
@@ -93,7 +93,7 @@ public struct Mat<F:Field>:Hashable {
             }
         }
     }
-    static func * (l:Self, r:Self)->Self {
+    public static func * (l:Self, r:Self)->Self {
         let mx = max(l.colLen, r.rowLen)
         let newL = l.fit(to: (l.rowLen, mx))
         let newR = r.fit(to: (mx, r.colLen))
@@ -104,17 +104,17 @@ public struct Mat<F:Field>:Hashable {
         }
         return .init(e: newElems)
     }
-    var transposed:Self {
+    public var transposed:Self {
         return Mat(e: cols)
     }
-    func without(col:Int)->Self? {
+    public func without(col:Int)->Self? {
         if let newCols = cols.all.without(at: col).decompose() {
             return Self(e: newCols).transposed
         } else {
             return nil
         }
     }
-    func without(row:Int, col:Int) -> Self?  {
+    public func without(row:Int, col:Int) -> Self?  {
         if let remainRows = rows.all.without(at: row).decompose() {
             if let remainCols = Mat(e: remainRows).cols.all.without(at: col).decompose() {
                 return Mat(e: remainCols).transposed
@@ -122,7 +122,7 @@ public struct Mat<F:Field>:Hashable {
         }
         return nil
     }
-    var determinant:F {
+    public var determinant:F {
         return List<Int>.rng(colLen).fmap { (c)->F in
             if let subMatrix = self.without(row: 0, col: c) {
                 return (F._Id^F.B.whole(n: c).asNumber(F.self)) * self.col(c).head * subMatrix.determinant
@@ -131,7 +131,7 @@ public struct Mat<F:Field>:Hashable {
             }
         }.reduce(+).eval()
     }
-    func cofactor(i:Int, j:Int)-> F? {
+    public func cofactor(i:Int, j:Int)-> F? {
         if let detAij = without(row: i, col: j)?.determinant {
             let co = F._Id^F.B.whole(n: i+j).asNumber(F.self)
             return co * detAij
@@ -139,7 +139,7 @@ public struct Mat<F:Field>:Hashable {
             return nil
         }
     }
-    var inversed:Self? {
+    public var inversed:Self? {
         let cofacs = join(optionals: (0..<rowLen).map { (row) in
             join(optionals: (0..<colLen).map { (col) in
                 cofactor(i: col, j: row)
@@ -149,7 +149,7 @@ public struct Mat<F:Field>:Hashable {
         let coMat = Mat(e: cofactors)
         return (~determinant).eval() * coMat
     }
-    var echelon:Self {
+    public var echelon:Self {
         let nonZeroTopEntry = rows.reduceR({ (end) in
             List(end)
         }, { (prev, newRows) in
@@ -182,7 +182,7 @@ public struct Mat<F:Field>:Hashable {
         return Mat(e: List(h) + Z.rows)
     }
     
-    var reducedEchelon:Self {
+    public var reducedEchelon:Self {
         let ech = echelon
         var rows = ech.rows.all
         for i in (0..<rows.count).reversed() {

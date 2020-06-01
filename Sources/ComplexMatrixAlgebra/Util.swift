@@ -35,7 +35,7 @@ extension Collection {
         }
     }
 }
-struct List<T> {
+public struct List<T> {
     static func rng(_ limit:Int)-> List<Int> {
         return List<Int>(0, (1..<limit))
     }
