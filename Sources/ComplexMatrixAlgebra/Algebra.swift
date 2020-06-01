@@ -29,7 +29,7 @@ protocol Algebra: Hashable {
     var c: Construction<Self> {
         get
     }
-    static var cache:Dictionary<Self, Self>? {get set}
+    static var cache:Dictionary<Int, Self>? {get set}
 }
 
 let lock = NSLock()
@@ -49,10 +49,9 @@ extension Algebra {
     }
     func eval() -> Self {
         
-        
         var cached:Self?
         lock.lock()
-        cached = Self.cache?[self]
+        cached = Self.cache?[self.hashValue]
         lock.unlock()
         
         if let cached = cached {
@@ -62,11 +61,7 @@ extension Algebra {
         let result = o?.eval() ?? self
         
         lock.lock()
-        if let _ = Self.cache?[self] {
-            
-        } else {
-            Self.cache?[self] = result
-        }
+        Self.cache?[self.hashValue] = result
         lock.unlock()
         return result
     }

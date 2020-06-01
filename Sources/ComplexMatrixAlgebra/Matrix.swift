@@ -202,7 +202,7 @@ struct Mat<F:Field>:Hashable {
 
 
 struct Matrix<F:Field>:Ring {
-    static var cache: Dictionary<Matrix<F>, Matrix<F>>? {
+    static var cache: Dictionary<Int, Matrix<F>>? {
         get {
             return nil
         }
