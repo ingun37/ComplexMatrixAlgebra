@@ -17,6 +17,9 @@ public struct Dimension:Hashable {
 }
 public struct Mat<F:Field>:Hashable {
     public let e:List<List<F>>
+    public init(e:List<List<F>>) {
+        self.e = e
+    }
     public var rowLen:Int {
         return e.all.count
     }
