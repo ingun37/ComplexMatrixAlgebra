@@ -42,11 +42,11 @@ public struct List<T> {
     typealias Element = T
     public let head:T
     public let tail:[T]
-    init<C:Sequence>(_ h:T, _ t:C) where C.Element == T {
+    public init<C:Sequence>(_ h:T, _ t:C) where C.Element == T {
         head = h
         tail = Array(t)
     }
-    init(_ h:T) {
+    public init(_ h:T) {
         head = h
         tail = []
     }
