@@ -37,19 +37,19 @@ public protocol Algebra: Hashable {
 let lock = NSLock()
 
 extension Algebra {
-    var element:E? {
+    public var element:E? {
         switch c {
         case let .o(o): return nil
         case let .e(e): return e
         }
     }
-    var o:O? {
+    public var o:O? {
         switch c {
         case let .o(o): return o
         case let .e(e): return nil
         }
     }
-    func eval() -> Self {
+    public func eval() -> Self {
         
         var cached:Self?
         lock.lock()
@@ -67,7 +67,7 @@ extension Algebra {
         lock.unlock()
         return result
     }
-    init(element:E) {
+    public init(element:E) {
         self.init(.e(element))
     }
 }
