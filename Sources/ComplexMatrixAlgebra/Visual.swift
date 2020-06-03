@@ -125,7 +125,7 @@ func latex<F:Field>(matrixOp:MatrixOp<F>)->String {
     case let .Scale(x, y): return "\(latex(x)) \(latex(y))"
     }
 }
-func latex<A:Algebra>(_ a:A)->String {
+public func latex<A:Algebra>(_ a:A)->String {
     if let a = a as? Real {
         switch a.c {
         case let .e(e):
