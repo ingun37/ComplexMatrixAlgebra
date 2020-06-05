@@ -65,9 +65,8 @@ func flatRingMul<A:Ring>(_ x:A)-> List<A> {
     }
 }
 extension Ring {
-    static func * (l:Self, r:Self)-> Self { return .init(mmonoidOp: .Mul(.init(l:l, r:r))) }
-    static var Id:Self { return .init(element: .Basis(.Id)) }
-    static var _Id:Self { return .init(element: .Basis(-.Id)) }
+    public static var Id:Self { return .init(element: .Basis(.Id)) }
+    public static var _Id:Self { return .init(element: .Basis(-.Id)) }
     
     public init(abelianOp: AbelianO) {
         self.init(ringOp: .Abelian(abelianOp))

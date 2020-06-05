@@ -59,10 +59,10 @@ public protocol AMonoid:Algebra where B:AMonoidBasis {
     var amonoidOp: AMonO? { get }
 }
 extension AMonoid {
-    static var Zero:Self {
+    public static var Zero:Self {
         return .init(element: .Basis(.Zero))
     }
-    static func + (l:Self, r:Self)->Self {
+    public static func + (l:Self, r:Self)->Self {
         return .init(amonoidOp: .Add(.init(l: l, r: r)))
     }
 }

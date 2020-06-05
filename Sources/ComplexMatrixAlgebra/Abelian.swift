@@ -84,10 +84,10 @@ public protocol Abelian:AMonoid where B:AbelianBasis, ADD:CommutativeBinary {
     var abelianOp: AbelianO? {get}
 }
 extension Abelian {
-    static func - (lhs: Self, rhs: Self) -> Self {
+    public static func - (lhs: Self, rhs: Self) -> Self {
         return .init(abelianOp: .Subtract(lhs, rhs))
     }
-    static prefix func - (l:Self)-> Self {
+    public static prefix func - (l:Self)-> Self {
         return .init(abelianOp: .Negate(l))
     }
     public var amonoidOp: AMonO? {

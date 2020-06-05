@@ -57,10 +57,10 @@ public protocol MMonoid:Algebra where B:MMonoidBasis {
     var mmonoidOp: MMonO? { get }
 }
 extension MMonoid {
-    static var Id:Self {
+    public static var Id:Self {
         return .init(element: .Basis(.Id))
     }
-    static func * (l:Self, r:Self)->Self {
+    public static func * (l:Self, r:Self)->Self {
         return .init(mmonoidOp: .Mul(.init(l: l, r: r)))
     }
 }
