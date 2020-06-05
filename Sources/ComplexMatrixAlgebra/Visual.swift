@@ -167,8 +167,17 @@ func gprettify<A:Prettifiable>(fieldOp:FieldOperators<A>)->A {
         case let .Monoid(x):
             switch x {
             case let .Mul(m):
-                let flat = flatMul(m.l) + flatMul(m.r)
-                let prettyTerms = flat.grouped().fmap { (g) in
+                let (s,b,_a) = decomposeMul(m.l * m.r)
+                guard let a = _a else {
+                    if s {
+                        return A(element: .Basis(b))
+                    } else {
+                        return A(abelianOp: .Negate(A(element: .Basis(b))))
+                    }
+                }
+                let aTerms = flatMul(a)
+                
+                let groupedTerm = aTerms.grouped().fmap { (g) in
                     (g.all.count, g.head.prettyfy())
                 }.fmap { (size,term)->A in
                     if size == 1 {
@@ -178,7 +187,23 @@ func gprettify<A:Prettifiable>(fieldOp:FieldOperators<A>)->A {
                         return A(fieldOp: .Power(base: term, exponent: exp))
                     }
                 }.reduce(*)
-                return prettyTerms
+                
+                let ba:A
+                if b == .Id {
+                    ba = groupedTerm
+                } else if b == .Zero {
+                    ba = .Zero
+                } else {
+                    ba = b.asNumber(A.self) * groupedTerm
+                }
+                
+                let nba:A
+                if s {
+                    nba = ba
+                } else {
+                    nba = A(abelianOp: .Negate(ba))
+                }
+                return nba
             }
         case let .Quotient(x, y): return .init(mabelianOp: .Quotient(x.prettyfy(), y.prettyfy()))
         }
@@ -348,5 +373,30 @@ extension Matrix: Latexable where F:Latexable{
             case let .Scale(x, y): return "\((x.latex())) \((y.latex()))"
             }
         }
+    }
+}
+func decomposeMul<A:Field>(_ term:A)-> (Bool, A.B, A?) {
+    if case let .Negate(n) = term.abelianOp {
+        let (s,b,a) = decomposeMul(n)
+        return (!s, b, a)
+    }
+    if case let .Mul(b) = term.mmonoidOp {
+        let (ls, lb, la) = decomposeMul(b.l)
+        let (rs, rb, ra) = decomposeMul(b.r)
+        let aa:A?
+        if let la = la {
+            if let ra = ra { aa = la * ra}
+            else {aa = la }
+        } else {
+            if let ra = ra { aa = ra }
+            else { aa = nil }
+        }
+        
+        return (ls == rs, lb * rb, aa)
+    }
+    if case let .Basis(b) = term.element {
+        return (true, b, nil)
+    } else {
+        return (true, A.B.Id, term)
     }
 }
