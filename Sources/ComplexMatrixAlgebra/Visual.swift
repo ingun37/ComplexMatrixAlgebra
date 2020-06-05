@@ -285,11 +285,11 @@ func gprettify<A:Prettifiable>(ringOp:RingOperators<A>)->A {
         }
     }
 }
-protocol Prettifiable:Algebra {
+public protocol Prettifiable:Algebra {
     func prettyfy()->Self
 }
 extension Real:Prettifiable {
-    func prettyfy()->Self {
+    public func prettyfy()->Self {
         switch c {
         case .e(_): return self
         case let .o(o):
@@ -300,7 +300,7 @@ extension Real:Prettifiable {
     }
 }
 extension Complex:Prettifiable {
-    func prettyfy()-> Self {
+    public func prettyfy()-> Self {
         switch c {
         case let .e(e):
             switch e {
@@ -312,7 +312,7 @@ extension Complex:Prettifiable {
     }
 }
 extension Matrix:Prettifiable where F:Prettifiable {
-    func prettyfy()-> Self {
+    public func prettyfy()-> Self {
         switch c {
         case let .e(e):
             switch e {
