@@ -116,15 +116,6 @@ fileprivate func glatex<A:Abelian & Latexable>(abelianOp:AbelianOperator<A>)-> S
         return (x + (-y)).latex()
     }
 }
-fileprivate func glatex<F:Field&Latexable>(matrixOp:MatrixOp<F>)->String {
-    switch matrixOp {
-    case let .Echelon(x): return "E \((x.latex()).paren)"
-    case let .Inverse(x): return "{\((x.latex()).paren)}^{-1}"
-    case let .ReducedEchelon(x): return "RE \((x.latex()).paren)"
-    case let .Ring(x): return glatex(ringOp: x)
-    case let .Scale(x, y): return "\((x.latex())) \((y.latex()))"
-    }
-}
 
 func flatMul<A:MMonoid>(_ x:A)-> List<A> {
     return flatAlgebra(x) { (x) -> [A] in
@@ -331,7 +322,31 @@ extension Matrix: Latexable where F:Latexable{
                 return v
             }
         case let .o(o):
-            return glatex(matrixOp: o)
+            switch o {
+            case let .Echelon(x): return "E \((x.latex()).paren)"
+            case let .Inverse(x): return "{\((x.latex()).paren)}^{-1}"
+            case let .ReducedEchelon(x): return "RE \((x.latex()).paren)"
+            case let .Ring(x):
+                if case let .MMonoid(.Mul(b)) = x {
+                    let left:String
+                    if case .Add(_) = b.l.amonoidOp {
+                        left = b.l.latex().paren
+                    } else {
+                        left = b.l.latex()
+                    }
+                    
+                    let right:String
+                    if case .Add(_) = b.r.amonoidOp {
+                        right = b.r.latex().paren
+                    } else {
+                        right = b.r.latex()
+                    }
+                    
+                    return left + " " + right
+                }
+                return glatex(ringOp: x)
+            case let .Scale(x, y): return "\((x.latex())) \((y.latex()))"
+            }
         }
     }
 }

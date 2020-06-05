@@ -20,7 +20,6 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         return "$$\n" + (x).latex() + "=" + (x.eval().prettyfy()).latex() + "\n$$"
     }
     func genLine<F:Field & Prettifiable & Latexable>(_ x:Matrix<F>)-> String {
-        let v = x.eval()
         return "$$\n" + (x).latex() + "=" + (x.eval().prettyfy()).latex() + "\n$$"
     }
     func testOutput() {
@@ -46,7 +45,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let rm = [[0, 3, -6, 6, 4, -5],
                   [3, -7, 8, -5, 8, 9],
                   [3, -9, 12, -9, 6, 15]].rmatrix()
-        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)), .C(~auhs), .C(ggg*hch), .C(z * *z), .R(.init(fieldOp: .Determinant(ddd))), .MR(.init(.o(.ReducedEchelon(rm))))]
+        let samples:[Sum] = [.R(x*x),.R(x * xy), .R(_x * _x) , .R(xyxy), .R(i1^bbb), .C(hhh/3.complex(i: 4).f), .R((uc^2.real.f) * (cu^2.real.f)), .C(~auhs), .C(ggg*hch), .C(z * *z), .R(.init(fieldOp: .Determinant(ddd))), .MR(.init(.o(.ReducedEchelon(rm)))), .MR(rm * rm), .MR(rm * (rm + rm))]
         
         let tex = samples.map { (expression) in
             switch expression {
