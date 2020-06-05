@@ -76,8 +76,8 @@ public indirect enum FieldOperators<A:Field>: Operator {
 prefix operator *
 
 extension Field {
-    static prefix func * (lhs: Self) -> Self { return .init(fieldOp: .Conjugate(lhs)) }
-    static func ^ (lhs: Self, rhs: Self) -> Self { return .init(fieldOp: .Power(base: lhs, exponent: rhs)) }
+    public static prefix func * (lhs: Self) -> Self { return .init(fieldOp: .Conjugate(lhs)) }
+    public static func ^ (lhs: Self, rhs: Self) -> Self { return .init(fieldOp: .Power(base: lhs, exponent: rhs)) }
 
     public var ringOp: RingOperators<Self>? {
         switch fieldOp {

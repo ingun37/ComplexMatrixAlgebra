@@ -83,10 +83,10 @@ public protocol MAbelian:MMonoid where B:MAbelianBasis, MUL:CommutativeMultiplic
     var mabelianOp: MAbelianO? {get}
 }
 extension MAbelian {
-    static func / (lhs: Self, rhs: Self) -> Self {
+    public static func / (lhs: Self, rhs: Self) -> Self {
         return .init(mabelianOp: .Quotient(lhs, rhs))
     }
-    static prefix func ~ (l:Self)-> Self {
+    public static prefix func ~ (l:Self)-> Self {
         return .init(mabelianOp: .Inverse(l))
     }
     var mmonoidOp: MMonO? {
