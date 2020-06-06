@@ -395,7 +395,13 @@ func decomposeMul<A:Field>(_ term:A)-> (Bool, A.B, A?) {
         return (ls == rs, lb * rb, aa)
     }
     if case let .Basis(b) = term.element {
-        return (true, b, nil)
+        if let r = b as? RealBasis  {
+            if r.less0 {
+                return (false, -b, nil)
+            } else {return (true, b, nil)}
+        } else {
+            return (true, b, nil)
+        }
     } else {
         return (true, A.B.Id, term)
     }
