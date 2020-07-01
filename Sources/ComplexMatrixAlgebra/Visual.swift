@@ -294,7 +294,7 @@ extension Real:Latexable {
                 case let .N(n):
                     return n.description
                 case let .Q(q):
-                    return "{\(q.numerator.description) \\over \(q.denominator.description)}"
+                    return "{\(q.r.numerator.description) \\over \(q.r.denominator.description)}"
                 case let .R(r):
                     return r.description
                 }

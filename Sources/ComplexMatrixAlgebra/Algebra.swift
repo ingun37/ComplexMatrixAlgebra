@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import NumberKit
+
 public indirect enum Element<B:Basis>:Hashable {
     case Basis(B)
     case Var(String)

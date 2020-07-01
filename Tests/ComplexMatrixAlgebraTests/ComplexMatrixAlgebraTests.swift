@@ -214,3 +214,24 @@ extension Collection where Element: Collection, Element.Element == Int {
         return Matrix(element: .Basis(.Matrix(.init(e: rows))))
     }
 }
+
+extension Rational where T == Int {
+    var real: RealBasis {
+        return (.Q(self.rat()))
+    }
+    func complex(i:Rational) -> ComplexBasis {
+        return (ComplexBasis(r: real.f, i: i.real.f))
+    }
+}
+
+extension Int {
+    var real: RealBasis {
+        return .N(self)
+    }
+    func on(_ deno:Int)-> Rational<Int> {
+        return Rational(self, deno)
+    }
+    func complex(i:Int) -> ComplexBasis {
+        return ComplexBasis(r: real.f, i: i.real.f)
+    }
+}

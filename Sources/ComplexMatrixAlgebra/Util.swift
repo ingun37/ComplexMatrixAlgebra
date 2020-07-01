@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import NumberKit
+
 extension Collection {
     func comb2() -> [(Element, Element)] {
         guard let h = first else { return [] }
@@ -136,17 +136,7 @@ extension Collection where Element:Equatable {
 
 
 
-extension Int {
-    var real: RealBasis {
-        return .N(self)
-    }
-    func on(_ deno:Int)-> Rational<Int> {
-        return Rational(self, deno)
-    }
-    func complex(i:Int) -> ComplexBasis {
-        return ComplexBasis(r: real.f, i: i.real.f)
-    }
-}
+
 extension RealBasis {
     var f: Real {
         return Real(element: .Basis(self))
@@ -171,14 +161,7 @@ extension Double {
         return (RealBasis.R(self))
     }
 }
-extension Rational where T == Int {
-    var real: RealBasis {
-        return (.Q(self))
-    }
-    func complex(i:Rational) -> ComplexBasis {
-        return (ComplexBasis(r: real.f, i: i.real.f))
-    }
-}
+
 extension String {
     func f<F:Field>() -> F {
         return F(element: .Var(self))

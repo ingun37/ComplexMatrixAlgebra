@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import NumberKit
 
 public enum RealBasis: FieldBasis {
     public static func whole(n: Int) -> RealBasis {
@@ -26,7 +25,7 @@ public enum RealBasis: FieldBasis {
         case let .N(n):
             return (RealBasis.Q(Rational(1, n))).eval()
         case let .Q(q):
-            return RealBasis.Q(Rational(q.denominator, q.numerator)).eval()
+            return RealBasis.Q(Rational(q.r.denominator, q.r.numerator)).eval()
         case let .R(r):
             return RealBasis.R(1/r).eval()
         }
@@ -48,8 +47,8 @@ public enum RealBasis: FieldBasis {
         switch (lhs,rhs) {
         case let (.N(x), .N(y)): return (.N(x+y))
 
-        case let (.N(x), .Q(y)): return (RealBasis.Q(y + Rational<Int>(x))).eval()
-        case let (.Q(y), .N(x)): return (RealBasis.Q(y + Rational<Int>(x))).eval()
+        case let (.N(x), .Q(y)): return (RealBasis.Q(y + Rational(x))).eval()
+        case let (.Q(y), .N(x)): return (RealBasis.Q(y + Rational(x))).eval()
 
         case let (.N(x), .R(y)): return (RealBasis.R(y + Double(x))).eval()
         case let (.R(y), .N(x)): return (RealBasis.R(y + Double(x))).eval()
@@ -71,7 +70,7 @@ public enum RealBasis: FieldBasis {
         switch self {
         case .N(_): return self
         case let .Q(q):
-            if let n = q.intValue { return .N(n) }
+            if let n = q.r.intValue { return .N(n) }
             else                  { return self }
         case let .R(r):
             if abs(r - r.rounded()) < 0.00001 { return (.N(Int(r.rounded())))}
@@ -83,8 +82,8 @@ public enum RealBasis: FieldBasis {
         switch (lhs,rhs) {
         case let (.N(x), .N(y)): return (.N(x*y))
 
-        case let (.N(x), .Q(y)): return (RealBasis.Q(y * Rational<Int>(x))).eval()
-        case let (.Q(y), .N(x)): return (RealBasis.Q(y * Rational<Int>(x))).eval()
+        case let (.N(x), .Q(y)): return (RealBasis.Q(y * Rational(x))).eval()
+        case let (.Q(y), .N(x)): return (RealBasis.Q(y * Rational(x))).eval()
 
         case let (.N(x), .R(y)): return (RealBasis.R(y * Double(x))).eval()
         case let (.R(y), .N(x)): return (RealBasis.R(y * Double(x))).eval()
@@ -109,7 +108,7 @@ public enum RealBasis: FieldBasis {
         }
     }
     case N(Int)
-    case Q(Rational<Int>)
+    case Q(Rational)
     case R(Double)
 }
 public indirect enum RealOperator:Operator {
