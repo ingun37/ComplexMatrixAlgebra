@@ -12,11 +12,11 @@ public struct ComplexBasis: FieldBasis {
         return .init(r: .init(element: .Basis(.N(n))), i: .Zero)
     }
     
-    public static prefix func * (lhs: ComplexBasis) -> ComplexBasis {
-        return ComplexBasis(r: lhs.r, i: -lhs.i).eval()
+    public static prefix func * (lhs: ComplexBasis) throws -> ComplexBasis {
+        return try ComplexBasis(r: lhs.r, i: -lhs.i).eval()
     }
     
-    static func / (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis {
+    static func / (lhs: ComplexBasis, rhs: ComplexBasis) throws -> ComplexBasis {
         //compiling never ends
         let a1 = lhs.r
         let b1 = lhs.i
@@ -31,24 +31,24 @@ public struct ComplexBasis: FieldBasis {
         let a1b2 = a1 * b2
         let r = (a1a2 + b1b2) / a22_b22
         let i = (b1a2 - a1b2) / a22_b22
-        return ComplexBasis(r: r, i: i).eval()
+        return try ComplexBasis(r: r, i: i).eval()
     }
     
     
-    public static prefix func ~ (lhs: ComplexBasis) -> ComplexBasis {
-        return (*lhs / (lhs * *lhs)).eval()
+    public static prefix func ~ (lhs: ComplexBasis) throws -> ComplexBasis {
+        return try (*lhs / (lhs * *lhs)).eval()
     }
     
     public static prefix func - (lhs: ComplexBasis) -> ComplexBasis {
-        return ComplexBasis(r: -lhs.r, i: -lhs.i).eval()
+        return ComplexBasis(r: -lhs.r, i: -lhs.i)
     }
     
-    static func - (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis {
-        return ComplexBasis(r: lhs.r - rhs.r, i: lhs.i - rhs.i).eval()
+    static func - (lhs: ComplexBasis, rhs: ComplexBasis) throws -> ComplexBasis {
+        return try ComplexBasis(r: lhs.r - rhs.r, i: lhs.i - rhs.i).eval()
     }
     
-    public static func + (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis {
-        return ComplexBasis(r: lhs.r + rhs.r, i: lhs.i + rhs.i).eval()
+    public static func + (lhs: ComplexBasis, rhs: ComplexBasis) throws -> ComplexBasis {
+        return try ComplexBasis(r: lhs.r + rhs.r, i: lhs.i + rhs.i).eval()
     }
     
     let r:Real
@@ -61,15 +61,17 @@ public struct ComplexBasis: FieldBasis {
     public static var Id: ComplexBasis {
         return ComplexBasis(r: Real.Id, i: Real.Zero)
     }
-    
-    func eval() -> ComplexBasis {
-        ComplexBasis(r: r.eval(), i: i.eval())
+    public static var _Id: ComplexBasis {
+        return ComplexBasis(r: Real._Id, i: Real.Zero)
+    }
+    func eval() throws -> ComplexBasis {
+        try ComplexBasis(r: r.eval(), i: i.eval())
     }
     
-    public static func * (lhs: ComplexBasis, rhs: ComplexBasis) -> ComplexBasis {
+    public static func * (lhs: ComplexBasis, rhs: ComplexBasis) throws -> ComplexBasis {
         let img = (lhs.r * rhs.i) + (lhs.i * rhs.r)
         let real = (lhs.r * rhs.r) - (lhs.i * rhs.i)
-        return ComplexBasis(r: real, i: img).eval()
+        return try ComplexBasis(r: real, i: img).eval()
     }
     
 }

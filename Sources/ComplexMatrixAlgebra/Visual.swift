@@ -167,7 +167,7 @@ func gprettify<A:Prettifiable>(fieldOp:FieldOperators<A>)->A {
         case let .Monoid(x):
             switch x {
             case let .Mul(m):
-                let (s,b,_a) = decomposeMul(m.l * m.r)
+                let (s,b,_a) = try! decomposeMul(m.l * m.r)
                 guard let a = _a else {
                     if s {
                         return A(element: .Basis(b))
@@ -375,14 +375,14 @@ extension Matrix: Latexable where F:Latexable{
         }
     }
 }
-func decomposeMul<A:Field>(_ term:A)-> (Bool, A.B, A?) {
+func decomposeMul<A:Field>(_ term:A) throws -> (Bool, A.B, A?) {
     if case let .Negate(n) = term.abelianOp {
-        let (s,b,a) = decomposeMul(n)
+        let (s,b,a) = try decomposeMul(n)
         return (!s, b, a)
     }
     if case let .Mul(b) = term.mmonoidOp {
-        let (ls, lb, la) = decomposeMul(b.l)
-        let (rs, rb, ra) = decomposeMul(b.r)
+        let (ls, lb, la) = try decomposeMul(b.l)
+        let (rs, rb, ra) = try decomposeMul(b.r)
         let aa:A?
         if let la = la {
             if let ra = ra { aa = la * ra}
@@ -392,12 +392,12 @@ func decomposeMul<A:Field>(_ term:A)-> (Bool, A.B, A?) {
             else { aa = nil }
         }
         
-        return (ls == rs, lb * rb, aa)
+        return try (ls == rs, lb * rb, aa)
     }
     if case let .Basis(b) = term.element {
         if let r = b as? RealBasis  {
             if r.less0 {
-                return (false, -b, nil)
+                return try (false, -b, nil)
             } else {return (true, b, nil)}
         } else {
             return (true, b, nil)

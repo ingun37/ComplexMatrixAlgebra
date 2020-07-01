@@ -55,6 +55,9 @@ public struct List<T> {
     public func fmap<Q>(_ f:@escaping (T)->Q) -> List<Q> {
         return List<Q>(f(head), tail.map(f))
     }
+    public func fmap<Q>(_ f:@escaping  (T)throws->Q) throws -> List<Q> {
+        return try List<Q>(f(head), tail.map(f))
+    }
     public static func + (lhs: List, rhs: List) -> List {
         return List(lhs.head, lhs.tail + rhs.all)
     }

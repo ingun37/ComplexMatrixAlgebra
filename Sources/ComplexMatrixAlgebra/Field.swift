@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol FieldBasis: RingBasis & MAbelianBasis {
-    static prefix func * (lhs: Self) -> Self
+    static prefix func * (lhs: Self) throws -> Self
     static func whole(n:Int)->Self
 }
 
@@ -19,25 +19,25 @@ public protocol Field:Ring & MAbelian where B:FieldBasis {
 }
 
 public indirect enum FieldOperators<A:Field>: Operator {
-    public func eval() -> A {
+    public func eval() throws -> A {
         switch self {
         case let .Mabelian(mab):
             if case let .Monoid(.Mul(_b)) = mab {
-                let l = _b.l.eval()
-                let r = _b.r.eval()
+                let l = try _b.l.eval()
+                let r = try _b.r.eval()
 
-                let evaledAsRing = RingOperators<A>.MMonoid(.Mul(.init(l: l, r: r))).eval()
+                let evaledAsRing = try RingOperators<A>.MMonoid(.Mul(.init(l: l, r: r))).eval()
                 if l*r != evaledAsRing {
                     return evaledAsRing
                 }
             }
-            return mab.eval()
+            return try mab.eval()
         case let .Abelian(abe):
-            return abe.eval()
+            return try abe.eval()
 
         case .Power(base: let _base, exponent: let _exponent):
-            let base = _base.eval()
-            let exponent = _exponent.eval()
+            let base = try _base.eval()
+            let exponent = try _exponent.eval()
             if exponent == .Zero {
                 return .Id
             } else if exponent == .Id {
@@ -47,17 +47,17 @@ public indirect enum FieldOperators<A:Field>: Operator {
             }
             return .init(fieldOp: .Power(base: base, exponent: exponent))
         case let .Conjugate(xx):
-            let x = xx.eval()
+            let x = try xx.eval()
             switch x.element {
             case let .Basis(n):
-                return .init(element: .Basis(*n))
+                return try .init(element: .Basis(*n))
             default: break
             }
             return .init(fieldOp: .Conjugate(x))
         case let .Determinant(m):
-            let m = m.eval()
+            let m = try m.eval()
             if case let .e(.Basis(m)) = m.c {
-                if let d = m.determinant {
+                if let d = try m.determinant() {
                     return d
                 }
             }

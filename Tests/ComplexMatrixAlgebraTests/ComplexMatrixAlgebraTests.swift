@@ -17,10 +17,10 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         case MC(Matrix<Complex>)
     }
     func genLine<T:Field & Prettifiable & Latexable>(_ x:T)-> String {
-        return "$$\n" + (x).latex() + "=" + (x.eval().prettyfy()).latex() + "\n$$"
+        return try! "$$\n" + (x).latex() + "=" + (x.eval().prettyfy()).latex() + "\n$$"
     }
     func genLine<F:Field & Prettifiable & Latexable>(_ x:Matrix<F>)-> String {
-        return "$$\n" + (x).latex() + "=" + (x.eval().prettyfy()).latex() + "\n$$"
+        return try! "$$\n" + (x).latex() + "=" + (x.eval().prettyfy()).latex() + "\n$$"
     }
     func testOutput() {
         
@@ -73,43 +73,43 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         // results.
         XCTAssertEqual(ComplexMatrixAlgebra().text, "Hello, World!")
         
-        expect((3.real.f + -3.real.f).eval()).to(equal(0.real.f))
-        expect((2.real.f * 4.real.f).eval()).to(equal(8.real.f))
-        expect((2.real.f * 0.5.real.f).eval()).to(equal(1.real.f))
+        expect(try (3.real.f + -3.real.f).eval()).to(equal(0.real.f))
+        expect(try (2.real.f * 4.real.f).eval()).to(equal(8.real.f))
+        expect(try (2.real.f * 0.5.real.f).eval()).to(equal(1.real.f))
         // 1/2 * 2 = 1
-        expect((Rational(1,2).real.f * 2.real.f).eval()).to(equal(1.real.f))
+        expect(try (Rational(1,2).real.f * 2.real.f).eval()).to(equal(1.real.f))
         // 1 - 2 = -1
-        expect((1.real.f - 2.real.f).eval()).to(equal((-1).real.f))
-        expect(("x".rvar + 0.real.f).eval()).to(equal("x".rvar))
+        expect(try (1.real.f - 2.real.f).eval()).to(equal((-1).real.f))
+        expect(try ("x".rvar + 0.real.f).eval()).to(equal("x".rvar))
             
         /**
          Terms are distributed otherwise compiling won't end.
          */
         do {
             let x = 1.real.f + "x".rvar
-            expect((x + 1.real.f).eval()).to(equal(2.real.f + "x".rvar))
+            expect(try (x + 1.real.f).eval()).to(equal(2.real.f + "x".rvar))
         }
         
-        expect((4.real.f / (-2).real.f).eval()).to(equal((-2).real.f))
+        expect(try (4.real.f / (-2).real.f).eval()).to(equal((-2).real.f))
             
         do {
             let x = (-3.real.f * "x".rvar)
             let y = (x * (-4).real.f)
-            expect((y * "y".rvar).eval()).to(equal(12.real.f * "x".rvar * "y".rvar))
+            expect(try (y * "y".rvar).eval()).to(equal(12.real.f * "x".rvar * "y".rvar))
         }
         
-        expect((4.complex(i: 3).f/3.complex(i: 4).f).eval()).to(equal(24.on(25).complex(i: (-7).on(25)).f))
+        expect(try (4.complex(i: 3).f/3.complex(i: 4).f).eval()).to(equal(24.on(25).complex(i: (-7).on(25)).f))
         expect(
-            (~(3.complex(i: 4).f)).eval()
+            try (~(3.complex(i: 4).f)).eval()
         ).to(equal(
-            3.on(25).complex(i: -4.on(25)).f.eval()
+            try! 3.on(25).complex(i: -4.on(25)).f.eval()
         ))
         
-        expect((2.complex(i: 3).f * 3.complex(i: 4).f).eval()).to(equal((-6).complex(i: 17).f))
+        expect(try (2.complex(i: 3).f * 3.complex(i: 4).f).eval()).to(equal((-6).complex(i: 17).f))
         
         
-        expect(Real(fieldOp: .Power(base: 2.real.f, exponent: 2.real.f)).eval()).to(equal(4.real.f))
-        expect(Real(fieldOp: .Power(base: 2.real.f, exponent: (-2).real.f)).eval()).to(equal(1.on(4).real.f))
+        expect(try Real(fieldOp: .Power(base: 2.real.f, exponent: 2.real.f)).eval()).to(equal(4.real.f))
+        expect(try Real(fieldOp: .Power(base: 2.real.f, exponent: (-2).real.f)).eval()).to(equal(1.on(4).real.f))
         
 //        expect(RealBasis.N(2)^2).to(equal(RealBasis.N(4)))
 //        expect(RealBasis.N(2)^(-2)).to(equal(RealBasis.Q(1.on(4))))
@@ -119,17 +119,17 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let aoeu = (uc^2.real.f) * (cu^2.real.f)
 //        expect(aoeu.eval()).to(equal(cu^(4.real.f)))
         let auhs = 3.complex(i: 4).f
-        expect((~auhs).eval()).to(equal(3.on(25).complex(i: (-4).on(25)).f))
+        expect(try (~auhs).eval()).to(equal(3.on(25).complex(i: (-4).on(25)).f))
         
         let zz = 3.complex(i: 4).f
-        expect((zz * *zz).eval()).to(equal(25.complex(i: 0).f))
+        expect(try (zz * *zz).eval()).to(equal(25.complex(i: 0).f))
         
         let m0 = [[(0,0)],].matrix()
 
         let m1 = [[(1,0),(0,-1)],
                   [(1,1),(4,-1)]].matrix()
         
-        expect((m0 + m1).eval()).to(equal(m1))
+        expect(try (m0 + m1).eval()).to(equal(m1))
         
         let m2 = [[(0,1),(1,-1)],
                   [(2,-3),(4,0)]].matrix()
@@ -141,19 +141,19 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
                            [(3,-2),(8,-1)]].matrix()
         let expectedScaleBy2 = [[(0,2),(2,-2)],
                                 [(4,-6),(8,0)]].matrix()
-        expect((m1 * m2).eval()).to(equal(expectedMul))
-        expect((m1 + m2).eval()).to(equal(expectedAdd))
-        expect(((2.complex(i: 0).f * m2)).eval()).to(equal(expectedScaleBy2))
+        expect(try (m1 * m2).eval()).to(equal(expectedMul))
+        expect(try (m1 + m2).eval()).to(equal(expectedAdd))
+        expect(try ((2.complex(i: 0).f * m2)).eval()).to(equal(expectedScaleBy2))
         
         let mxx = [[1, 5, 0],
                    [2, 4,-1],
                    [0,-2, 0]].matrix()
-        expect(Complex.init(fieldOp: .Determinant(mxx)).eval()).to(equal((-2).complex(i: 0).f))
+        expect(try Complex.init(fieldOp: .Determinant(mxx)).eval()).to(equal((-2).complex(i: 0).f))
         
         
         let myx = [[ 2, 5],
                    [-3,-7]].rmatrix()
-        expect(Matrix<Real>.init(.o(.Inverse(myx))).eval()).to(equal([[-7,-5],[3,2]].rmatrix()))
+        expect(try Matrix<Real>.init(.o(.Inverse(myx))).eval()).to(equal([[-7,-5],[3,2]].rmatrix()))
 
         let rm = [[0, 3, -6, 6, 4, -5],
                     [3, -7, 8, -5, 8, 9],
@@ -161,7 +161,7 @@ final class ComplexMatrixAlgebraTests: XCTestCase {
         let rmexppp = [[1, 0, -2, 3, 0, -24],
                        [0, 1, -2, 2, 0, -7],
                        [0, 0,  0, 0, 1, 4]].rmatrix()
-        expect(Matrix<Real>.init(.o(.ReducedEchelon(rm))).eval()).to(equal(rmexppp))
+        expect(try Matrix<Real>.init(.o(.ReducedEchelon(rm))).eval()).to(equal(rmexppp))
     }
     static var allTests = [
         ("testExample", testExample),

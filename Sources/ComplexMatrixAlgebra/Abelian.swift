@@ -15,12 +15,12 @@ public indirect enum AbelianOperator<A:Abelian>:Operator {
     case Subtract(A,A)
     case Negate(A)
     
-    public func eval() -> A {
+    public func eval() throws -> A {
         switch self {
         case let .Monoid(mon):
             if case let .Add(bin) = mon {
-                let l = bin.l.eval()
-                let r = bin.r.eval()
+                let l = try bin.l.eval()
+                let r = try bin.r.eval()
                 
                 if case let .Negate(l) = l.abelianOp {
                     if l == r {
@@ -38,39 +38,39 @@ public indirect enum AbelianOperator<A:Abelian>:Operator {
                     
                     // commutativity (x+y)+r = (x+r)+y
                     let alter2 = x + r
-                    let aeval2 = alter2.eval()
+                    let aeval2 = try alter2.eval()
                     if alter2 != aeval2 {
-                        return (aeval2 + y).eval()
+                        return try (aeval2 + y).eval()
                     }
                 }
                 if case let .Add(radd) = r.amonoidOp {
                     let (x,y) = (radd.x, radd.y)
                     // commutativity l+(x+y) = x+(l+y)
                     let alter1 = l+y
-                    let aeval1 = alter1.eval()
+                    let aeval1 = try alter1.eval()
                     if alter1 != aeval1 {
-                        return (x+aeval1).eval()
+                        return try (x+aeval1).eval()
                     }
                 }
             }
-            return mon.eval()
+            return try mon.eval()
         case let .Subtract(l, r):
-            return (l + -r).eval()
+            return try (l + -r).eval()
         case let .Negate(x):
-            let x = x.eval()
+            let x = try x.eval()
             switch x.element {
-            case let .Basis(x): return .init(element: .Basis(-x))
+            case let .Basis(x): return try .init(element: .Basis(-x))
             default: break
             }
             switch x.amonoidOp {
-            case let .Add(bin): return ((-bin.l) + (-bin.r)).eval()
+            case let .Add(bin): return try ((-bin.l) + (-bin.r)).eval()
             default: break
             }
             switch x.abelianOp {
             case let .Negate(x):
                 return x
             case let .Subtract(l, r):
-                return (r - l).eval()
+                return try (r - l).eval()
             default: break
             }
         default: break

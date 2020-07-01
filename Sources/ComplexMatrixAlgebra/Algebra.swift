@@ -13,7 +13,7 @@ public indirect enum Element<B:Basis>:Hashable {
 }
 public protocol Operator:Hashable {
     associatedtype A:Algebra
-    func eval() -> A
+    func eval() throws -> A
 }
 public indirect enum Construction<A:Algebra>: Hashable {
     case e(A.E)
@@ -49,7 +49,7 @@ extension Algebra {
         case let .e(e): return nil
         }
     }
-    public func eval() -> Self {
+    public func eval() throws -> Self {
         
         var cached:Self?
         lock.lock()
@@ -60,7 +60,7 @@ extension Algebra {
             return cached
         }
         
-        let result = o?.eval() ?? self
+        let result = try o?.eval() ?? self
         
         lock.lock()
         Self.cache?[self.hashValue] = result
@@ -117,8 +117,8 @@ extension AssociativeBinary {
         return xs.fzip(ys).fmap(==).reduce({$0 && $1})
 //        return zip(xs, ys).map(==).reduce(true, {$0 && $1})
     }
-    var eachEvaled: Self {
-        return .init(l: l.eval(), r: r.eval())
+    func eachEvaled() throws -> Self {
+        return try .init(l: l.eval(), r: r.eval())
     }
 }
 public protocol CommutativeBinary:AssociativeBinary {}

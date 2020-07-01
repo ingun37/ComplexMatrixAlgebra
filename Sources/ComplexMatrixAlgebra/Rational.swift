@@ -13,7 +13,10 @@ public enum AlgebraError: Error {
 }
 public struct Rational: Hashable {
     public let r:NumberKit.Rational<Int>
-    public init(_ numer: Int, _ denom:Int)  {
+    public init(_ numer: Int, _ denom:Int) throws {
+        guard denom != 0 else {
+            throw AlgebraError.DivisionByZero
+        }
         r = NumberKit.Rational(numer, denom)
     }
     public init(_ r:NumberKit.Rational<Int>) { self.r = r}

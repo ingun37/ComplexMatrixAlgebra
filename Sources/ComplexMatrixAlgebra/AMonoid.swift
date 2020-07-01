@@ -9,36 +9,36 @@ import Foundation
 
 public indirect enum AMonoidOperators<A:AMonoid>:Operator {
     case Add(A.ADD)
-    public func eval() -> A {
+    public func eval() throws -> A {
         switch self {
         case let .Add(b):
-            let l = b.l.eval()
-            let r = b.r.eval()
+            let l = try b.l.eval()
+            let r = try b.r.eval()
             
             if l == .Zero { return r }
             if r == .Zero { return l }
             
             if case let .Basis(lb) = l.element {
                 if case let .Basis(rb) = r.element {
-                    return A(element: .Basis(lb + rb))
+                    return try A(element: .Basis(lb + rb))
                 }
             }
             
             if case let .Add(lm) = l.amonoidOp {
                 //(xy)r = x(yr)
                 let alter = (lm.r + r)
-                let aeval = alter.eval()
+                let aeval = try alter.eval()
                 if alter != aeval {
-                    return (lm.l + aeval).eval()
+                    return try (lm.l + aeval).eval()
                 }
             }
             
             if case let .Add(rm) = r.amonoidOp {
                 //l(xy) = (lx)y
                 let alter = (l + rm.l)
-                let aeval = alter.eval()
+                let aeval = try alter.eval()
                 if alter != aeval {
-                    return (aeval + rm.r).eval()
+                    return try (aeval + rm.r).eval()
                 }
             }
             
@@ -49,7 +49,7 @@ public indirect enum AMonoidOperators<A:AMonoid>:Operator {
 }
 
 public protocol AMonoidBasis:Basis {
-    static func + (l:Self, r:Self)->Self
+    static func + (l:Self, r:Self)throws->Self
     static var Zero:Self {get}
 }
 public protocol AMonoid:Algebra where B:AMonoidBasis {

@@ -7,7 +7,7 @@
 
 import Foundation
 public protocol MAbelianBasis:MMonoidBasis {
-    static prefix func ~ (l:Self)->Self
+    static prefix func ~ (l:Self) throws ->Self
 }
 
 public indirect enum MAbelianOperator<A:MAbelian>:Operator {
@@ -15,12 +15,12 @@ public indirect enum MAbelianOperator<A:MAbelian>:Operator {
     case Quotient(A,A)
     case Inverse(A)
     
-    public func eval() -> A {
+    public func eval() throws -> A {
         switch self {
         case let .Monoid(mon):
             if case let .Mul(_b) = mon {
-                let l = _b.l.eval()
-                let r = _b.r.eval()
+                let l = try _b.l.eval()
+                let r = try _b.r.eval()
                 
                 if case let .Inverse(l) = l.mabelianOp {
                     if l == r {
@@ -36,40 +36,40 @@ public indirect enum MAbelianOperator<A:MAbelian>:Operator {
                 if case let .Mul(lm) = l.mmonoidOp {
                     if (true) {//(x*y)*r = (x*r)*y
                         let alter = (lm.x * r)
-                        let aeval = alter.eval()
+                        let aeval = try alter.eval()
                         if alter != aeval {
-                            return (aeval * lm.y).eval()
+                            return try (aeval * lm.y).eval()
                         }
                     }
                 }
                 if case let .Mul(rm) = r.mmonoidOp {
                     if (true) {//l(xy) = x(ly)
                         let alter = (l * rm.y)
-                        let aeval = alter.eval()
+                        let aeval = try alter.eval()
                         if alter != aeval {
-                            return (rm.x * aeval).eval()
+                            return try (rm.x * aeval).eval()
                         }
                     }
                 }
             }
-            return mon.eval()
+            return try mon.eval()
         case let .Quotient(l, r):
-            return (l * ~r).eval()
+            return try (l * ~r).eval()
         case let .Inverse(x):
-            let x = x.eval()
+            let x = try x.eval()
             switch x.element {
-            case let .Basis(x): return .init(element: .Basis(~x))
+            case let .Basis(x): return try .init(element: .Basis(~x))
             default: break
             }
             switch x.mmonoidOp {
-            case let .Mul(bin): return ((~bin.l) * (~bin.r)).eval()
+            case let .Mul(bin): return try ((~bin.l) * (~bin.r)).eval()
             default: break
             }
             switch x.mabelianOp {
             case let .Inverse(x):
-                return x.eval()
+                return try x.eval()
             case let .Quotient(l, r):
-                return (r / l).eval()
+                return try (r / l).eval()
             default: break
             }
         default: break

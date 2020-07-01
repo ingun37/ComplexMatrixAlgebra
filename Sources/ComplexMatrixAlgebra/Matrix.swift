@@ -68,23 +68,23 @@ public struct Mat<F:Field>:Hashable {
         }
         return .init(e: newE)
     }
-    public static func * (l:F, r:Self)->Self {
-        let newE = r.e.fmap { (row) in
-            row.fmap { (e) in
-                (l*e).eval()
+    public static func * (l:F, r:Self) throws ->Self {
+        let newE = try r.e.fmap { (row) in
+            try row.fmap { (e) in
+                try (l*e).eval()
             }
         }
         return .init(e: newE)
     }
-    public static func + (l:Self, r:Self)->Self {
+    public static func + (l:Self, r:Self) throws ->Self {
         let maxRow = max(l.rowLen, r.rowLen)
         let maxCol = max(l.colLen, r.colLen)
         let dim = (maxRow, maxCol)
         let newL = l.fit(to: dim)
         let newR = r.fit(to: dim)
         
-        let newElements = newL.e.fzip(newR.e).fmap { (l,r) in
-            l.fzip(r).fmap(+).fmap({$0.eval()})
+        let newElements = try newL.e.fzip(newR.e).fmap { (l,r) in
+            try l.fzip(r).fmap(+).fmap({try $0.eval()})
         }
         return (.init(e: newElements))
     }
@@ -96,13 +96,13 @@ public struct Mat<F:Field>:Hashable {
             }
         }
     }
-    public static func * (l:Self, r:Self)->Self {
+    public static func * (l:Self, r:Self) throws ->Self {
         let mx = max(l.colLen, r.rowLen)
         let newL = l.fit(to: (l.rowLen, mx))
         let newR = r.fit(to: (mx, r.colLen))
-        let newElems = newL.rows.fmap { (lrow) in
-            newR.cols.fmap { (rcol) in
-                lrow.fzip(rcol).fmap(*).reduce(+).eval()
+        let newElems = try newL.rows.fmap { (lrow) in
+            try newR.cols.fmap { (rcol) in
+                try lrow.fzip(rcol).fmap(*).reduce(+).eval()
             }
         }
         return .init(e: newElems)
@@ -125,34 +125,34 @@ public struct Mat<F:Field>:Hashable {
         }
         return nil
     }
-    public var determinant:F {
-        return List<Int>.rng(colLen).fmap { (c)->F in
+    public func determinant()throws->F {
+        return try List<Int>.rng(colLen).fmap { (c)->F in
             if let subMatrix = self.without(row: 0, col: c) {
-                return (F._Id^F.B.whole(n: c).asNumber(F.self)) * self.col(c).head * subMatrix.determinant
+                return try (F._Id^F.B.whole(n: c).asNumber(F.self)) * self.col(c).head * subMatrix.determinant()
             } else {
                 return self.row(0).all[c]
             }
         }.reduce(+).eval()
     }
-    public func cofactor(i:Int, j:Int)-> F? {
-        if let detAij = without(row: i, col: j)?.determinant {
+    public func cofactor(i:Int, j:Int)throws-> F? {
+        if let detAij = try without(row: i, col: j)?.determinant() {
             let co = F._Id^F.B.whole(n: i+j).asNumber(F.self)
             return co * detAij
         } else {
             return nil
         }
     }
-    public var inversed:Self? {
-        let cofacs = join(optionals: (0..<rowLen).map { (row) in
-            join(optionals: (0..<colLen).map { (col) in
-                cofactor(i: col, j: row)
+    public func inversed()throws->Self? {
+        let cofacs = try join(optionals: (0..<rowLen).map { (row) in
+            try join(optionals: (0..<colLen).map { (col) in
+                try cofactor(i: col, j: row)
             })?.decompose()
         })?.decompose()
         guard let cofactors = cofacs else { return nil }
         let coMat = Mat(e: cofactors)
-        return (~determinant).eval() * coMat
+        return try (~determinant()).eval() * coMat
     }
-    public var echelon:Self {
+    public func echelon()throws->Self {
         let nonZeroTopEntry = rows.reduceR({ (end) in
             List(end)
         }, { (prev, newRows) in
@@ -165,7 +165,7 @@ public struct Mat<F:Field>:Hashable {
         
         if nonZeroTopEntry.head.head == .Zero {
             let nx = without(col: 0)
-            if let nx_rdc = nx?.echelon {
+            if let nx_rdc = try nx?.echelon() {
                 let newRows = nx_rdc.rows.fmap({List(.Zero) + $0})
                 return .init(e: newRows)
             } else {
@@ -174,29 +174,29 @@ public struct Mat<F:Field>:Hashable {
         }
         guard let Trows = nonZeroTopEntry.tail.decompose() else { return self }
         let h = nonZeroTopEntry.head
-        let Zrows = Trows.fmap { (Tn) -> List<F> in
+        let Zrows = try Trows.fmap { (Tn) -> List<F> in
             let bn = Tn.head
             let co = (-bn)/h.head
-            return Tn.fzip(h).fmap({(t,h) in (t + (co * h)).eval()})
+            return try Tn.fzip(h).fmap({(t,h) in try (t + (co * h)).eval()})
         }
         
-        let Z = Mat(e: Zrows).echelon
+        let Z = try Mat(e: Zrows).echelon()
         
         return Mat(e: List(h) + Z.rows)
     }
     
-    public var reducedEchelon:Self {
-        let ech = echelon
+    public func reducedEchelon()throws->Self {
+        let ech = try echelon()
         var rows = ech.rows.all
         for i in (0..<rows.count).reversed() {
             let row = rows[i]
             guard let entryIdx = row.entryIdx else { continue }
             let entry = row.all[entryIdx]
-            let row2 = ~entry * row
+            let row2 = try ~entry * row
             rows[i] = row2
             for j in (0..<i) {
                 let rowj = rows[j]
-                rows[j] = rowj.subtract(rowj.all[entryIdx] * row2)
+                rows[j] = try rowj.subtract(rowj.all[entryIdx] * row2)
             }
         }
         return Mat(e: rows.decompose()!)
@@ -249,7 +249,8 @@ public struct Matrix<F:Field>:Ring {
 
 public enum MatrixBasis<F:Field>:RingBasis {
     public static var Id: MatrixBasis<F> {return .id(.Id)}
-    
+    public static var _Id: MatrixBasis<F> {return .id(._Id)}
+
     public static var Zero: MatrixBasis<F> {return .zero}
     
     case zero
@@ -259,60 +260,60 @@ public enum MatrixBasis<F:Field>:RingBasis {
     public static prefix func - (l: Self) -> Self {
         switch l {
         case .zero: return .zero
-        case let .id(f): return .id((-f).eval())
+        case let .id(f): return .id((-f))
         case let .Matrix(e):
             let newE = e.e.fmap { (row) in
                 row.fmap { (e) in
-                    (-e).eval()
+                    (-e)
                 }
             }
             return .Matrix(.init(e: newE))
         }
     }
     
-    public static func * (l:Self, r:Self)->Self {
+    public static func * (l:Self, r:Self) throws ->Self {
         switch (l,r) {
         case let (.zero,_): return .zero
         case let (_,.zero): return .zero
 
-        case let (.id(x),.id(y)): return .id((x * y).eval())
-        case let (.id(f),.Matrix(_)): return f * r
+        case let (.id(x),.id(y)): return .id(try (x * y).eval())
+        case let (.id(f),.Matrix(_)): return try f * r
 
-        case let (.Matrix(_),.id(f)):   return f * l
-        case let (.Matrix(x),.Matrix(y)): return .Matrix(x * y)
+        case let (.Matrix(_),.id(f)):   return try f * l
+        case let (.Matrix(x),.Matrix(y)): return try .Matrix(x * y)
         }
 
     }
     
-    public static func * (l:F, r:MatrixBasis)->MatrixBasis {
+    public static func * (l:F, r:MatrixBasis)throws ->MatrixBasis {
         switch r {
         case .zero: return .zero
-        case let .id(f): return .id((l*f).eval())
+        case let .id(f): return .id(try (l*f).eval())
         case let .Matrix(e):
-            return .Matrix(l * e)
+            return try .Matrix(l * e)
         }
 
     }
     
-    public static func + (l:MatrixBasis, r:MatrixBasis)->MatrixBasis {
+    public static func + (l:MatrixBasis, r:MatrixBasis) throws ->MatrixBasis {
         switch (l,r) {
         case let (.zero, x): return x
         case let (x, .zero): return x
-        case let (.id(f),.id(ff)): return .id((f+ff).eval())
+        case let (.id(f),.id(ff)): return try .id( (f+ff).eval())
         case let (.id(f),.Matrix(m)):
-            return .Matrix( (f * m.id) + m)
+            return try .Matrix( (f * m.id) + m)
         case let (.Matrix(m),.id(f)):
-            return .Matrix(m + (f * m.id))
+            return try .Matrix(m + (f * m.id))
         case let (.Matrix(l),.Matrix(r)):
-            return .Matrix(l + r)
+            return try .Matrix(l + r)
         }
     }
     
-    var determinant:F? {
+    func determinant()throws->F? {
         switch self {
         case .zero: return .Zero
         case let .id(f): return nil
-        case let .Matrix(m): return m.determinant
+        case let .Matrix(m): return try m.determinant()
         }
     }
     
@@ -324,10 +325,10 @@ public enum MatrixBasis<F:Field>:RingBasis {
 
         case let (.id(x),.zero): return x == .Zero
         case let (.id(x),.id(y)): return x == y
-        case let (.id(f),.Matrix(m)): return m.id.dim == m.dim && m == (f * m.id)
+        case let (.id(f),.Matrix(m)): return m.id == m
 
-        case let (.Matrix(m),.zero): return rhs == lhs
-        case let (.Matrix(m),.id(y)): return rhs == lhs
+        case let (.Matrix(m),.zero): return  rhs == lhs
+        case let (.Matrix(m),.id(y)): return  rhs == lhs
         case let (.Matrix(x),.Matrix(y)): return x == y
         }
     }
@@ -358,62 +359,62 @@ public struct MatrixAddition<F:Field>:CommutativeAddition {
 }
 public indirect enum MatrixOp<F:Field>:Operator {
     public typealias A = Matrix<F>
-    public func eval() -> A {
+    public func eval() throws -> A {
         switch self {
         case let .Scale(s, m):
-            let s = s.eval()
-            let m = m.eval()
+            let s = try s.eval()
+            let m = try m.eval()
             
             switch m.o {
-            case let .Scale(s2, m): return Self.Scale(s*s2, m).matrix.eval()
+            case let .Scale(s2, m): return try Self.Scale(s*s2, m).matrix.eval()
             default: break
             }
             
             switch m.amonoidOp {
-            case let .Add(b): return ((s * b.l) + (s * b.r)).eval()
+            case let .Add(b): return try ((s * b.l) + (s * b.r)).eval()
             default: break
             }
             
             switch m.element {
-            case let .Basis(m): return .init(element: .Basis(s * m))
+            case let .Basis(m): return try .init(element: .Basis(s * m))
             default: break
             }
             
             return s * m
         case let .Ring(ring):
-            return ring.eval()
+            return try ring.eval()
         case let .Inverse(m):
-            let m = m.eval()
+            let m = try m.eval()
             if case let .Basis(mb) = m.element {
                 switch mb {
-                case let .id(f): return .init(element: .Basis(.id((~f).eval())))
+                case let .id(f): return try .init(element: .Basis(.id((~f).eval())))
                 case .zero: return m
                 case let .Matrix(mat):
-                    if let inv = mat.inversed {
+                    if let inv = try mat.inversed() {
                         return .init(element: .Basis(.Matrix(inv)))
                     }
                 }
             }
             return .init(.o(.Inverse(m)))
         case let .Echelon(m):
-            let m = m.eval()
+            let m = try m.eval()
             if case let .Basis(mb) = m.element {
                 switch mb {
                 case let .id(f): return .init(element: .Basis(mb))
                 case .zero: return .init(element: .Basis(mb))
                 case let .Matrix(m):
-                    return .init(element: .Basis(.Matrix(m.echelon)))
+                    return try .init(element: .Basis(.Matrix(m.echelon())))
                 }
             }
             return .init(.o(.Echelon(m)))
         case let .ReducedEchelon(m):
-            let m = m.eval()
+            let m = try m.eval()
             if case let .Basis(mb) = m.element {
                 switch mb {
                 case let .id(f): return .init(element: .Basis(mb))
                 case .zero: return .init(element: .Basis(mb))
                 case let .Matrix(m):
-                    return .init(element: .Basis(.Matrix(m.reducedEchelon)))
+                    return try .init(element: .Basis(.Matrix(m.reducedEchelon())))
                 }
             }
             return .init(.o(.ReducedEchelon(m)))
@@ -434,13 +435,13 @@ extension List where T:Field {
     var entryIdx:Int? {
         return all.firstIndex(where: {$0 != .Zero})
     }
-    static func * (l:T, r:Self)->Self {
-        return r.fmap({(l * $0).eval()})
+    static func * (l:T, r:Self)throws ->Self {
+        return try r.fmap({try (l * $0).eval()})
     }
-    func add(_ to:Self)->Self {
-        return fzip(to).fmap(+).fmap({$0.eval()})
+    func add(_ to:Self)throws ->Self {
+        return try fzip(to).fmap(+).fmap({try $0.eval()})
     }
-    func subtract(_ by:Self)->Self {
-        return fzip(by).fmap(-).fmap({$0.eval()})
+    func subtract(_ by:Self)throws ->Self {
+        return try fzip(by).fmap(-).fmap({try $0.eval()})
     }
 }

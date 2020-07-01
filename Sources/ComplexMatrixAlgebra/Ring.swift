@@ -7,6 +7,7 @@
 
 import Foundation
 public protocol RingBasis:AbelianBasis, MMonoidBasis {
+    static var _Id:Self {get}
 }
 extension RingBasis {
     func asNumber<R:Ring>(_ a:R.Type) -> R where R.B == Self{
@@ -24,34 +25,34 @@ public indirect enum RingOperators<A:Ring>:Operator {
     case MMonoid(A.MMonO)
     case Abelian(A.AbelianO)
     
-    public func eval() -> A {
+    public func eval() throws -> A {
         switch self {
         case let .MMonoid(mon):
             if case let .Mul(_b) = mon {
-                let l = _b.l.eval()
-                let r = _b.r.eval()
+                let l = try _b.l.eval()
+                let r = try _b.r.eval()
                 
                 if l == .Zero || r == .Zero {
                     return .Zero
                 }
                 
                 if case let .Negate(nl) = l.abelianOp {
-                    return A(abelianOp: .Negate(nl * r)).eval()
+                    return try A(abelianOp: .Negate(nl * r)).eval()
                 }
                 if case let .Negate(nr) = r.abelianOp {
-                    return A(abelianOp: .Negate(l * nr)).eval()
+                    return try A(abelianOp: .Negate(l * nr)).eval()
                 }
                 
                 if case let .Add(ladd) = l.amonoidOp {
-                    return ((ladd.l * r) + (ladd.r * r)).eval()
+                    return try ((ladd.l * r) + (ladd.r * r)).eval()
                 }
                 if case let .Add(radd) = r.amonoidOp {
-                    return ((l * radd.l) + (l * radd.r)).eval()
+                    return try ((l * radd.l) + (l * radd.r)).eval()
                 }
             }
-            return mon.eval()
+            return try mon.eval()
         case let .Abelian(abe):
-            return abe.eval()
+            return try abe.eval()
         }
     }
 }
@@ -66,7 +67,7 @@ func flatRingMul<A:Ring>(_ x:A)-> List<A> {
 }
 extension Ring {
     public static var Id:Self { return .init(element: .Basis(.Id)) }
-    public static var _Id:Self { return .init(element: .Basis(-.Id)) }
+    public static var _Id:Self { return .init(element: .Basis(._Id)) }
     
     public init(abelianOp: AbelianO) {
         self.init(ringOp: .Abelian(abelianOp))

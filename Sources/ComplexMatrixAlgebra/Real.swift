@@ -12,20 +12,20 @@ public enum RealBasis: FieldBasis {
         return .N(n)
     }
     
-    public static prefix func * (lhs: RealBasis) -> RealBasis {
+    public static prefix func * (lhs: RealBasis) throws -> RealBasis {
         return lhs
     }
     
-    static func / (lhs: RealBasis, rhs: RealBasis) -> RealBasis {
-        return lhs * (~rhs)
+    static func / (lhs: RealBasis, rhs: RealBasis) throws -> RealBasis {
+        return try lhs * (~rhs)
     }
     
-    public static prefix func ~ (lhs: RealBasis) -> RealBasis {
+    public static prefix func ~ (lhs: RealBasis) throws -> RealBasis {
         switch lhs {
         case let .N(n):
-            return (RealBasis.Q(Rational(1, n))).eval()
+            return try (RealBasis.Q(Rational(1, n))).eval()
         case let .Q(q):
-            return RealBasis.Q(Rational(q.r.denominator, q.r.numerator)).eval()
+            return try RealBasis.Q(Rational(q.r.denominator, q.r.numerator)).eval()
         case let .R(r):
             return RealBasis.R(1/r).eval()
         }
@@ -65,7 +65,8 @@ public enum RealBasis: FieldBasis {
     public static var Zero: RealBasis {return .N(0)}
     
     public static var Id: RealBasis {return .N(1)}
-    
+    public static var _Id: RealBasis {return .N(-1)}
+
     private func eval() -> RealBasis {
         switch self {
         case .N(_): return self
@@ -112,17 +113,17 @@ public enum RealBasis: FieldBasis {
     case R(Double)
 }
 public indirect enum RealOperator:Operator {
-    public func eval() -> Real {
+    public func eval() throws -> Real {
         
         if case let .f(.Power(base: base, exponent: exponent)) = self {
-            let exponent = exponent.eval()
+            let exponent = try exponent.eval()
             if case let .Basis(.N(intExp)) = exponent.element {
-                let base = base.eval()
+                let base = try base.eval()
                 if let mul = (0..<abs(intExp)).decompose()?.fmap({_ in base}).reduce(*) {
                     if intExp < 0 {
-                        return Real(mabelianOp: .Inverse(mul)).eval()
+                        return try Real(mabelianOp: .Inverse(mul)).eval()
                     } else {
-                        return mul.eval()
+                        return try mul.eval()
                     }
                 } else { // exponent is 0
                     return Real.Id
@@ -131,7 +132,7 @@ public indirect enum RealOperator:Operator {
         }
         
         switch self {
-        case let .f(f): return f.eval()
+        case let .f(f): return try f.eval()
         }
     }
     
