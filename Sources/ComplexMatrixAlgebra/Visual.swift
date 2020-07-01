@@ -136,7 +136,7 @@ func flatAdd<A:AMonoid>(_ x:A)-> List<A> {
     }
 }
 
-func gprettify<A:Prettifiable>(fieldOp:FieldOperators<A>)->A {
+func gprettify<A:Prettifiable>(fieldOp:FieldOperators<A>)throws->A {
     switch fieldOp {
     case let .Abelian(a):
         switch a {
@@ -144,30 +144,30 @@ func gprettify<A:Prettifiable>(fieldOp:FieldOperators<A>)->A {
             switch x {
             case let .Add(x):
                 let flat = flatAdd(x.l) + flatAdd(x.r)
-                let pretty = flat.grouped().fmap { (g) in
-                    (g.all.count, g.head.prettyfy())
+                let pretty = try flat.grouped().fmap { (g) in
+                    try (g.all.count, g.head.prettyfy())
                 }.fmap { (size, term)->A in
                     if size == 1 {
                         return term
                     } else {
                         let times = A.B.whole(n: size).asNumber(A.self)
-                        return (times * term).prettyfy()
+                        return try (times * term).prettyfy()
                     }
                 }.reduce(+)
                 return pretty
             }
-        case let .Negate(x): return .init(abelianOp: .Negate(x.prettyfy()))
-        case let .Subtract(x, y): return .init(abelianOp: .Subtract(x.prettyfy(), y.prettyfy()))
+        case let .Negate(x): return try .init(abelianOp: .Negate(x.prettyfy()))
+        case let .Subtract(x, y): return try .init(abelianOp: .Subtract(x.prettyfy(), y.prettyfy()))
         }
     case let .Conjugate(c): return A(fieldOp: .Conjugate(c))
-    case let .Determinant(x): return A(fieldOp: .Determinant(x.prettyfy()))
+    case let .Determinant(x): return try A(fieldOp: .Determinant(x.prettyfy()))
     case let .Mabelian(ma):
         switch ma {
-        case let .Inverse(x): return .init(mabelianOp: .Inverse(x.prettyfy()))
+        case let .Inverse(x): return try .init(mabelianOp: .Inverse(x.prettyfy()))
         case let .Monoid(x):
             switch x {
             case let .Mul(m):
-                let (s,b,_a) = try! decomposeMul(m.l * m.r)
+                let (s,b,_a) = try decomposeMul(m.l * m.r)
                 guard let a = _a else {
                     if s {
                         return A(element: .Basis(b))
@@ -177,8 +177,8 @@ func gprettify<A:Prettifiable>(fieldOp:FieldOperators<A>)->A {
                 }
                 let aTerms = flatMul(a)
                 
-                let groupedTerm = aTerms.grouped().fmap { (g) in
-                    (g.all.count, g.head.prettyfy())
+                let groupedTerm = try aTerms.grouped().fmap { (g) in
+                    try (g.all.count, g.head.prettyfy())
                 }.fmap { (size,term)->A in
                     if size == 1 {
                         return term
@@ -205,78 +205,78 @@ func gprettify<A:Prettifiable>(fieldOp:FieldOperators<A>)->A {
                 }
                 return nba
             }
-        case let .Quotient(x, y): return .init(mabelianOp: .Quotient(x.prettyfy(), y.prettyfy()))
+        case let .Quotient(x, y): return try .init(mabelianOp: .Quotient(x.prettyfy(), y.prettyfy()))
         }
-    case .Power(let base, let exponent): return A(fieldOp: .Power(base: base.prettyfy(), exponent: exponent.prettyfy()))
+    case .Power(let base, let exponent): return try A(fieldOp: .Power(base: base.prettyfy(), exponent: exponent.prettyfy()))
     }
 }
-func gprettify<A:Prettifiable>(ringOp:RingOperators<A>)->A {
+func gprettify<A:Prettifiable>(ringOp:RingOperators<A>)throws->A {
     //todo: come back after implementing power
     switch ringOp {
     case let .Abelian(ab):
         switch ab {
         case let .Monoid(mon):
             switch mon {
-            case let .Add(a): return .init(amonoidOp: .Add(.init(l: a.l.prettyfy(), r: a.r.prettyfy())))
+            case let .Add(a): return try .init(amonoidOp: .Add(.init(l: a.l.prettyfy(), r: a.r.prettyfy())))
             }
-        case let .Negate(x): return .init(abelianOp: .Negate(x.prettyfy()))
-        case let .Subtract(x, y): return .init(abelianOp: .Subtract(x.prettyfy(), y.prettyfy()))
+        case let .Negate(x): return try .init(abelianOp: .Negate(x.prettyfy()))
+        case let .Subtract(x, y): return try .init(abelianOp: .Subtract(x.prettyfy(), y.prettyfy()))
         }
     case let .MMonoid(mmon):
         switch mmon {
-        case let .Mul(x): return .init(mmonoidOp: .Mul(.init(l: x.l.prettyfy(), r: x.r.prettyfy())))
+        case let .Mul(x): return try .init(mmonoidOp: .Mul(.init(l: x.l.prettyfy(), r: x.r.prettyfy())))
         }
     }
 }
 public protocol Prettifiable:Algebra {
-    func prettyfy()->Self
+    func prettyfy()throws->Self
 }
 extension Real:Prettifiable {
-    public func prettyfy()->Self {
+    public func prettyfy()throws->Self {
         switch c {
         case .e(_): return self
         case let .o(o):
             switch o {
-            case let .f(f): return gprettify(fieldOp: f)
+            case let .f(f): return try gprettify(fieldOp: f)
             }
         }
     }
 }
 extension Complex:Prettifiable {
-    public func prettyfy()-> Self {
+    public func prettyfy()throws-> Self {
         switch c {
         case let .e(e):
             switch e {
-            case let .Basis(b): return .init(element: .Basis(.init(r: b.r.prettyfy(), i: b.i.prettyfy())))
+            case let .Basis(b): return try .init(element: .Basis(.init(r: b.r.prettyfy(), i: b.i.prettyfy())))
             case .Var(_): return self
             }
-        case let .o(o): return gprettify(fieldOp: o)
+        case let .o(o): return try gprettify(fieldOp: o)
         }
     }
 }
 extension Matrix:Prettifiable where F:Prettifiable {
-    public func prettyfy()-> Self {
+    public func prettyfy()throws -> Self {
         switch c {
         case let .e(e):
             switch e {
             case let .Basis(b):
                 switch b {
                 case let .Matrix(m):
-                    return .init(element: .Basis(.Matrix(.init(e: m.e.fmap({ (row) in
-                        row.fmap({$0.prettyfy()})
+                    return try .init(element: .Basis(.Matrix(.init(e: m.e.fmap({ (row) in
+                        try row.fmap({try $0.prettyfy()})
                     })))))
-                case let .id(f): return .init(element: .Basis(.id(f.prettyfy())))
+                case let .id(f): return try .init(element: .Basis(.id(f.prettyfy())))
                 case .zero: return self
                 }
             case .Var(_): return self
             }
         case let .o(o):
             switch o {
-            case let .Echelon(m): return .init(.o(.Echelon(m.prettyfy())))
-            case let .Inverse(m): return .init(.o(.Inverse(m.prettyfy())))
-            case let .ReducedEchelon(m): return .init(.o(.ReducedEchelon(m.prettyfy())))
-            case let .Ring(ro): return gprettify(ringOp: ro)
-            case let .Scale(f, m): return .init(.o(.Scale(f.prettyfy(), m.prettyfy())))
+            case let .Echelon(m): return try .init(.o(.Echelon(m.prettyfy())))
+            case let .Inverse(m): return try .init(.o(.Inverse(m.prettyfy())))
+            case let .ReducedEchelon(m): return try .init(.o(.ReducedEchelon(m.prettyfy())))
+            case let .Ring(ro): return try gprettify(ringOp: ro)
+            case let .Scale(f, m): return try .init(.o(.Scale(f.prettyfy(), m.prettyfy())))
             }
         }
     }
